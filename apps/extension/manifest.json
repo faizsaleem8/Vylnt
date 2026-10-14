@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "VYNLT — Web Security Observer",
+  "version": "0.1.0",
+  "minimum_chrome_version": "120",
+  "description": "Observe web security configuration with private, local reports.",
+  "permissions": ["storage", "activeTab", "scripting", "webRequest", "webNavigation", "cookies"],
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*", "https://localhost/*", "https://127.0.0.1/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "VYNLT security scan" }
+}

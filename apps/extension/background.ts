@@ -1,0 +1,116 @@
+import { cookieMetadata, createReport, safeUrl, securityHeaders, type Observation, type Report, type Resource, type ScriptMetadata } from '../../packages/core';
+
+interface TabScan { requestId: string; documentId?: string; report: Report }
+// Serialize read/modify/write operations; durable state lives in extension storage.
+let queue: Promise<unknown> = Promise.resolve();
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const next = queue.then(work);
+  queue = next.catch(error => console.error('VYNLT:', error instanceof Error ? error.message : 'operation failed'));
+  return next;
+}
+const key = (tabId: number) => `tab:${tabId}`;
+async function active() { return (await chrome.storage.local.get('paused')).paused !== true; }
+async function getScan(tabId: number): Promise<TabScan | undefined> { return (await chrome.storage.session.get(key(tabId)))[key(tabId)] as TabScan | undefined; }
+async function save(tabId: number, scan: TabScan) {
+  scan.report = createReport(scan.report.scanId, scan.report.observation);
+  await chrome.storage.session.set({ [key(tabId)]: scan });
+  const { history = [] } = await chrome.storage.local.get('history');
+  await chrome.storage.local.set({ history: [scan.report, ...(history as Report[]).filter(r => r.scanId !== scan.report.scanId)].slice(0, 30) });
+}
+async function allowed(url: string) {
+  try { const u = new URL(url); return ['http:', 'https:'].includes(u.protocol) && await chrome.permissions.contains({ origins: [`${u.protocol}//${u.hostname}/*`] }); }
+  catch { return false; }
+}
+async function register() {
+  await chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+  const { origins = [] } = await chrome.permissions.getAll();
+  const matches = origins.filter(o => o.startsWith('http'));
+  await chrome.scripting.unregisterContentScripts();
+  if (matches.length) await chrome.scripting.registerContentScripts([{ id: 'vynlt-dom', matches, js: ['content.js'], runAt: 'document_idle' }]);
+}
+chrome.runtime.onInstalled.addListener(() => { void enqueue(register); });
+chrome.runtime.onStartup.addListener(() => { void enqueue(register); });
+chrome.permissions.onAdded.addListener(() => { void enqueue(register); });
+chrome.permissions.onRemoved.addListener(() => { void enqueue(register); });
+
+chrome.webRequest.onBeforeRequest.addListener(details => { void enqueue(async () => {
+  if (details.tabId < 0 || !await active()) return;
+  if (details.type === 'main_frame') {
+    if (!await allowed(details.url)) return;
+    const observation: Observation = { url: safeUrl(details.url), scannedAt: new Date().toISOString(), resources: [], scripts: [], domCollected: false };
+    const previous = await getScan(details.tabId);
+    const scanId = previous?.requestId === details.requestId ? previous.report.scanId : crypto.randomUUID();
+    await save(details.tabId, { requestId: details.requestId, report: createReport(scanId, observation) });
+  } else {
+    const scan = await getScan(details.tabId);
+    if (!scan || !scan.documentId || details.documentId !== scan.documentId || !await allowed(scan.report.observation.url)) return;
+    const resources = scan.report.observation.resources;
+    if (resources.length < 300 && !resources.some(r => r.url === safeUrl(details.url) && r.type === details.type)) {
+      resources.push({ url: safeUrl(details.url), type: details.type, outcome: 'requested' });
+      await save(details.tabId, scan);
+    }
+  }
+}); return undefined; }, { urls: ['http://*/*', 'https://*/*'] });
+
+chrome.webRequest.onHeadersReceived.addListener(details => { void enqueue(async () => {
+  if (details.type !== 'main_frame' || !await active()) return;
+  const scan = await getScan(details.tabId);
+  if (!scan || scan.requestId !== details.requestId || !await allowed(details.url)) return;
+  scan.report.observation.url = safeUrl(details.url);
+  scan.report.observation.headers = securityHeaders(details.responseHeaders ?? []);
+  await save(details.tabId, scan);
+}); return undefined; }, { urls: ['http://*/*', 'https://*/*'] }, ['responseHeaders']);
+
+chrome.webNavigation.onCommitted.addListener(details => { void enqueue(async () => {
+  if (details.frameId !== 0) return;
+  const scan = await getScan(details.tabId);
+  if (!await active() || !await allowed(details.url) || !scan || safeUrl(details.url) !== scan.report.observation.url) {
+    await chrome.storage.session.remove(key(details.tabId)); return;
+  }
+  scan.documentId = details.documentId;
+  await save(details.tabId, scan);
+}); });
+chrome.tabs.onRemoved.addListener(tabId => { void enqueue(() => chrome.storage.session.remove(key(tabId))); });
+
+chrome.runtime.onMessage.addListener((message, sender, reply) => {
+  if (sender.id !== chrome.runtime.id) return;
+  void enqueue(async () => {
+    if (message.type === 'DOM') {
+      if (!sender.tab?.id || sender.frameId !== 0 || !await active()) return { ok: false };
+      const scan = await getScan(sender.tab.id);
+      if (!scan || scan.documentId !== sender.documentId || !await allowed(sender.url ?? '')) return { ok: false };
+      const o = scan.report.observation;
+      // Explicit allowlists keep arbitrary page data out of storage.
+      o.scripts = (Array.isArray(message.scripts) ? message.scripts : []).slice(0, 150).map((s: ScriptMetadata) => ({ url: safeUrl(String(s.url)), integrity: s.integrity === true }));
+      const domResources: Resource[] = (Array.isArray(message.resources) ? message.resources : []).slice(0, 300).map((r: Resource) => ({ url: safeUrl(String(r.url)), type: String(r.type).slice(0, 30), outcome: 'referenced' }));
+      o.resources = [...o.resources.filter(r => r.outcome !== 'referenced'), ...domResources].slice(0, 600);
+      o.domCollected = true;
+      try { o.cookies = (await chrome.cookies.getAll({ url: sender.url! })).slice(0, 100).map(cookieMetadata); }
+      catch { o.cookies = undefined; }
+      await save(sender.tab.id, scan);
+      return { ok: true };
+    }
+    // Content scripts cannot control monitoring, read history, or clear reports.
+    if (sender.tab || !sender.url?.startsWith(chrome.runtime.getURL(''))) throw new Error('Untrusted control message');
+    if (message.type === 'STATE') {
+      const { paused = false, history = [] } = await chrome.storage.local.get(['paused', 'history']);
+      return { paused, history, scan: (await getScan(message.tabId))?.report };
+    }
+    if (message.type === 'PAUSE') {
+      await chrome.storage.local.set({ paused: message.paused === true });
+      return { ok: true };
+    }
+    if (message.type === 'RESCAN') {
+      const tab = await chrome.tabs.get(message.tabId);
+      if (!await allowed(tab.url ?? '')) throw new Error('Enable access to this site first.');
+      if (!await active()) throw new Error('Resume monitoring before rescanning.');
+      await chrome.tabs.reload(message.tabId); return { ok: true };
+    }
+    if (message.type === 'CLEAR') {
+      await chrome.storage.local.set({ history: [] });
+      await chrome.storage.session.clear(); return { ok: true };
+    }
+    throw new Error('Unknown command');
+  }).then(reply).catch(error => reply({ error: error instanceof Error ? error.message : 'Operation failed' }));
+  return true;
+});

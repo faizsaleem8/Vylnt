@@ -68,28 +68,102 @@ try {
   const worker = extensionContext.serviceWorkers()[0] ?? await extensionContext.waitForEvent('serviceworker');
   const extensionPage = await extensionContext.newPage();
   await extensionPage.route(`${supabaseUrl}/auth/v1/**`, authRoute);
-  let uploaded = false;
-  await extensionPage.route(`${origin}/api/scans`, async route => {
+  const savedScans = new Map(); let posts = 0; let failures = 1; let preflightFailures = 1; const submitted = [];
+  await extensionPage.route(origin + '/api/scans**', async route => {
     assert.ok(route.request().headers().authorization?.startsWith('Bearer ey'));
-    assert.deepEqual(Object.keys(route.request().postDataJSON()).sort(), ['observation', 'scanId']);
-    uploaded = true; await route.fulfill({ status: 201, json: { saved: true } });
+    const path = new URL(route.request().url()).pathname;
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON(); submitted.push(body);
+      assert.deepEqual(Object.keys(body).sort(), ['observation', 'scanId']);
+      if (failures-- > 0) { await route.fulfill({ status: 503, json: { error: 'Temporary failure' } }); return; }
+      posts++;
+      const report = { ...body, findings: [], score: 100, rulesetVersion: '0.2.0' };
+      savedScans.set(body.scanId, report); await route.fulfill({ status: 201, json: { report } }); return;
+    }
+    if (new URL(route.request().url()).searchParams.get('limit') === '1' && preflightFailures-- > 0) { await route.fulfill({ status: 503, json: { error: 'Database unavailable' } }); return; }
+    const id = path.split('/')[3];
+    if (route.request().method() === 'DELETE') { savedScans.delete(id); await route.fulfill({ status: 204 }); return; }
+    if (id) { await route.fulfill({ json: { report: savedScans.get(id) } }); return; }
+    await route.fulfill({ json: { scans: [...savedScans.values()].map(r => ({ scanId: r.scanId, url: r.observation.url, scannedAt: r.observation.scannedAt, findingCount: 0, score: 100 })), total: savedScans.size } });
   });
-  await extensionPage.goto(`chrome-extension://${new URL(worker.url()).host}/report.html`);
-  await extensionPage.evaluate(async () => chrome.storage.local.set({ history: [{ scanId: '00000000-0000-4000-8000-000000000003', rulesetVersion: '0.2.0', observation: { url: 'https://localhost/fixture', scannedAt: '2026-10-15T00:00:00Z', resources: [], scripts: [], domCollected: true }, findings: [], score: 100 }] }));
-  await extensionPage.getByText('0 findings', { exact: true }).waitFor();
-  await extensionPage.locator('.sync-panel summary').click(); await extensionPage.locator('#api-url').fill(origin);
+  await extensionPage.goto('chrome-extension://' + new URL(worker.url()).host + '/report.html');
+  await extensionPage.setViewportSize({ width: 360, height: 900 });
+  await extensionPage.locator('#api-url').fill(origin);
   await extensionPage.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
   await extensionPage.getByText('Workspace ready. Sign in', { exact: false }).waitFor();
-  await extensionPage.getByLabel('Email address').fill(user.email); await extensionPage.getByLabel('Password', { exact: true }).fill('fixture-password');
-  await extensionPage.getByRole('button', { name: 'Sign in', exact: true }).click(); await extensionPage.getByText('Signed in. Select Send scan', { exact: false }).waitFor();
+  await extensionPage.getByLabel('Email address').fill(user.email);
+  await extensionPage.getByLabel('Password', { exact: true }).fill('wrong');
+  await extensionPage.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await extensionPage.getByText('Invalid login credentials', { exact: true }).waitFor();
+  await extensionPage.getByLabel('Password', { exact: true }).fill('fixture-password');
+  await extensionPage.getByRole('button', { name: 'Create account', exact: true }).click();
+  await extensionPage.getByText('Check your email to confirm', { exact: false }).waitFor();
+  await extensionPage.getByLabel('Password', { exact: true }).fill('fixture-password');
+  await extensionPage.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await extensionPage.getByText('Workspace request failed (HTTP 503).', { exact: false }).waitFor();
+  assert.equal(await extensionPage.locator('#sign-out').isVisible(), false, 'Auth success alone must not claim a connected workspace');
+  await extensionPage.getByLabel('Password', { exact: true }).fill('fixture-password');
+  await extensionPage.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await extensionPage.getByText('Signed in. New scans sync automatically.', { exact: false }).waitFor();
   assert.equal(await extensionPage.getByLabel('Password', { exact: true }).inputValue(), '');
-  await extensionPage.getByRole('button', { name: 'Send scan', exact: true }).click(); await extensionPage.getByText('Scan saved to your workspace.', { exact: false }).waitFor(); assert.ok(uploaded);
+  await extensionPage.evaluate(async () => chrome.storage.session.set({ history: [{ scanId: '00000000-0000-4000-8000-000000000003', rulesetVersion: '0.2.0', observation: { url: 'https://localhost/fixture', scannedAt: new Date().toISOString(), resources: [], scripts: [], domCollected: true }, findings: [], score: 100 }] }));
+  await extensionPage.getByText('Sync failed. Retrying automatically', { exact: false }).waitFor();
+  await extensionPage.getByText('Scan saved automatically.', { exact: false }).waitFor();
+  assert.equal(posts, 1); assert.deepEqual(submitted[0], submitted[1]);
+  await extensionPage.getByRole('button', { name: 'Saved scans', exact: true }).click();
+  await extensionPage.getByRole('button').filter({ hasText: 'https://localhost/fixture' }).click();
+  await extensionPage.getByText('0 findings', { exact: true }).waitFor();
+  assert.ok(await extensionPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await extensionPage.screenshot({ path: 'test-results/extension-supabase-panel.png', fullPage: true });
+  extensionPage.once('dialog', dialog => dialog.accept());
+  await extensionPage.getByRole('button', { name: 'Delete saved scan', exact: true }).click();
+  await extensionPage.getByText('Saved scan deleted.', { exact: true }).waitFor(); assert.equal(savedScans.size, 0);
   const stored = await extensionPage.evaluate(async () => JSON.stringify({ local: await chrome.storage.local.get(null), session: await chrome.storage.session.get(null), webLocal: { ...localStorage }, webSession: { ...sessionStorage } }));
   assert.ok(!stored.includes('fixture-password') && !stored.includes('fixture-refresh-') && !stored.includes('test-signature'));
-  await extensionPage.getByRole('button', { name: 'Sign out', exact: true }).click(); await extensionPage.getByText('Signed out on this page.', { exact: true }).waitFor();
-  console.log('PASS mocked extension Supabase flow: connection discovery, email/password sign-in, explicit upload with user JWT, sign-out, no stored credentials.');
+  assert.equal(await extensionPage.evaluate(async () => (await chrome.storage.local.get('history')).history), undefined);
+  await extensionPage.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await extensionPage.getByText('Signed out. Automatic sync stopped.', { exact: true }).waitFor();
+  await extensionPage.evaluate(async () => {
+    const { history } = await chrome.storage.session.get('history');
+    const next = structuredClone(history[0]); next.scanId = crypto.randomUUID(); next.observation.scannedAt = new Date().toISOString();
+    await chrome.storage.session.set({ history: [next] });
+  });
+  await extensionPage.waitForTimeout(3500); assert.equal(posts, 1);
+  await extensionPage.reload(); assert.equal(await extensionPage.locator('#sign-out').isVisible(), false);
+  // A current scan captured before login, without DOM, still saves; unrelated history does not.
+  await extensionContext.route('https://localhost/adopted', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Current scan fixture</title>' }));
+  const fixture = await extensionContext.newPage(); await fixture.goto('https://localhost/adopted'); await fixture.bringToFront();
+  await extensionPage.waitForTimeout(1000);
+  const oldId = await worker.evaluate(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const key = 'tab:' + tab.id;
+    const data = await chrome.storage.session.get(key); const scan = data[key];
+    if (!scan) throw new Error('Fixture scan missing');
+    scan.report.observation.domCollected = false;
+    scan.report.observation.scannedAt = new Date(Date.now() - 60000).toISOString();
+    const other = structuredClone(scan.report); other.scanId = crypto.randomUUID(); other.observation.url = 'https://localhost/unselected';
+    await chrome.storage.session.set({ [key]: scan, history: [other, scan.report] });
+    return scan.report.scanId;
+  });
+  await extensionPage.locator('#api-url').fill(origin);
+  await extensionPage.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
+  await extensionPage.getByText('Workspace ready. Sign in', { exact: false }).waitFor();
+  await extensionPage.getByLabel('Email address').fill(user.email);
+  await extensionPage.getByLabel('Password', { exact: true }).fill('fixture-password');
+  await extensionPage.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await extensionPage.getByText('Signed in. Preparing the current scan', { exact: false }).waitFor();
+  await extensionPage.getByText('Partial coverage: page DOM was not observed.', { exact: false }).waitFor();
+  assert.equal(posts, 2);
+  const adopted = [...savedScans.values()][0];
+  assert.equal(adopted.observation.url, 'https://localhost/adopted');
+  assert.equal(adopted.observation.domCollected, false); assert.notEqual(adopted.scanId, oldId);
+  assert.ok(!submitted.some(s => s.observation.url.endsWith('/unselected')));
+  await fixture.close();
+  console.log('PASS mocked extension panel: registration, invalid login, database preflight failure, sign-in, automatic upload/retry, saved details/delete, sign-out, current pre-login partial scan saves, unrelated history excluded, no persistent credentials.');
 } finally {
   await extensionContext?.close();
   await browser?.close();
   if (server) { const stopped = new Promise(r => { if (server.exitCode !== null) r(); else server.once('exit', r); }); server.kill(); await stopped; }
 }
+
+

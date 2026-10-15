@@ -2,7 +2,7 @@
 
 ## Local development
 
-Run `npm run setup:local` once, then `npm run build` and `npm run dev`. Open `http://127.0.0.1:4318`. The generated token is in the ignored `.env`; paste it into the dashboard's connection form. It is not printed to logs. Local mode binds to loopback and uses `.local/scans.json` with serialized atomic writes. Run only one API process against a local data file.
+Run `npm run setup:local` once, then `npm run build` and `npm run dev`. Open the VYNLT extension side panel and load its workspace connection. The generated local-mode token is in the ignored `.env`; paste it into the panel's connection form. It is not printed to logs. Local mode binds to loopback and uses `.local/scans.json` with serialized atomic writes. Run only one API process against a local data file.
 
 The dashboard and extension keep sessions in page memory only; closing/reloading the page requires reconnecting. Rotate the local token by changing `VYNLT_API_TOKEN` and restarting the server. Local mode has no account registration or password management.
 
@@ -33,8 +33,8 @@ The local SHA-256 check establishes consistency with a stored hash, not third-pa
 2. Apply `supabase/migrations/001_initial.sql` in its SQL editor once. It creates owner-scoped sites, scans, findings and feedback, RLS policies, and an atomic ingestion RPC.
 3. Set `VYNLT_STORAGE=supabase`, `SUPABASE_URL`, and `SUPABASE_PUBLISHABLE_KEY` in `.env`. The `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` aliases and legacy `SUPABASE_ANON_KEY` are also accepted. Secret/service-role keys are rejected at startup.
 4. In Supabase **Authentication → URL Configuration**, set the Site URL to `http://127.0.0.1:4318` for local use and add that same URL to allowed Redirect URLs. Add the dev-dashboard origin too if using Vite separately. Keep email confirmation enabled.
-5. Run `npm run build` and `npm run dev`. Open the dashboard, choose **Create an account**, confirm your email, then return and **Sign in**. Existing users can sign in directly. Passwords go directly to Supabase Auth over HTTPS, not through the VYNLT API.
-6. For extension upload, open its report page, expand the workspace section, select **Load workspace connection**, then sign in using that same account. Grant the displayed API/Supabase host permissions. Select **Send scan** to upload explicitly.
+5. Run `npm run build` and `npm run dev`. Open the extension side panel, select **Load workspace connection**, choose **Create account**, confirm your email, then return to the panel and **Sign in**. Existing users can sign in directly. Passwords go directly to Supabase Auth over HTTPS, not through the VYNLT API.
+6. Grant the displayed API/Supabase host permissions. Select **Rescan page** in the panel; new scans upload automatically while signed in. Use **Saved scans** for history, evidence, JSON downloads, hash verification and deletion. The web dashboard is optional.
 7. Sessions refresh automatically while the page is open. `persistSession` and URL-token detection are disabled; closing or reloading the dashboard/extension page discards the local session. Sign-out revokes the current session when Supabase is reachable. No credentials are written to project files or browser storage by the application.
 8. Set `VYNLT_ALLOWED_ORIGINS` to exact dashboard origins. Serve production traffic over HTTPS and deploy a reverse proxy with rate limits before exposing the API publicly.
 
@@ -46,10 +46,10 @@ The ingestion RPC is callable by authenticated owners. It is a data-storage boun
 
 ### Live acceptance after sign-in
 
-- Sign in to account A, import a local lab report, reload/sign in again, and verify it persists.
+- Sign in to account A in the side panel, rescan a local lab page, wait for automatic sync, reload/sign in again, and verify the report persists in Saved scans.
 - Record feedback and verify the report hash still matches.
 - Sign out and sign in as account B; A's reports must not appear. Using A's scan ID with B's session must return 404 for detail, export, feedback and deletion.
-- Repeat upload through the extension using account A and check it in the dashboard.
+- Sign back in as A, rescan and verify automatic sync and saved-history refresh inside the panel.
 - Do not share passwords or access/refresh tokens in chat or commit them. Record results in `PLAN.md` after verification.
 
 ## CI and automated scanning
@@ -67,3 +67,4 @@ Exit 0 means policy passed, 1 means qualifying findings exceeded the policy, and
 The runner defaults to loopback targets and blocks non-loopback network resources in that mode. `--allow-remote` is required for other authorized targets. TLS verification bypass is allowed only for localhost test fixtures. Normal remote scans verify TLS.
 
 `.github/workflows/ci.yml` runs type checks, tests, builds, real Chromium regression checks and saves artifacts. It tests that the controlled insecure HTTPS fixture fails the configured gate while the hardened fixture passes. The workflow is present locally; it has not been run on GitHub. Require its check in branch protection if you want failed checks to block merges.
+

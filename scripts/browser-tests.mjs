@@ -34,10 +34,31 @@ try {
   let worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
   const extensionId = new URL(worker.url()).host;
   await until(async () => (await worker.evaluate(() => chrome.scripting.getRegisteredContentScripts())).length, 'content script registration');
-  const history = () => worker.evaluate(async () => (await chrome.storage.local.get('history')).history ?? []);
+  const history = () => worker.evaluate(async () => (await chrome.storage.session.get('history')).history ?? []);
+  // An ungranted site must still be identifiable after switching tabs with the panel open.
+  // Route controlled fixtures locally; no request goes to these test domains.
+  const permissionPanel = await context.newPage();
+  await permissionPanel.goto(`chrome-extension://${extensionId}/report.html`);
+  const ungrantedPage = await context.newPage();
+  await ungrantedPage.route('https://*.vynlt-permission.test/**', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Permission fixture</title><p>Controlled fixture</p>' }));
+  await ungrantedPage.goto('https://first.vynlt-permission.test/'); await ungrantedPage.bringToFront();
+  await until(async () => await permissionPanel.locator('#site').textContent() === 'first.vynlt-permission.test', 'ungranted tab address visible');
+  assert.equal(await permissionPanel.locator('#enable').isEnabled(), true, 'A new site must offer Enable this site');
+  assert.equal(await permissionPanel.locator('#rescan').isDisabled(), true, 'Scanning still requires explicit host permission');
+  assert.equal(await worker.evaluate(() => chrome.permissions.contains({ origins: ['https://first.vynlt-permission.test/*'] })), false);
+  await ungrantedPage.goto('https://second.vynlt-permission.test/');
+  await until(async () => await permissionPanel.locator('#site').textContent() === 'second.vynlt-permission.test', 'cross-origin navigation updates panel');
+  assert.equal(await permissionPanel.locator('#enable').isEnabled(), true);
+  assert.ok(!(await history()).some(r => r.observation.url.includes('vynlt-permission.test')), 'Reading the active URL must not authorize collection');
+  await ungrantedPage.goto('chrome://settings/');
+  await until(async () => (await permissionPanel.locator('#monitor-status').textContent()).includes('cannot be scanned'), 'restricted-page explanation');
+  assert.equal(await permissionPanel.locator('#enable').isDisabled(), true);
+  assert.equal(await permissionPanel.locator('#rescan').isDisabled(), true);
+  await ungrantedPage.close(); await permissionPanel.close();
+  console.log('PASS permissions: ungranted tabs remain identifiable, site access stays opt-in, cross-origin navigation updates controls, restricted pages explain disabled controls');
   const page = await context.newPage();
   await page.goto('https://127.0.0.1:5443/insecure?token=private');
-  const insecure = await until(async () => (await history()).find(r => r.observation.url === 'https://127.0.0.1:5443/insecure' && r.observation.domCollected && r.observation.cookies && r.observation.headers), 'insecure scan');
+  let insecure = await until(async () => (await history()).find(r => r.observation.url === 'https://127.0.0.1:5443/insecure' && r.observation.domCollected && r.observation.cookies && r.observation.headers), 'insecure scan');
   for (const rule of ['HDR-001', 'HDR-002', 'HDR-003', 'CK-001', 'CK-002', 'NET-001']) assert.ok(insecure.findings.some(f => f.ruleId === rule), `Missing ${rule}`);
   assert.ok(!JSON.stringify(insecure).includes('private')); assert.ok(!JSON.stringify(insecure).includes('lab-only'));
   await page.reload();
@@ -45,12 +66,45 @@ try {
   const securePage = await context.newPage(); await securePage.goto('https://127.0.0.1:5443/secure');
   const secure = await until(async () => (await history()).find(r => r.observation.url.endsWith('/secure') && r.observation.domCollected && r.observation.headers), 'secure scan');
   assert.equal(secure.findings.length, 0, `Secure fixture findings: ${JSON.stringify(secure.findings)}`);
-  reportPage = await context.newPage(); await reportPage.goto(`chrome-extension://${extensionId}/report.html#${insecure.scanId}`);
-  await reportPage.getByText(`${insecure.findings.length} findings`, { exact: true }).waitFor();
-  await reportPage.locator('.sync-panel summary').click(); await reportPage.locator('#api-url').fill(apiOrigin); await reportPage.locator('#api-token').fill(token); await reportPage.getByRole('button', { name: 'Send scan', exact: true }).click();
-  await reportPage.getByText('Scan saved to your workspace.', { exact: false }).waitFor();
-  const saved = await (await fetch(`${apiOrigin}/api/scans/${insecure.scanId}`, { headers: authHeaders })).json();
-  assert.equal(saved.report.scanId, insecure.scanId);
+  reportPage = await context.newPage(); await reportPage.setViewportSize({ width: 380, height: 900 });
+  await reportPage.goto('chrome-extension://' + extensionId + '/report.html');
+  assert.equal(await worker.evaluate(async () => (await chrome.sidePanel.getPanelBehavior()).openPanelOnActionClick), true);
+  assert.equal(await worker.evaluate(() => chrome.runtime.getManifest().action.default_popup), undefined);
+  await reportPage.locator('#api-url').fill(apiOrigin);
+  await reportPage.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
+  await reportPage.locator('#api-token').fill(token); await reportPage.getByRole('button', { name: 'Connect workspace', exact: true }).click();
+  await reportPage.getByText('Signed in. New scans sync automatically.', { exact: false }).waitFor();
+  await page.bringToFront(); await page.reload();
+  insecure = await until(async () => {
+    const rows = (await (await fetch(apiOrigin + '/api/scans', { headers: authHeaders })).json()).scans;
+    if (!rows.length) return;
+    return (await history()).find(r => r.scanId === rows[0].scanId);
+  }, 'automatic scan upload');
+  await reportPage.getByRole('button', { name: 'Saved scans', exact: true }).click();
+  await reportPage.getByRole('button').filter({ hasText: 'https://127.0.0.1:5443/insecure' }).click();
+  await reportPage.getByText(insecure.findings.length + ' findings', { exact: true }).waitFor();
+  await reportPage.locator('.finding-card summary').first().click();
+  await reportPage.getByRole('button', { name: 'Verify hash', exact: true }).click();
+  await reportPage.getByText('Stored report matches its SHA-256 hash.', { exact: false }).waitFor();
+  const panelDownload = reportPage.waitForEvent('download');
+  await reportPage.getByRole('button', { name: 'Export JSON', exact: false }).click();
+  assert.match((await panelDownload).suggestedFilename(), /^vynlt-.*\.json$/);
+  assert.ok(await reportPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Panel must fit narrow viewport');
+  await reportPage.evaluate(() => window.scrollTo(0, 0)); await reportPage.screenshot({ path: 'test-results/extension-side-panel.png', fullPage: true });
+  assert.equal(await worker.evaluate(async () => (await chrome.storage.local.get('history')).history), undefined);
+  await reportPage.getByRole('button', { name: 'Sign out', exact: true }).click();
+  const otherPanel = await context.newPage();
+  await otherPanel.goto('chrome-extension://' + extensionId + '/report.html');
+  await otherPanel.locator('#api-url').fill(apiOrigin);
+  await otherPanel.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
+  await otherPanel.locator('#api-token').fill(token);
+  await otherPanel.getByRole('button', { name: 'Connect workspace', exact: true }).click();
+  await otherPanel.getByText('Signed in. New scans sync automatically.', { exact: false }).waitFor();
+  // The original panel must not establish a second account/sync session.
+  await reportPage.locator('#api-token').fill(token);
+  await reportPage.getByRole('button', { name: 'Connect workspace', exact: true }).click();
+  await reportPage.getByText('Another VYNLT panel is connected.', { exact: false }).waitFor();
+  await otherPanel.close();
   const count = (await history()).length;
   await reportPage.evaluate(() => chrome.runtime.sendMessage({ type: 'PAUSE', paused: true })); await page.reload();
   await page.waitForTimeout(700); assert.equal((await history()).length, count, 'Paused navigation must not be stored');
@@ -61,9 +115,9 @@ try {
   await until(async () => (await history()).some(r => r.observation.url.endsWith('/dynamic/next')), 'SPA path scan');
   // Recreate service worker via CDP; history must remain available after a wake-up.
   const session = await context.newCDPSession(page); await session.send('ServiceWorker.enable'); await session.send('ServiceWorker.stopAllWorkers');
-  await reportPage.reload(); await reportPage.locator('.history-item').first().waitFor();
+  await reportPage.reload(); assert.ok((await reportPage.evaluate(async () => (await chrome.runtime.sendMessage({ type: 'STATE', tabId: -1 })).history)).length > 0);
   worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
-  console.log('PASS extension: TLS rules, navigation, two tabs, privacy, explicit API upload, pause/resume, SPA, worker restart');
+  console.log('PASS extension: TLS rules, navigation, two tabs, privacy, automatic API sync, side-panel history/detail/export/hash, no disk history, pause/resume, SPA, worker restart');
   const secureUpload = await fetch(`${apiOrigin}/api/scans`, { method: 'POST', headers: authHeaders, body: JSON.stringify({ scanId: secure.scanId, observation: secure.observation }) }); assert.equal(secureUpload.status, 201);
   const secureCLI = await run(['dist/cli/index.js', '--url', 'https://127.0.0.1:5443/secure', '--ignore-https-errors', '--fail-on', 'medium', '--output', 'test-results/secure.json']);
   const insecureCLI = await run(['dist/cli/index.js', '--url', 'https://127.0.0.1:5443/insecure', '--ignore-https-errors', '--fail-on', 'medium', '--output', 'test-results/insecure.json']);
@@ -108,3 +162,6 @@ finally {
   for (const server of servers) { server.closeAllConnections(); await new Promise(r => server.close(r)); }
   await unlink(dataFile).catch(() => {});
 }
+
+
+

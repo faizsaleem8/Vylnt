@@ -25,6 +25,7 @@ beforeEach(async () => {
   local = {}; session = {}; events.clear(); vi.resetModules();
   vi.stubGlobal('chrome', {
     storage: { local: storage(() => local), session: storage(() => session) },
+    sidePanel: { setPanelBehavior: vi.fn() },
     runtime: { id: 'extension', getURL: (p: string) => `chrome-extension://extension/${p}`, onInstalled: event('installed'), onStartup: event('startup'), onMessage: event('message') },
     permissions: { contains: async () => true, getAll: async () => ({ origins: ['https://example.test/*'] }), onAdded: event('added'), onRemoved: event('removed') },
     scripting: { unregisterContentScripts: async () => {}, registerContentScripts: async () => {} },
@@ -36,6 +37,12 @@ beforeEach(async () => {
   await import('../apps/extension/background');
 });
 describe('background lifecycle with Chrome API mocks', () => {
+  it('opens the side panel from the toolbar and removes legacy disk history', async () => {
+    local.history = [{ old: true }];
+    events.get('installed')!(); await flush();
+    expect(chrome.sidePanel.setPanelBehavior).toHaveBeenCalledWith({ openPanelOnActionClick: true });
+    expect(local.history).toBeUndefined();
+  });
   it('allows trusted extension report tabs while still rejecting website controls', async () => {
     await navigate();
     const state = await message({ type: 'STATE', tabId: 1 }, { id: 'extension', tab: { id: 99 }, url: 'chrome-extension://extension/report.html' });
@@ -48,7 +55,7 @@ describe('background lifecycle with Chrome API mocks', () => {
     events.get('historyState')!({ tabId: 1, frameId: 0, documentId: 'document-1', url: 'https://example.test/next?token=secret' });
     const state = await flush();
     expect(state.scan.scanId).not.toBe(first); expect(state.scan.observation.url).toBe('https://example.test/next');
-    expect(state.scan.observation.headers).toEqual({}); expect(local.history).toHaveLength(2);
+    expect(state.scan.observation.headers).toEqual({}); expect(session.history).toHaveLength(2);
   });
   it('correlates DOM to committed document and drops cookie values and URL secrets', async () => {
     await navigate();
@@ -58,6 +65,9 @@ describe('background lifecycle with Chrome API mocks', () => {
     expect(state.scan.findings.map((f: any) => f.ruleId)).toContain('CK-001');
     expect(JSON.stringify(local)).not.toContain('secret-cookie-value');
     expect(JSON.stringify(local)).not.toContain('private');
+    expect(JSON.stringify(session)).not.toContain('secret-cookie-value');
+    expect(JSON.stringify(session)).not.toContain('private');
+    expect(local.history).toBeUndefined();
   });
   it('ignores stale documents and separates navigation IDs and tabs', async () => {
     await navigate(); const first = (await flush()).scan.scanId;
@@ -67,7 +77,7 @@ describe('background lifecycle with Chrome API mocks', () => {
     const state = await flush();
     expect(state.scan.scanId).not.toBe(first);
     expect(state.scan.observation.domCollected).toBe(false);
-    expect(local.history).toHaveLength(3);
+    expect(session.history).toHaveLength(3);
   });
   it('does not record new navigation while paused and rejects content-script controls', async () => {
     await navigate();
@@ -75,15 +85,16 @@ describe('background lifecycle with Chrome API mocks', () => {
     expect(denied.error).toContain('Untrusted');
     await message({ type: 'PAUSE', paused: true });
     await navigate(1, 'request-2', 'document-2');
-    expect(local.history).toHaveLength(1);
+    expect(session.history).toHaveLength(1);
     expect((await flush()).scan).toBeUndefined();
   });
   it('keeps redirects in the same scan and caps retained history', async () => {
     await navigate(); await navigate(1, 'request-1', 'document-2');
-    expect(local.history).toHaveLength(1);
+    expect(session.history).toHaveLength(1);
     for (let i = 2; i < 34; i++) await navigate(1, `request-${i}`, `document-${i}`);
-    expect(local.history).toHaveLength(30);
+    expect(session.history).toHaveLength(30);
     await message({ type: 'CLEAR' });
-    expect(local.history).toEqual([]); expect(session).toEqual({});
+    expect(local.history).toBeUndefined(); expect(session).toEqual({});
   });
 });
+

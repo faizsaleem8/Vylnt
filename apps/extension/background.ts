@@ -1,7 +1,7 @@
 import { cookieMetadata, createReport, safeUrl, securityHeaders, type Observation, type Report, type Resource, type ScriptMetadata } from '../../packages/core';
 
 interface TabScan { requestId: string; documentId?: string; report: Report }
-// Serialize read/modify/write operations; durable state lives in extension storage.
+// Serialize temporary scan state. Only monitoring preferences persist to disk.
 let queue: Promise<unknown> = Promise.resolve();
 function enqueue<T>(work: () => Promise<T>): Promise<T> {
   const next = queue.then(work);
@@ -14,8 +14,8 @@ async function getScan(tabId: number): Promise<TabScan | undefined> { return (aw
 async function save(tabId: number, scan: TabScan) {
   scan.report = createReport(scan.report.scanId, scan.report.observation);
   await chrome.storage.session.set({ [key(tabId)]: scan });
-  const { history = [] } = await chrome.storage.local.get('history');
-  await chrome.storage.local.set({ history: [scan.report, ...(history as Report[]).filter(r => r.scanId !== scan.report.scanId)].slice(0, 30) });
+  const { history = [] } = await chrome.storage.session.get('history');
+  await chrome.storage.session.set({ history: [scan.report, ...(history as Report[]).filter(r => r.scanId !== scan.report.scanId)].slice(0, 30) });
 }
 async function allowed(url: string) {
   try { const u = new URL(url); return ['http:', 'https:'].includes(u.protocol) && await chrome.permissions.contains({ origins: [`${u.protocol}//${u.hostname}/*`] }); }
@@ -23,6 +23,10 @@ async function allowed(url: string) {
 }
 async function register() {
   await chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+  await chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+  // Remove the retired disk-backed history when upgrading.
+  await chrome.storage.local.remove('history');
+  await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   const { origins = [] } = await chrome.permissions.getAll();
   const matches = origins.filter(o => o.startsWith('http'));
   await chrome.scripting.unregisterContentScripts();
@@ -74,7 +78,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(details => { void enqueue
   if (details.frameId !== 0 || !await active() || !await allowed(details.url)) return;
   const scan = await getScan(details.tabId);
   if (!scan || scan.documentId !== details.documentId || safeUrl(details.url) === scan.report.observation.url) return;
-  const observation = { ...scan.report.observation, url: safeUrl(details.url), scannedAt: new Date().toISOString() };
+  const observation = { ...scan.report.observation, url: safeUrl(details.url), scannedAt: new Date().toISOString(), domCollected: false };
   await save(details.tabId, { requestId: `spa:${crypto.randomUUID()}`, documentId: scan.documentId, report: createReport(crypto.randomUUID(), observation) });
   // The document's response headers remain applicable; refresh DOM and cookie metadata.
   await chrome.tabs.sendMessage(details.tabId, { type: 'COLLECT' }, { documentId: details.documentId }).catch(() => {});
@@ -103,7 +107,8 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     // An extension report opened as a tab also has sender.tab. Its verified extension URL is the trust boundary.
     if (!sender.url?.startsWith(chrome.runtime.getURL(''))) throw new Error('Untrusted control message');
     if (message.type === 'STATE') {
-      const { paused = false, history = [] } = await chrome.storage.local.get(['paused', 'history']);
+      const { paused = false } = await chrome.storage.local.get('paused');
+      const { history = [] } = await chrome.storage.session.get('history');
       return { paused, history, scan: (await getScan(message.tabId))?.report };
     }
     if (message.type === 'PAUSE') {
@@ -117,7 +122,6 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       await chrome.tabs.reload(message.tabId); return { ok: true };
     }
     if (message.type === 'CLEAR') {
-      await chrome.storage.local.set({ history: [] });
       await chrome.storage.session.clear(); return { ok: true };
     }
     throw new Error('Unknown command');

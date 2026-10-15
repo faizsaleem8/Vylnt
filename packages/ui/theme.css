@@ -1,0 +1,81 @@
+@font-face {
+  font-family: "VYNLT Plex";
+  src: url("./fonts/plex-sans.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  font: 100%/1.5 "VYNLT Plex", system-ui, sans-serif;
+  font-synthesis: none;
+  color-scheme: light;
+  background: var(--background);
+  color: var(--text);
+  --background: #eef2f6;
+  --surface: #ffffff;
+  --surface-secondary: #e5ebf1;
+  --text: #263142;
+  --muted: #5f6b7c;
+  --accent: #5841c6;
+  --accent-fill: #5841c6;
+  --accent-contrast: #ffffff;
+  --accent-soft: #eeebfc;
+  --rail: #352867;
+  --rail-text: #f6f3ff;
+  --rail-muted: #cdc5ea;
+  --line: #d4dde7;
+  --control-line: #a6b3c3;
+  --positive: #137b78;
+  --positive-soft: #e3f3ef;
+  --warning: #82530b;
+  --warning-soft: #fbf0d8;
+  --negative: #ad354b;
+  --negative-soft: #fcebf0;
+  --inset: var(--surface-secondary);
+  --danger: var(--negative);
+  --danger-soft: var(--negative-soft);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --background: #19232f;
+    --surface: #222e3d;
+    --surface-secondary: #2c394b;
+    --text: #ecf0f6;
+    --muted: #b3bfd0;
+    --accent: #b7a8ff;
+    --accent-fill: #6550ce;
+    --accent-contrast: #19232f;
+    --accent-soft: #373354;
+    --rail: #2c234e;
+    --rail-text: #f6f3ff;
+    --rail-muted: #cdc5ea;
+    --line: #42516a;
+    --control-line: #77879f;
+    --positive: #8fd8c9;
+    --positive-soft: #223f42;
+    --warning: #f1ce8e;
+    --warning-soft: #463b27;
+    --negative: #ffb3c1;
+    --negative-soft: #4b2f3e;
+  }
+}
+::selection { background: var(--accent); color: var(--accent-contrast); }
+/* Extension pages can supply a browser body font; explicitly inherit our type. */
+body { font: inherit; }
+p { max-width: 76ch; }
+button, input, select, textarea { font-family: inherit; }
+button, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+button, summary, input, select, textarea { scroll-margin-block: 6rem; }
+/* A collection state is not a security verdict. Always include its text label. */
+.coverage-cell {
+  display: flex; flex-direction: column; gap: .2rem; min-width: 0;
+  padding: .75rem; border: 1px solid var(--line); border-radius: .25rem;
+  background: var(--surface-secondary); color: var(--muted); font-size: .75rem;
+}
+.coverage-cell strong { font-size: .8125rem; font-weight: 600; }
+.coverage-cell[data-observed="true"] { color: var(--positive); background: var(--positive-soft); border-color: var(--positive); }
+.coverage-cell[data-observed="false"] { border-style: dashed; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

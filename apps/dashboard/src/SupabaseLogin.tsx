@@ -5,7 +5,7 @@ export function SupabaseLogin({ client, onSignedIn }: { client: SupabaseClient; 
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [register, setRegister] = useState(false); const [pending, setPending] = useState(false);
   const [message, setMessage] = useState(''); const [error, setError] = useState('');
-  return <section className="connect-card"><div className="connect-symbol">◇</div><div className="auth-content"><p className="eyebrow">SUPABASE WORKSPACE</p><h2>{register ? 'Create your VYNLT account.' : 'Welcome to your workspace.'}</h2><p className="muted">Sign in to keep your reports together. Your session stays in this tab’s memory and refreshes while the tab is open.</p>
+  return <section className="connect-card"><div className="connect-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Zm-4 9 3 3 5-6" /></svg></div><div className="auth-content"><h2>{register ? 'Create your VYNLT account' : 'Sign in to VYNLT'}</h2><p className="muted">Use the same account as your VYNLT side panel to review automatically saved scans here. Keep the panel open and signed in while scanning.</p>
     {error && <div className="alert error" role="alert">{error}</div>}{message && <div className="alert success" role="status">{message}</div>}
     <form onSubmit={e => { e.preventDefault(); setPending(true); setError(''); setMessage(''); const enteredPassword = password; setPassword(''); void (async () => {
       const result = register

@@ -88,6 +88,8 @@ try {
   });
   await extensionPage.goto('chrome-extension://' + new URL(worker.url()).host + '/report.html');
   await extensionPage.setViewportSize({ width: 360, height: 900 });
+  await extensionPage.locator('#connection').evaluate(d => { d.open = true; });
+  await extensionPage.locator('#api-settings').evaluate(d => { d.open = true; });
   await extensionPage.locator('#api-url').fill(origin);
   await extensionPage.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
   await extensionPage.getByText('Workspace ready. Sign in', { exact: false }).waitFor();
@@ -145,6 +147,8 @@ try {
     await chrome.storage.session.set({ [key]: scan, history: [other, scan.report] });
     return scan.report.scanId;
   });
+  await extensionPage.locator('#connection').evaluate(d => { d.open = true; });
+  await extensionPage.locator('#api-settings').evaluate(d => { d.open = true; });
   await extensionPage.locator('#api-url').fill(origin);
   await extensionPage.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
   await extensionPage.getByText('Workspace ready. Sign in', { exact: false }).waitFor();
@@ -152,7 +156,7 @@ try {
   await extensionPage.getByLabel('Password', { exact: true }).fill('fixture-password');
   await extensionPage.getByRole('button', { name: 'Sign in', exact: true }).click();
   await extensionPage.getByText('Signed in. Preparing the current scan', { exact: false }).waitFor();
-  await extensionPage.getByText('Partial coverage: page DOM was not observed.', { exact: false }).waitFor();
+  await extensionPage.locator('#upload-status').filter({ hasText: 'Partial coverage: page DOM was not observed.' }).waitFor();
   assert.equal(posts, 2);
   const adopted = [...savedScans.values()][0];
   assert.equal(adopted.observation.url, 'https://localhost/adopted');

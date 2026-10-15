@@ -1,15 +1,57 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VYNLT · Side panel</title><link rel="stylesheet" href="styles.css"></head>
-<body class="panel"><header><span class="brand">V<span>Y</span>NLT<span class="brand-dot">◆</span></span><span class="eyebrow">SECURITY WORKSPACE</span><button id="pause">Pause</button></header>
-<main>
-<section class="current-site"><p class="eyebrow">CURRENT PAGE</p><h1 id="site">Open a website</h1><p id="monitor-status" class="muted" role="status"></p><div class="actions"><button id="enable">Enable this site</button><button id="rescan" class="primary">Rescan page</button></div></section>
-<details id="connection" class="sync-panel" open><summary id="connection-title">Account & automatic sync</summary><p class="muted">Sign in to sync the current page’s scan and new scans automatically while this panel is open. Other previous scans are not uploaded. Closing the panel clears your login. Saved history comes from your workspace.</p><label>API base URL<input id="api-url" type="url" value="http://127.0.0.1:4318"></label><button id="load-auth">Load workspace connection</button>
-<div id="supabase-auth" hidden><label>Email address<input id="auth-email" type="email" autocomplete="username"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password"></label><button id="sign-in">Sign in</button><button id="sign-up">Create account</button></div>
-<div id="local-auth" hidden><label>API token<input id="api-token" type="password" autocomplete="off"></label><button id="connect-local">Connect workspace</button></div>
-</details><div class="connection-actions"><button id="sign-out" hidden>Sign out</button><button id="retry" hidden>Retry sync</button><p id="upload-status" class="muted" role="status">Connect to save scans automatically. URL paths and cookie names are included.</p></div>
-<nav class="panel-tabs" aria-label="Workspace"><button id="current" aria-pressed="true">Current scan</button><button id="saved" aria-pressed="false">Saved scans</button></nav>
-<section id="saved-view" hidden><div class="actions"><button id="previous">Previous</button><span id="page-label"></span><button id="next">Next</button><button id="refresh">Refresh</button></div><div id="history"></div></section>
-<div class="actions report-actions"><button id="export" disabled>Export JSON ↓</button><button id="verify" hidden>Verify hash</button><button id="delete" class="danger" hidden>Delete saved scan</button></div>
-<p id="message" class="muted" role="status"></p><article id="detail"></article>
-</main><script src="report.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>VYNLT · Side panel</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="panel">
+  <header class="toolbar">
+    <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.3 3 7.6 7.5 9.5 4.5-1.9 7.5-5.2 7.5-9.5V6L12 3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></svg><span>VYNLT</span></div>
+    <button id="pause" class="quiet">Pause</button>
+  </header>
+  <main>
+    <section class="current-site" aria-labelledby="site">
+      <p class="eyebrow">Current page</p>
+      <h1 id="site">Open a website</h1>
+      <p id="monitor-status" class="muted" role="status"></p>
+      <p id="current-sync-status" class="current-sync-status" role="status" hidden></p>
+      <div class="actions"><button id="enable">Enable this site</button><button id="rescan" class="primary">Rescan page</button></div>
+    </section>
+    <section class="account-section" aria-label="Account and sync">
+      <details id="connection" class="sync-panel">
+        <summary id="connection-title">Account & automatic sync</summary>
+        <div class="account-content">
+          <p class="muted">Sign in to save the current page and new scans automatically. Keep this panel open while syncing.</p>
+          <details id="api-settings" class="advanced-settings"><summary>Connection settings</summary><label>API base URL<input id="api-url" type="url" value="http://127.0.0.1:4318" spellcheck="false"></label></details>
+          <button id="load-auth">Load workspace connection</button>
+          <form id="supabase-auth" hidden>
+            <label>Email address<input id="auth-email" type="email" autocomplete="username" required></label>
+            <label>Password<input id="auth-password" type="password" autocomplete="current-password" required></label>
+            <div class="actions"><button id="sign-in" type="submit" class="primary">Sign in</button><button id="sign-up" type="button">Create account</button></div>
+          </form>
+          <form id="local-auth" hidden><label>API token<input id="api-token" type="password" autocomplete="off" required></label><button id="connect-local" type="submit" class="primary">Connect workspace</button></form>
+          <p class="privacy">Closing the panel clears your login. Older scans are not uploaded. Saved scans stay in your workspace.</p>
+        </div>
+      </details>
+      <div class="connection-actions">
+        <p id="upload-status" class="muted" role="status">Connect to save scans automatically. URL paths and cookie names are included.</p>
+        <div class="account-buttons"><button id="retry" hidden>Retry sync</button><button id="sign-out" class="quiet" hidden>Sign out</button></div>
+      </div>
+    </section>
+    <nav class="panel-tabs" aria-label="Workspace"><button id="current" aria-pressed="true">Current scan</button><button id="saved" aria-pressed="false">Saved scans</button></nav>
+    <section id="saved-view" hidden aria-label="Saved scans">
+      <div class="history-toolbar"><button id="previous">Previous</button><span id="page-label"></span><button id="next">Next</button><button id="refresh">Refresh</button></div>
+      <div id="history"></div>
+    </section>
+    <p id="message" class="message" role="status"></p>
+    <article id="detail"></article>
+    <div class="actions report-actions" aria-label="Report actions"><button id="export" disabled>Export JSON</button><button id="verify" hidden>Verify hash</button><button id="delete" class="danger" hidden>Delete saved scan</button></div>
+    <footer>VYNLT <span>Evidence before conclusions.</span></footer>
+  </main>
+  <script src="report.js"></script>
+</body>
+</html>
 

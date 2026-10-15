@@ -70,6 +70,8 @@ try {
   await reportPage.goto('chrome-extension://' + extensionId + '/report.html');
   assert.equal(await worker.evaluate(async () => (await chrome.sidePanel.getPanelBehavior()).openPanelOnActionClick), true);
   assert.equal(await worker.evaluate(() => chrome.runtime.getManifest().action.default_popup), undefined);
+  await reportPage.locator('#connection').evaluate(d => { d.open = true; });
+  await reportPage.locator('#api-settings').evaluate(d => { d.open = true; });
   await reportPage.locator('#api-url').fill(apiOrigin);
   await reportPage.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
   await reportPage.locator('#api-token').fill(token); await reportPage.getByRole('button', { name: 'Connect workspace', exact: true }).click();
@@ -95,6 +97,8 @@ try {
   await reportPage.getByRole('button', { name: 'Sign out', exact: true }).click();
   const otherPanel = await context.newPage();
   await otherPanel.goto('chrome-extension://' + extensionId + '/report.html');
+  await otherPanel.locator('#connection').evaluate(d => { d.open = true; });
+  await otherPanel.locator('#api-settings').evaluate(d => { d.open = true; });
   await otherPanel.locator('#api-url').fill(apiOrigin);
   await otherPanel.getByRole('button', { name: 'Load workspace connection', exact: true }).click();
   await otherPanel.locator('#api-token').fill(token);

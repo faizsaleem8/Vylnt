@@ -84,4 +84,89 @@ describe('automatic immutable scan syncing', () => {
     await sync.tick([current], 11000); expect(upload).toHaveBeenCalledTimes(1);
     finish(); await pending;
   });
+  it('keeps a permanent failure visible after another scan saves and clears it only after recovery', async () => {
+    const upload = vi.fn().mockRejectedValueOnce(new SyncFailure('Scan metadata rejected.', false)).mockResolvedValue(undefined);
+    const status = vi.fn(); const sync = new ScanSync(0, upload, status);
+    const reports = [report(1000, 'failed-scan'), report(1000, 'saved-scan')];
+    await sync.tick(reports, 1000); await sync.tick(reports, 3000);
+    expect(status).toHaveBeenLastCalledWith(expect.stringContaining('Scan not saved. Scan metadata rejected.'));
+    expect(status).toHaveBeenLastCalledWith(expect.stringContaining('1 saved · 0 pending · 1 failed'));
+    expect(sync.snapshot()).toMatchObject({ saved: 1, pending: 0, failed: 1 });
+    expect(sync.statusFor('failed-scan')).toMatchObject({ state: 'failed', text: 'Scan not saved. Scan metadata rejected.', attempts: 1 });
+    expect(sync.statusFor('saved-scan')).toMatchObject({ state: 'saved', text: 'Scan saved automatically. Available in Saved scans.' });
+
+    sync.retry();
+    expect(sync.snapshot()).toMatchObject({ failed: 1 });
+    await sync.tick(reports, 3001);
+    expect(upload).toHaveBeenCalledTimes(3);
+    expect(upload.mock.calls[0][0]).toEqual(upload.mock.calls[2][0]);
+    expect(sync.snapshot()).toMatchObject({ saved: 2, pending: 0, failed: 0 });
+    expect(status.mock.lastCall?.[0]).not.toContain('rejected');
+  });
+  it('retains an automatic-retry failure while other jobs prepare and save, then removes it on success', async () => {
+    const upload = vi.fn().mockRejectedValueOnce(new Error('Network unavailable.')).mockResolvedValue(undefined);
+    const status = vi.fn(); const sync = new ScanSync(0, upload, status);
+    const first = report(); const second = report(4000, 'two');
+    await sync.tick([first], 1000); await sync.tick([first], 3000);
+    await sync.tick([first, second], 4000);
+    expect(sync.snapshot()).toMatchObject({ saved: 0, pending: 1, failed: 1 });
+    expect(status.mock.lastCall?.[0]).toContain('Network unavailable.');
+    await sync.tick([first, second], 6000);
+    expect(sync.snapshot()).toMatchObject({ saved: 1, pending: 0, failed: 1 });
+    expect(status.mock.lastCall?.[0]).toContain('Network unavailable.');
+    expect(sync.statusFor('two')?.text).not.toContain('Network');
+    await sync.tick([first, second], 7999);
+    expect(upload).toHaveBeenCalledTimes(2);
+    await sync.tick([first, second], 8000);
+    expect(sync.snapshot()).toMatchObject({ saved: 2, pending: 0, failed: 0 });
+    expect(sync.statusFor('one')).toMatchObject({ state: 'saved', attempts: 2 });
+    expect(status.mock.lastCall?.[0]).not.toContain('Network');
+  });
+  it('keeps errors separate by scan and clears all status on an account stop, including late responses', async () => {
+    let rejectPending!: (error: Error) => void;
+    const upload = vi.fn()
+      .mockRejectedValueOnce(new SyncFailure('First scan rejected.', false))
+      .mockImplementationOnce(() => new Promise<void>((_, reject) => { rejectPending = reject; }));
+    const status = vi.fn(); const sync = new ScanSync(0, upload, status);
+    const reports = [report(), report(1000, 'two')];
+    await sync.tick(reports, 1000);
+    const pending = sync.tick(reports, 3000);
+    await vi.waitFor(() => expect(upload).toHaveBeenCalledTimes(2));
+    expect(sync.statusFor('two')).toMatchObject({ state: 'saving', text: 'Saving scan to your workspace…' });
+    sync.stop(); const callbacksAtStop = status.mock.calls.length;
+    expect(sync.snapshot()).toMatchObject({ scans: [], saved: 0, pending: 0, failed: 0 });
+    expect(sync.statusFor('one')).toBeUndefined();
+    rejectPending(new Error('Old account late error.')); await pending;
+    expect(status).toHaveBeenCalledTimes(callbacksAtStop);
+    const newStatus = vi.fn(); const next = new ScanSync(6000, vi.fn().mockResolvedValue(undefined), newStatus);
+    await next.tick(reports, 6000);
+    expect(newStatus).not.toHaveBeenCalled();
+    await next.tick([report(7000, 'new-account')], 7000); await next.tick([report(7000, 'new-account')], 9000);
+    expect(next.snapshot()).toMatchObject({ saved: 1, failed: 0 });
+    expect(newStatus.mock.lastCall?.[0]).not.toMatch(/rejected|Old account/);
+  });
+  it('keeps the queue bounded and its overflow warning visible after successful uploads', async () => {
+    const upload = vi.fn().mockResolvedValue(undefined); const status = vi.fn(); const sync = new ScanSync(0, upload, status);
+    const reports = Array.from({ length: 31 }, (_, index) => report(1000, String(index)));
+    await sync.tick(reports, 1000); await sync.tick(reports, 3000);
+    expect(upload).toHaveBeenCalledTimes(30);
+    expect(sync.snapshot()).toMatchObject({ saved: 30, queueFull: true });
+    expect(sync.snapshot().scans).toHaveLength(30);
+    expect(status.mock.lastCall?.[0]).toContain('Sync queue full.');
+    sync.includeCurrent(report(1000, 'another'), 3001);
+    expect(sync.snapshot().scans).toHaveLength(30);
+    await sync.tick([reports[30]], 4000);
+    expect(sync.snapshot()).toMatchObject({ saved: 0, pending: 1, failed: 0, queueFull: false });
+    expect(status.mock.lastCall?.[0]).not.toContain('queue full');
+  });
+  it('returns detached status metadata keyed by the original scan without exposing reports', async () => {
+    const sync = new ScanSync(5000, vi.fn().mockResolvedValue(undefined), vi.fn()); const current = report();
+    sync.includeCurrent(current, 5000);
+    await sync.tick([current], 7000);
+    expect(sync.statusFor(current.scanId)).toMatchObject({ state: 'saved' });
+    const snapshot = sync.snapshot();
+    expect(snapshot.scans[0]).toEqual({ scanId: current.scanId, state: 'saved', text: 'Scan saved automatically. Available in Saved scans.', attempts: 1 });
+    Object.assign(snapshot.scans[0], { state: 'failed', text: 'modified by consumer' });
+    expect(sync.statusFor(current.scanId)?.state).toBe('saved');
+  });
 });

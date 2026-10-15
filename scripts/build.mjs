@@ -11,6 +11,11 @@ for (const entry of ['background', 'content', 'report']) {
 for (const name of ['manifest.json', 'report.html', 'styles.css']) {
   await copyFile(`apps/extension/${name}`, `dist/extension/${name}`);
 }
+await copyFile('packages/ui/theme.css', 'dist/extension/theme.css');
+await mkdir('dist/extension/fonts', { recursive: true });
+for (const name of ['plex-sans.ttf', 'OFL.txt']) {
+  await copyFile(`packages/ui/fonts/${name}`, `dist/extension/fonts/${name}`);
+}
 console.log('Built unpacked extension: dist/extension');
 for (const entry of ['server', 'cli']) {
   await build({ entryPoints: [`apps/${entry}/index.ts`], bundle: true, outfile: `dist/${entry}/index.js`,

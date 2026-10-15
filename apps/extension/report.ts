@@ -1,4 +1,4 @@
-import type { Report } from '../../packages/core';
+import type { Finding, Report } from '../../packages/core';
 import { element, get, send } from './ui';
 import { createMemoryClient, type SupabaseConfig } from '../../packages/auth/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -22,7 +22,8 @@ let busy = false;
 let stateBusy = false;
 let renderKey = '';
 let releaseConnection: (() => void) | undefined;
-const status = (text: string) => { get('upload-status').textContent = text; };
+const text = (node: HTMLElement, value: string) => { if (node.textContent !== value) node.textContent = value; };
+const status = (value: string) => { text(get('upload-status'), value); renderSyncStatus(); };
 const handle = (work: () => Promise<void>) => { void work().catch(error => { if (error.name !== 'AbortError') get('message').textContent = error.message; }); };
 function apiOrigin() {
   const base = new URL(get<HTMLInputElement>('api-url').value);
@@ -82,7 +83,7 @@ async function connected(token: string) {
   get('supabase-auth').hidden = true; get('local-auth').hidden = true;
   get('sign-out').hidden = false; get('retry').hidden = false; get<HTMLInputElement>('api-url').disabled = true;
   get<HTMLDetailsElement>('connection').open = false;
-  get('connection-title').textContent = 'Account · Connected';
+  get('connection-title').textContent = 'Account / Connected';
   sync = new ScanSync(Date.now(), async report => {
     await api('/scans', { method: 'POST', body: JSON.stringify({ scanId: report.scanId, observation: report.observation }) });
     if (view === 'saved') await loadHistory().catch(() => {});
@@ -138,41 +139,123 @@ async function signIn(register: boolean) {
   if (data.session) await connected(data.session.access_token);
   else status('Check your email to confirm your account, then return here and sign in.');
 }
-get('sign-in').onclick = () => authAction(() => signIn(false));
-get('sign-up').onclick = () => authAction(() => signIn(true));
-get('connect-local').onclick = () => authAction(async () => {
-  if (!authOrigin || authConfig || apiOrigin().origin !== authOrigin) throw new Error('Load the workspace connection first.');
-  accessToken = get<HTMLInputElement>('api-token').value.trim(); get<HTMLInputElement>('api-token').value = '';
-  try { await connected(accessToken); } catch (error) { resetConnection(); throw error; }
-});
+get<HTMLFormElement>('supabase-auth').onsubmit = event => {
+  event.preventDefault();
+  authAction(() => signIn(false));
+};
+get('sign-up').onclick = () => {
+  if (get<HTMLFormElement>('supabase-auth').reportValidity()) authAction(() => signIn(true));
+};
+get<HTMLFormElement>('local-auth').onsubmit = event => {
+  event.preventDefault();
+  authAction(async () => {
+    if (!authOrigin || authConfig || apiOrigin().origin !== authOrigin) throw new Error('Load the workspace connection first.');
+    accessToken = get<HTMLInputElement>('api-token').value.trim(); get<HTMLInputElement>('api-token').value = '';
+    try { await connected(accessToken); } catch (error) { resetConnection(); throw error; }
+  });
+};
 get('sign-out').onclick = () => authAction(async () => {
   resetConnection();
   try { const result = await authClient?.auth.signOut({ scope: 'local' }); if (result?.error) throw result.error; status('Signed out. Automatic sync stopped.'); }
   finally { await authClient?.auth.dispose(); authClient = undefined; }
 });
-get('retry').onclick = () => { sync?.retry(); status('Retry requested. Keep the panel open.'); handle(refreshState); };
+get('retry').onclick = () => { sync?.retry(); handle(refreshState); };
 
+interface FindingNodes {
+  card: HTMLDetailsElement; severity: HTMLElement; title: HTMLElement; rule: HTMLElement;
+  description: HTMLElement; context: HTMLElement; evidence: HTMLElement; recommendation: HTMLElement;
+}
+interface ReportNodes {
+  identity: string; score: HTMLElement; title: HTMLElement; metadata: HTMLElement;
+  coverage: HTMLElement[]; heading: HTMLElement; list: HTMLElement; empty: HTMLElement;
+  findings: Map<string, FindingNodes>;
+}
+let renderedReport: ReportNodes | undefined;
+
+function createFinding(): FindingNodes {
+  const card = element('details', '', 'finding-card');
+  const summary = element('summary');
+  const severity = element('span', '', 'badge'), title = element('strong'), rule = element('span', '', 'rule-id');
+  const disclosure = element('span', '', 'finding-disclosure'); disclosure.setAttribute('aria-hidden', 'true');
+  summary.append(severity, title, rule, disclosure);
+  const description = element('p'), context = element('p', '', 'muted'), evidence = element('pre'), recommendation = element('p');
+  const body = element('div', '', 'finding-body');
+  body.append(description, context, element('h3', 'Observed evidence'), evidence, element('h3', 'Recommended action'), recommendation);
+  card.append(summary, body);
+  return { card, severity, title, rule, description, context, evidence, recommendation };
+}
+function updateFinding(nodes: FindingNodes, finding: Finding) {
+  nodes.card.dataset.findingId = finding.id;
+  nodes.severity.className = 'badge ' + finding.severity;
+  text(nodes.severity, finding.severity); text(nodes.title, finding.title); text(nodes.rule, finding.ruleId);
+  text(nodes.description, finding.description); text(nodes.context, finding.confidence + ' confidence / ' + finding.url);
+  text(nodes.evidence, JSON.stringify(finding.evidence, null, 2)); text(nodes.recommendation, finding.recommendation);
+}
+function createReportNodes(identity: string): ReportNodes {
+  const header = element('section', '', 'report-summary');
+  const score = element('span', '', 'score'), scoreBlock = element('div', '', 'score-block');
+  scoreBlock.append(score, element('p', 'Configuration score, out of 100', 'muted'));
+  const title = element('h2'), metadata = element('p', '', 'muted'), titleBlock = element('div', '', 'report-title');
+  titleBlock.append(title, metadata); header.append(scoreBlock, titleBlock);
+  const coverageBar = element('div', '', 'coverage-bar'), coverage = [element('span'), element('span'), element('span')];
+  coverage.forEach((cell, index) => { cell.className = 'coverage-cell'; cell.append(element('strong', ['Headers', 'DOM', 'Cookies'][index]), element('span')); });
+  coverageBar.append(...coverage);
+  const heading = element('h2', '', 'section-title'); heading.tabIndex = -1;
+  const list = element('div', '', 'findings-list');
+  const empty = element('p', 'No findings from observed checks. Review coverage before interpreting this result.', 'empty');
+  get('detail').replaceChildren(header, coverageBar, element('p', 'Configuration checks are not proof of exploitability. Collection is bounded; missing permissions can limit coverage.', 'muted note'), heading, list, empty);
+  return { identity, score, title, metadata, coverage, heading, list, empty, findings: new Map() };
+}
+function renderSyncStatus() {
+  const node = get('current-sync-status');
+  node.hidden = !sync;
+  const scanStatus = currentScan && sync?.statusFor(currentScan.scanId);
+  node.dataset.state = scanStatus?.state ?? (sync ? 'idle' : 'disconnected');
+  text(node, scanStatus ? 'Current scan / ' + scanStatus.text : !sync ? 'Sign in to save this scan automatically.' : currentScan ? 'Current scan is not queued. Rescan to save a new report.' : 'No current scan to save yet.');
+}
 function show(report?: Report) {
   selected = report;
   get<HTMLButtonElement>('export').disabled = !report;
   get('verify').hidden = view !== 'saved' || !report;
   get('delete').hidden = view !== 'saved' || !report;
-  if (!report) { get('detail').replaceChildren(element('p', view === 'saved' ? 'Select a saved scan to inspect it.' : 'Open an allowed website and select Rescan page.', 'empty')); return; }
+  if (!report) {
+    renderedReport = undefined;
+    get('detail').replaceChildren(element('p', view === 'saved' ? 'Select a saved scan to inspect it.' : 'Open an allowed website and select Rescan page.', 'empty'));
+    return;
+  }
+  const identity = view + ':' + report.scanId;
+  const sameScan = renderedReport?.identity === identity;
+  const scrollPosition = { x: window.scrollX, y: window.scrollY };
+  const focused = sameScan && document.activeElement instanceof HTMLElement && get('detail').contains(document.activeElement) ? document.activeElement : undefined;
+  const visibleCard = sameScan ? [...get('detail').querySelectorAll<HTMLElement>('.finding-card')].find(card => {
+    const bounds = card.getBoundingClientRect(); return bounds.bottom > 0 && bounds.top < window.innerHeight;
+  }) : undefined;
+  const readingAnchor = focused ?? visibleCard;
+  const anchorTop = readingAnchor?.getBoundingClientRect().top;
+  const nodes = sameScan ? renderedReport! : (renderedReport = createReportNodes(identity));
   const o = report.observation;
-  const header = element('section', '', 'report-summary');
-  const score = element('div', '', 'score-block'); score.append(element('span', String(report.score), 'score'), element('p', 'Configuration score / 100', 'muted'));
-  const title = element('div'); title.append(element('h2', o.url), element('p', new Date(o.scannedAt).toLocaleString() + ' · Ruleset ' + report.rulesetVersion, 'muted'));
-  header.append(score, title);
-  const coverage = element('div', '', 'coverage-bar');
-  coverage.append(element('span', 'Headers: ' + (o.headers ? 'observed' : 'not observed')), element('span', 'DOM: ' + (o.domCollected ? 'observed' : 'not observed')), element('span', 'Cookies: ' + (o.cookies ? 'observed' : 'not observed')));
-  const cards = report.findings.map(f => {
-    const card = element('details', '', 'finding-card');
-    const summary = element('summary'); summary.append(element('span', f.severity, 'badge ' + f.severity), element('strong', f.title), element('span', f.ruleId, 'rule-id'));
-    const body = element('div', '', 'finding-body'); body.append(element('p', f.description), element('p', f.confidence + ' confidence · ' + f.url, 'muted'), element('h3', 'Observed evidence'), element('pre', JSON.stringify(f.evidence, null, 2)), element('h3', 'Recommended action'), element('p', f.recommendation));
-    card.append(summary, body); return card;
+  text(nodes.score, String(report.score)); text(nodes.title, o.url);
+  text(nodes.metadata, new Date(o.scannedAt).toLocaleString() + ' / Ruleset ' + report.rulesetVersion);
+  [o.headers !== undefined, o.domCollected, o.cookies !== undefined].forEach((observed, index) => {
+    nodes.coverage[index].dataset.observed = String(Boolean(observed));
+    text(nodes.coverage[index].lastElementChild as HTMLElement, observed ? 'Observed' : 'Not observed');
   });
-  get('detail').replaceChildren(header, coverage, element('p', 'Configuration checks are not proof of exploitability. Collection is bounded; missing permissions can limit coverage.', 'muted note'), element('h2', report.findings.length + ' findings', 'section-title'), ...cards);
-  if (!cards.length) get('detail').append(element('p', 'No findings from observed checks. Review coverage before interpreting this result.', 'empty'));
+  text(nodes.heading, report.findings.length + ' findings'); nodes.empty.hidden = report.findings.length > 0;
+  const remaining = new Set(report.findings.map(finding => finding.id));
+  for (const [id, findingNodes] of nodes.findings) {
+    if (!remaining.has(id)) { findingNodes.card.remove(); nodes.findings.delete(id); }
+  }
+  report.findings.forEach((finding, index) => {
+    const findingNodes = nodes.findings.get(finding.id) ?? createFinding();
+    nodes.findings.set(finding.id, findingNodes); updateFinding(findingNodes, finding);
+    // Keep unchanged nodes in place so open disclosures and keyboard focus survive collection updates.
+    if (nodes.list.children[index] !== findingNodes.card) nodes.list.insertBefore(findingNodes.card, nodes.list.children[index] ?? null);
+  });
+  if (sameScan) {
+    if (focused && document.activeElement !== focused) (focused.isConnected ? focused : nodes.heading).focus({ preventScroll: true });
+    const scrollTop = readingAnchor?.isConnected && anchorTop !== undefined ? window.scrollY + readingAnchor.getBoundingClientRect().top - anchorTop : scrollPosition.y;
+    window.scrollTo({ left: scrollPosition.x, top: scrollTop, behavior: 'instant' });
+  }
 }
 function setView() {
   get('saved-view').hidden = view !== 'saved';
@@ -184,11 +267,11 @@ async function loadHistory() {
   const version = ++listVersion; const session = epoch;
   const data = await api<ScanList>('/scans?page=' + page + '&limit=10');
   if (version !== listVersion || session !== epoch || view !== 'saved') return;
-  get('page-label').textContent = 'Page ' + page + ' · ' + data.total + ' scans';
+  get('page-label').textContent = 'Page ' + page + ' / ' + data.total + ' scans';
   get<HTMLButtonElement>('previous').disabled = page <= 1; get<HTMLButtonElement>('next').disabled = page * 10 >= data.total;
   get('history').replaceChildren(...data.scans.map(row => {
     const button = element('button', '', 'history-item');
-    button.append(element('strong', row.url), element('span', new Date(row.scannedAt).toLocaleString(), 'muted'), element('span', row.findingCount + ' findings · ' + row.score + '/100', 'history-meta'));
+    button.append(element('strong', row.url), element('span', new Date(row.scannedAt).toLocaleString(), 'muted'), element('span', row.findingCount + ' findings / ' + row.score + '/100', 'history-meta'));
     button.onclick = () => handle(async () => {
       const version = ++selectionVersion;
       const result = await api<{ report: Report }>('/scans/' + row.scanId);
@@ -240,6 +323,7 @@ async function refreshState() {
     get('monitor-status').textContent = !url ? unavailable : paused ? 'Monitoring paused. Select Resume to scan.' : !permitted ? 'Enable this site to start scanning.' : 'Monitoring active. Rescan reloads this page.';
     const fingerprint = JSON.stringify(currentScan) ?? '';
     if (view === 'current' && fingerprint !== renderKey) { renderKey = fingerprint; show(currentScan); }
+    renderSyncStatus();
     sync?.setPaused(paused);
     // Keep page controls responsive while a network request is pending.
     const currentSync = sync;

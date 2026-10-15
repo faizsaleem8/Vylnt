@@ -26,16 +26,19 @@ npm.cmd run lab
 1. Open `chrome://extensions`, enable **Developer mode**, select **Load unpacked**, and choose this project's `dist/extension` directory.
 2. Visit `http://127.0.0.1:5174/insecure`.
 3. Click VYNLT's toolbar icon to open its side panel alongside the website.
-4. Under **Account & automatic sync**, select **Load workspace connection**, then **Sign in** (or **Create account**, confirm your email and return here). Local development mode instead asks for its API token.
+4. Expand **Account & automatic sync**, select **Load workspace connection**, then **Sign in** (or **Create account**, confirm your email and return here). Pressing Enter also submits sign-in. Local development mode instead asks for its API token. The default API address is localhost; expand **Connection settings** only when you need to change it.
 5. Select **Rescan page**. This reloads the current page to observe response headers. Inspect evidence and remediation under **Current scan**; select **Export JSON** to download it.
 6. Sign-in checks authenticated API/database access, then automatically syncs the current page's existing scan and new scans while the panel stays open. **Saved scans** retrieves paginated history from the API/Supabase; select a scan to inspect, export, verify its hash or delete it. No manual send button or separate dashboard login is needed.
 7. Compare `/secure`, then use `/dynamic` to exercise DOM updates. Rescan to save later changes as a new immutable report.
 
 After source edits, run `npm.cmd run build`, reload the extension in Chrome, and reload the test page. Other domains require **Enable this site** in the side panel. Chrome host permission patterns apply across ports on that host. Pause stops collection and new sync attempts; an already submitted request can finish. Resume and rescan to capture a complete new navigation.
 
+The side panel and optional dashboard share an inspection-workspace design: violet navigation, locally bundled IBM Plex Sans, cool neutral evidence surfaces and a collection coverage matrix. Coverage says what was collected, not whether a site is secure. Both surfaces follow system light/dark appearance and provide scalable text, reduced-motion and increased-contrast treatments with opaque toolbars. Live scan updates preserve expanded findings and keyboard focus. The current-page status identifies that scan's save outcome; account feedback retains unresolved failures even when another scan saves. Counts describe the open panel's bounded sync queue, not the workspace's full history. The requested frontend-design skill, design plan, implementation and acceptance limits are recorded in [docs/FRONTEND_DESIGN.md](docs/FRONTEND_DESIGN.md). Earlier audits remain historical evidence.
+
 ## Structure
 
 - `packages/core`: shared contracts, eight pure configuration rules, scoring, and metadata sanitizers.
+- `packages/ui`: shared theme and locally bundled IBM Plex Sans with its SIL Open Font License.
 - `apps/extension`: background collector, bounded DOM observer, side-panel workspace and automatic sync.
 - `apps/server`: Express API, local persistence, Supabase adapter and authentication.
 - `apps/dashboard`: React + Vite dashboard and print stylesheet.
@@ -82,9 +85,12 @@ npm.cmd run setup:browser
 npm.cmd run lab:tls
 npm.cmd run test:browser
 npm.cmd run test:auth-browser
+node scripts/ui-audit.mjs
 ```
 
 The TLS setup needs OpenSSL (included with Git for Windows) and generates a self-signed localhost certificate in `.local/tls`; it does not change the system trust store. The suite starts and stops isolated test servers and headless Chromium profiles. Close an existing lab on ports 5174/5443 before running it. Screenshots and CLI reports go in ignored `test-results/`.
+
+Run the UI regression script after a build and `test:browser` (it uses that suite's controlled report fixture). It checks disclosure/focus retention, Enter-to-sign-in, filter recovery, stable refresh layout, minimum control heights, actual font loading, all/partial collection coverage, empty states, print evidence visibility, light/dark appearance, preference fallbacks and layout at 200% root text. It uses an isolated API and mocked Auth, with screenshots and measurements in `test-results/frontend-design/`. These checks do not replace installed-Chrome, screen-reader or physical-device acceptance.
 
 For interactive HTTPS fixtures, run `npm run lab` after TLS setup and visit `https://127.0.0.1:5443/insecure`. The self-signed certificate requires a browser exception for this local fixture. The automated test context ignores certificate errors only for the controlled test run.
 

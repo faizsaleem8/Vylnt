@@ -1,10 +1,10 @@
 # VYNLT implementation plan
 
-Last updated: 2026-10-15 (Asia/Calcutta)
+Last updated: 2026-10-16 (Asia/Calcutta)
 
 ## Current milestone
 
-Extension-first workspace implemented: Chrome side panel, automatic authenticated sync, Express API, optional legacy React dashboard, and Playwright scanner. Local integration and mocked Auth checks pass; real authenticated Supabase persistence/RLS remains pending user sign-in.
+Extension-first inspection workspace redesigned using the user-requested Anthropic frontend-design skill: a shared violet/slate theme, locally bundled IBM Plex Sans, real collection coverage and consistent report/account/history/settings screens. Stable scan reading, keyboard sign-in and explicit sync outcomes remain. All 50 unit tests, both browser suites and the expanded UI regression suite pass. The final typography/layout refinements passed TypeScript, production build and the full UI rerun. Real authenticated Supabase persistence/RLS remains pending user sign-in.
 
 ## Milestones and remaining work
 
@@ -30,6 +30,9 @@ Extension-first workspace implemented: Chrome side panel, automatic authenticate
   - [x] Connected overview, sites, scan/finding details, paginated history, settings and deletion.
   - [x] Same-URL comparison within loaded history page, review feedback, JSON import/export and responsive layout.
   - [x] Browser print/PDF layout and print action (dedicated server PDF generation remains open).
+  - [x] First Apple design increment across side panel/dashboard; responsive themes, larger controls, stable interaction feedback and controlled browser validation.
+  - [x] Full frontend-design visual pass across existing extension/dashboard screens; shared local typography, coverage matrix, themes and evidence hierarchy.
+  - [ ] Installed-Chrome, physical-touch, screen-reader and full contrast/zoom acceptance for the updated UI; measure font/loading performance on slow devices.
   - [ ] Cross-page comparison selection, history charts and dedicated PDF generator with pagination QA.
 - [ ] M4 — Automated scanner and GitHub Actions
   - [x] Playwright CLI using shared rules, JSON artifacts, confidence/severity gate and documented exit codes.
@@ -49,6 +52,7 @@ Extension-first workspace implemented: Chrome side panel, automatic authenticate
 
 - Follow the roadmap's dependency order. Complete a runnable local scanner before introducing hosted services or experimental modules.
 - The extension side panel is the primary workspace: scan controls, findings, account access, cloud history and downloads. The existing web dashboard is optional legacy functionality, not required for extension use.
+- Use the user's newly requested Anthropic `frontend-design` skill for the full visual redesign. `docs/FRONTEND_DESIGN.md` records the design plan, critique and implementation checks. Earlier Apple/interaction audits remain historical evidence; preserve their tested interaction improvements.
 - Sign-in validates authenticated workspace access, includes the active page's current scan, and enables automatic syncing for new scans while the panel remains open. Other pre-login history stays excluded. Credentials and bounded pending uploads remain in memory; no persistent local extension report archive. Saved reports remain immutable; rescan to capture later changes.
 - Local file storage makes development usable without external accounts; Supabase is an alternate adapter requiring real-project validation.
 - Reports are immutable once submitted; review decisions are stored separately and never rewrite historical findings or scores.
@@ -56,6 +60,40 @@ Extension-first workspace implemented: Chrome side panel, automatic authenticate
 - Library advisory matching and DOM data-flow analysis need trustworthy evidence and remain deferred.
 
 ## Change log and validation
+
+### 2026-10-16 — Frontend design workspace
+- Read and applied the user's linked Anthropic frontend-design skill. Documented palette, typography, alternative layouts, selected coverage matrix and pre-implementation critique in `docs/FRONTEND_DESIGN.md`. This supersedes the Apple visual direction; earlier audits remain historical and their interaction fixes remain protected.
+- Added shared theme tokens and locally bundled IBM Plex Sans (537 KB, SIL OFL). Extension and dashboard builds include the font and license; no runtime font requests to external services, new package dependencies or new permissions. Updated the browser theme color.
+- Redesigned side-panel controls/account/history/report/evidence and all existing dashboard screens: authentication/registration, summary, websites, history, reports/filters/comparison/review, integrity, settings/delete and empty/error states. Introduced real coverage cells and an overview table for up to five sites' latest scans, with total/display counts and explicit collection-not-security wording. Scores remain labeled heuristics. Shared detection, backend storage and auth/sync semantics remain unchanged.
+- Removed generic overview guidance, decorative all-caps metadata and repeated card shadows. Preserved system dark mode, 44px controls, focus/disclosure/reading-position retention and stable status space. Visual critique led to one onboarding explanation, responsive summary dividers, clearer per-screen descriptions and wrapping panel toolbar controls at enlarged text.
+- Validation: `npm run check` passed TypeScript, all 50 unit tests and production builds after an approved rerun for Windows sandbox temp-file rename restrictions. Both `test:browser` and `test:auth-browser` passed with isolated fixtures/mocked Auth, covering scanning/privacy/permissions, automatic upload, saved scans, import/export, feedback/comparison/delete and session handling. Final copy/layout refinements also passed TypeScript and build.
+- Extended `scripts/ui-audit.mjs` with bundled-font loading, all/partial coverage, empty states, print evidence visibility and expanded screenshots. The first run caught the extension's browser-default body font; fixed explicit inheritance and reran successfully. Existing regression results: refresh displacement 0px, same finding node/open/focus/reading position, filter recovery, Enter one request/click one additional request, light/dark, motion/contrast/transparency, >=44px controls and no horizontal overflow at 380px/390px including 200% root text. Final toolbar/grid/copy rerun passed, including the explicit enlarged-text toolbar overlap assertion. Test browsers and fixture servers closed cleanly.
+- Updated README, the new design document and historical audit notices. Evidence is under `test-results/frontend-design/`; older evidence is retained. Native Chrome lifecycle, physical touch, assistive technology, exhaustive contrast/zoom, slow-device performance and paginated PDF acceptance remain open. Live Supabase persistence/two-user RLS remains unverified; these visual changes do not establish a fix for the user's cloud-saving issue.
+- Next steps: reload `dist/extension` in Chrome and refresh the optional dashboard; perform installed-Chrome acceptance, then verify authenticated Supabase saving and owner isolation before production hardening and the roadmap's later comparison/PDF/ML/blockchain work.
+
+### 2026-10-15 — Apple design implementation
+- Rebuilt side-panel and dashboard styling around system typography and relative spacing, a neutral light/system-dark palette, blue accents, coherent shield/navigation icons, grouped surfaces and controls at least 44px high at the default text size. Added functional sticky translucent toolbars with opaque preference/unsupported-blur fallbacks, static reduced-motion feedback and increased-contrast tokens. No new dependencies or site permissions.
+- Simplified the panel: account access stays expandable, technical API settings sit one level deeper, current/saved scans use a segmented control, and report actions remain within the extension. Updated dashboard onboarding/retention guidance to explain automatic side-panel saving; import is secondary.
+- Preserved keyed finding nodes, expanded state, keyboard focus and visible reading position during same-scan updates. Different reports reset disclosure state. Added native Enter submission for both sign-in forms, field validation for account creation, per-current-scan save status, persistent failure feedback and bounded-queue counts. Retry recovery clears only the recovered job's error; no credentials or scan archive were added to persistent browser storage.
+- Fixed dashboard refresh displacement (29px before, 0px after), added a filtered-empty explanation/Clear filter action, and added semantic current navigation plus heading focus on deliberate navigation. Existing reports, feedback, comparisons, export, deletion and print styling are retained.
+- Validation: `npm run check` passed TypeScript, all 50 tests in six suites and builds. Five new sync tests cover mixed results, retry recovery, account stop, queue capacity and detached status snapshots. Windows sandbox blocked Vitest temporary-file renames; the approved rerun passed. Both `npm run test:browser` and `npm run test:auth-browser` passed with isolated data and mocked Supabase Auth.
+- `node scripts/ui-audit.mjs` now asserts the audited behavior and writes fresh evidence to `test-results/apple-design/`, leaving baseline audit evidence in `test-results/ui-audit/`. Passed: same-node/open/focus retention, reading position when a finding is inserted, reset on a different scan, one request for Enter and one additional request for a click, filter recovery, stable refresh, system fonts, light/dark changes, reduced-motion static press, solid toolbar under contrast/transparency preferences, controls >=44px and no horizontal overflow at panel 380px/dashboard 390px including 200% root text. Desktop 1440px screenshots also reviewed.
+- The first enlarged-text run exposed a 6px panel overflow; wrapped the score group and stacked finding metadata using a container query. Rebuilt and reran the affected UI suite successfully. Visually reviewed light/dark desktop/panel, mobile, account and enlarged-text screenshots. A selector matching both empty-state heading and explanation was corrected in the harness. Final build is in `dist/extension` and `dist/dashboard`; temporary test browsers/servers were closed.
+- Updated README and both audits with implementation status, validation evidence and remaining work. Native installed-Chrome behavior, physical touch, screen-reader output, complete contrast/zoom coverage, print pagination and performance under load remain unverified. Actual hosted Supabase writes/RLS are still unverified; these UI changes do not establish the cause or resolution of the user's live saving issue.
+
+### 2026-10-15 — Corrected skill selection to apple-design
+- User clarified that `apple-design` from the same repository was intended. Installed it successfully at `C:/Users/yaqoo/.codex/skills/apple-design`; it is available automatically next turn. Read the installed skill and verified its file hash. The earlier skill remains installed.
+- Added `docs/APPLE_DESIGN_AUDIT.md` as the preferred design audit, with eight findings covering relative/system typography, common-path hierarchy, pressed feedback, continuity/status, adaptive appearance, functional materials, consistent navigation/disclosure cues and touch hit areas. Marked the earlier audit as supporting evidence and retained its confirmed interaction bugs.
+- Validation: read relevant application sources, re-inspected existing extension/desktop screenshots and reused prior browser measurements against unchanged application code. No application styling/behavior changed and no new browser/test run was needed for this documentation-only correction. Recommendations are not marked implemented.
+- Remaining: prototype the primary side-panel design against the requested skill, implement prioritized UI/interaction changes, then validate keyboard, larger text/zoom, light/dark/contrast preferences and any introduced motion/transparency. Native Chrome, physical-touch/assistive-technology checks, motion performance and live authenticated Supabase acceptance remain open.
+
+### 2026-10-15 — Emil design-engineering skill and UI audit
+- Installed the repository's main `emil-design-eng` skill into `C:/Users/yaqoo/.codex/skills/emil-design-eng` using the skill-installer helper; it is available automatically on the next turn. Read and applied it to both the primary extension side panel and optional web dashboard.
+- Added `docs/UI_AUDIT.md` with nine prioritized findings in the skill's Before/After/Why format, source references, evidence, existing strengths and acceptance criteria. No application behavior or styling changed; all proposed fixes remain open.
+- Added and successfully ran `scripts/ui-audit.mjs` with isolated synthetic API/scan fixtures and mocked Auth. Confirmed live panel updates close an expanded finding and move focus to BODY; Enter sends zero login requests while clicking sends one; dashboard refresh shifts the metric grid 29px; a severity filter with no matches renders neither findings nor an empty-state message. A separate controlled queue simulation confirmed that a later successful scan can replace an earlier failure's status.
+- Visually reviewed three screenshots and checked horizontal overflow at 1440px/390px dashboard widths and 380px panel width; none observed in those fixtures. Source review also found stale manual-import/retention guidance, missing panel disclosure indicators, missing custom pressed feedback and dashboard navigation semantics/focus improvements. Findings distinguish explicit skill guidance from applied UX recommendations.
+- Evidence is generated under ignored `test-results/ui-audit/`; the script requires built assets and the controlled insecure-report fixture from `npm run test:browser`. Audit contexts/server were closed. Application regression suites were not rerun for the audit-only additions; earlier results remain recorded below.
+- Remaining: implement the audit priorities, then repeat the affected interaction checks. Native installed-Chrome acceptance, screen-reader/physical-touch checks, full contrast/zoom review, performance measurements and authenticated live Supabase persistence/RLS remain unverified. Current UI has no animations; missing animation or reduced-motion overrides was not treated as a defect by itself.
 
 ### 2026-10-15 — Signed in but scans are not saved
 - User reports sign-in succeeds but no scans appear. Read-only health check confirms the local API is running in Supabase mode; the user's authenticated database request has not been observed.
@@ -125,9 +163,10 @@ Extension-first workspace implemented: Chrome side panel, automatic authenticate
 
 ## Next implementation steps
 
-1. Run the API, reload the unpacked extension, open its side panel and sign in (or create/confirm an account there). Rescan and verify persistence in Saved scans; repeat with a second account to verify real RLS isolation. Keep a valid Supabase email confirmation return URL; never send passwords/tokens in chat.
-2. Complete installed-Chrome side-panel open/close and permission acceptance, browser-restart checks and observer/storage overhead benchmarks on dynamic pages.
-3. Create/connect the GitHub repository and run the added CI workflow; add explicit accepted-risk policies and branch protection configuration.
-4. Build M5's Solidity/local-EVM anchor and verify flow on the existing immutable report/hash contract.
-5. Extend the side panel with review feedback, cross-scan comparisons, trend charts and a dedicated PDF renderer; these advanced features are not all ported from the optional web dashboard.
-6. Define/collect labeled examples before implementing or evaluating the baseline classifier and LSTM. Do not claim measured ML improvements without held-out data.
+1. Accept the implemented Apple design in installed Chrome: reload `dist/extension`, inspect light/dark appearance, account setup, expanded evidence, keyboard controls and save status. Complete physical-touch/screen-reader, browser text/zoom and full contrast checks; measure toolbar blur under load. The controlled browser regressions for the original interaction findings now pass.
+2. Run the API, reload the unpacked extension, open its side panel and sign in (or create/confirm an account there). Rescan and verify persistence in Saved scans; repeat with a second account to verify real RLS isolation. Keep a valid Supabase email confirmation return URL; never send passwords/tokens in chat. The audit does not establish the cause of the user's live saving issue.
+3. Complete installed-Chrome side-panel open/close and permission acceptance, browser-restart checks and observer/storage overhead benchmarks on dynamic pages.
+4. Create/connect the GitHub repository and run the added CI workflow; add explicit accepted-risk policies and branch protection configuration.
+5. Build M5's Solidity/local-EVM anchor and verify flow on the existing immutable report/hash contract.
+6. Extend the side panel with review feedback, cross-scan comparisons, trend charts and a dedicated PDF renderer; these advanced features are not all ported from the optional web dashboard.
+7. Define/collect labeled examples before implementing or evaluating the baseline classifier and LSTM. Do not claim measured ML improvements without held-out data.

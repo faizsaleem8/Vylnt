@@ -5,9 +5,11 @@
     "moduleResolution": "Bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
     "noEmit": true,
     "types": ["chrome", "node"],
     "skipLibCheck": true
   },
-  "include": ["packages/**/*.ts", "apps/**/*.ts", "tests/**/*.ts"]
+  "include": ["packages/**/*.ts", "apps/**/*.ts", "apps/**/*.tsx", "tests/**/*.ts"]
 }

@@ -1,10 +1,10 @@
 # VYNLT implementation plan
 
-Last updated: 2026-10-14 (Asia/Calcutta)
+Last updated: 2026-10-15 (Asia/Calcutta)
 
 ## Current milestone
 
-M1: locally installable Chrome extension with reusable rules, private local history, report export, and controlled fixtures. Source implementation and automated checks complete; real-browser acceptance remains open.
+Local connected application implemented and verified: Chromium extension, authenticated Express API, React dashboard, and Playwright scanner. The remaining milestones below distinguish working local behavior from hosted/deployment and research work.
 
 ## Milestones and remaining work
 
@@ -12,36 +12,63 @@ M1: locally installable Chrome extension with reusable rules, private local hist
   - [x] Review supplied roadmap and establish project conventions.
   - [x] TypeScript project, shared observation/finding contracts, build and test scripts (checks pass).
   - [x] Header, cookie, mixed-resource, and script-integrity rules; deterministic scoring and deduplication.
-  - [x] Manifest V3 collection, navigation association, permission requests, pause/resume, rescan (browser acceptance pending).
+  - [x] Manifest V3 collection, navigation association, pause/resume, rescan and SPA path snapshots.
   - [x] Popup, local history, detailed evidence/remediation, JSON export.
-  - [x] Controlled localhost HTTP labs, setup guide, automated rule/privacy test source.
-  - [ ] Manual Chrome acceptance checks including restart, navigation, permissions and pause.
+  - [x] Controlled localhost HTTP/HTTPS labs and automated rule/privacy tests.
+  - [x] Real Chromium checks: TLS findings, refresh, two tabs, pause/resume, SPA, worker restart, report tab and explicit upload.
+  - [ ] Manual installed-Chrome checks: popup workflow, optional permission grant/revocation, browser restart and cache edge cases.
 - [ ] M2 — Express API and Supabase PostgreSQL
-  - [ ] Authentication, schema migrations and owner-isolated storage.
-  - [ ] Validated scan ingestion, list/detail APIs and domain summaries.
-  - [ ] Extension upload with consent, retry handling and API integration tests.
+  - [x] Authenticated local API, durable local store and owner-isolation tests.
+  - [x] Supabase Auth adapter, PostgreSQL migration, RLS policies and atomic ingestion RPC source.
+  - [x] Validated scan ingestion, list/detail APIs and domain summaries.
+  - [x] Extension upload with explicit action, one retry, idempotent submissions and integration tests.
+  - [ ] Apply migration to an actual Supabase project; verify two-user RLS, persistence and RPC behavior there.
+  - [ ] Dedicated Supabase login/token refresh UI, production rate limiting and database pagination/aggregates beyond 1,000 scans.
 - [ ] M3 — React dashboard and reports
-  - [ ] Overview, sites, scan/finding details, history, settings.
-  - [ ] Comparison, feedback (fixed/accepted risk/false positive), PDF export.
+  - [x] Connected overview, sites, scan/finding details, paginated history, settings and deletion.
+  - [x] Same-URL comparison within loaded history page, review feedback, JSON import/export and responsive layout.
+  - [x] Browser print/PDF layout and print action (dedicated server PDF generation remains open).
+  - [ ] Cross-page comparison selection, history charts and dedicated PDF generator with pagination QA.
 - [ ] M4 — Automated scanner and GitHub Actions
-  - [ ] Playwright CLI using shared rules, JSON artifacts, confidence/severity gate.
-  - [ ] Secure/insecure app regression checks and CI workflow.
+  - [x] Playwright CLI using shared rules, JSON artifacts, confidence/severity gate and documented exit codes.
+  - [x] Real secure/insecure fixture regression: secure passes, insecure fails; CLI/extension rule IDs agree.
+  - [x] GitHub Actions workflow with test artifacts, minimum permissions and Node setup.
+  - [ ] Run workflow in a GitHub repository; configure required checks/branch protection and documented risk exceptions.
 - [ ] M5 — Tamper-evident reports
-  - [ ] Canonical report serialization, SHA-256, Solidity contract and local EVM.
-  - [ ] Anchor/verify APIs and UI; unchanged/tampered demonstration.
+  - [x] Canonical JSON and SHA-256 consistency check with API/UI and tamper unit tests.
+  - [ ] Solidity contract, local EVM deployment and transaction metadata.
+  - [ ] Blockchain anchor/verify APIs and UI; unchanged/tampered on-chain demonstration.
 - [ ] M6 — Experimental ML
   - [ ] Labeled dataset, source/sink feature collection, site-separated splits.
   - [ ] Baseline classifier, LSTM comparison, held-out metrics, inference service.
-- [ ] Ongoing — TLS browser fixtures, browser performance measurements, privacy regression tests, release hardening.
+- [ ] Ongoing — Browser performance measurements, extended privacy/regression coverage, production hardening and literature/report alignment.
 
 ## Decisions
 
 - Follow the roadmap's dependency order. Complete a runnable local scanner before introducing hosted services or experimental modules.
-- Local reports are the first UI; the planned React dashboard remains a separate milestone.
+- Local extension reports and the connected React dashboard coexist. Uploads are explicit; credentials remain in page memory.
+- Local file storage makes development usable without external accounts; Supabase is an alternate adapter requiring real-project validation.
+- Reports are immutable once submitted; review decisions are stored separately and never rewrite historical findings or scores.
 - Configuration score is a heuristic: 100 minus severity weights capped once per rule; it is not a compromise probability.
 - Library advisory matching and DOM data-flow analysis need trustworthy evidence and remain deferred.
 
 ## Change log and validation
+
+### 2026-10-15 — Connected application work started
+- Re-read the existing implementation and plan. Continuing the original roadmap in this checkout.
+- Planned this increment: real-browser fixture checks, authenticated Express API with local persistence and a Supabase adapter/migration, React dashboard, explicit extension upload, Playwright CLI and CI.
+- Local mode will run without external account credentials. Supabase deployment will remain unverified until a project is configured.
+- Implemented: strict ingestion contracts, server-side rules/scoring, immutable/idempotent reports, local atomic file storage, Supabase JWT adapter and SQL migration, scan/site APIs, finding feedback, JSON export and local SHA-256 verification.
+- Added a connected React dashboard with overview, sites, history, finding details, feedback, comparisons, settings/deletion, JSON export and print/PDF layout. No demo findings are presented as real scans.
+- Added explicit extension upload (in-memory credentials, one retry, no automatic uploads), SPA path scan boundaries, and CSP nonce/source URL redaction. Ruleset is now 0.2.0.
+- Added Playwright CLI, local Chromium/TLS setup scripts, and a real-browser suite. GitHub execution remains pending.
+- Validation: `npm run check` passed TypeScript, all 30 tests in 4 suites, and extension/API/CLI/dashboard builds. Real Chromium exposed and verified the fix for report-tab authorization: extension tabs also carry `sender.tab`, so controls now require the verified extension URL.
+- `npm run test:browser` passed extension TLS rules, navigation, two tabs, privacy, explicit upload, pause/resume, SPA and worker restart; CLI secure/insecure gates and rule parity; dashboard authentication, details, feedback, hash check, JSON download/import, comparison, severity filter, deletion, mobile overflow and JavaScript-error checks.
+- Visually inspected desktop overview and mobile report screenshots in `test-results/`; no clipping or horizontal overflow observed.
+- Generated ignored `.env` with a random local token and ignored `.local/tls` fixture credentials, without printing secrets or modifying certificate trust. Startup check found Node 20.18 lacks `--env-file-if-exists`; changed the command to supported `--env-file=.env`.
+- Verified the local dashboard startup command and HTTP 200 at `http://127.0.0.1:4318`; requested opening its preview in Codex. Test data was isolated and removed from the API store after the browser suite. Screenshot/CLI artifacts remain in ignored `test-results/`.
+- Supabase adapter now handles empty successful PostgREST insert responses, with mocked adapter/Auth regression tests. Actual hosted database verification remains open.
+- Added API/deployment documentation, CI workflow and updated setup instructions. Dependency audit after compatible Vite updates reports zero known vulnerabilities.
 
 ### 2026-10-14 — Project kickoff
 - Read the user-provided roadmap; confirmed the workspace has no existing implementation.
@@ -62,7 +89,9 @@ M1: locally installable Chrome extension with reusable rules, private local hist
 
 ## Next implementation steps
 
-1. Load `dist/extension` into Chrome and execute the README acceptance checklist; add a persistent-browser Playwright suite.
-2. Add a TLS-enabled local fixture to validate HSTS and mixed-content observations in a real browser.
-3. Improve SPA navigation handling and measure storage/observer overhead on dynamic pages.
-4. Start M2 with database migrations, authentication and scan ingestion, then connect the first React dashboard.
+1. Configure an actual Supabase project and run two-user RLS/ingestion tests; add proper sign-in and token refresh.
+2. Complete installed-Chrome permission/popup acceptance and benchmark observer/storage overhead on dynamic pages.
+3. Create/connect the GitHub repository and run the added CI workflow; add explicit accepted-risk policies and branch protection configuration.
+4. Build M5's Solidity/local-EVM anchor and verify flow on the existing immutable report/hash contract.
+5. Extend dashboard comparisons across all pages, add trend charts and a dedicated PDF renderer.
+6. Define/collect labeled examples before implementing or evaluating the baseline classifier and LSTM. Do not claim measured ML improvements without held-out data.

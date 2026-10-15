@@ -23,7 +23,7 @@ function show(report?: Report) {
   });
   get('detail').replaceChildren(header, coverage, disclaimer, element('h2', `${report.findings.length} findings`, 'section-title'), ...cards);
   if (!cards.length) get('detail').append(element('p', 'No findings from the observed checks. Review coverage before interpreting this result.', 'empty'));
-  get('message').textContent = 'Reports stay in this browser. Expand a finding to inspect evidence and remediation.';
+  get('message').textContent = 'Reports stay in this browser unless you explicitly send a scan to your workspace.';
 }
 async function refresh() {
   const state = await send({ type: 'STATE', tabId: -1 }); reports = state.history;
@@ -38,6 +38,32 @@ get('export').onclick = () => {
   if (!selected) return;
   const url = URL.createObjectURL(new Blob([JSON.stringify(selected, null, 2)], { type: 'application/json' }));
   const link = element('a'); link.href = url; link.download = `vynlt-${selected.scanId}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+get('upload').onclick = () => {
+  void (async () => {
+    if (!selected) throw new Error('Select a scan first.');
+    const base = new URL(get<HTMLInputElement>('api-url').value);
+    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
+    if (base.username || base.password || base.search || base.hash || base.pathname !== '/' || (base.protocol !== 'https:' && !(base.protocol === 'http:' && loopback))) throw new Error('Use an HTTPS API origin, or HTTP on localhost, without a path or credentials.');
+    const token = get<HTMLInputElement>('api-token').value.trim();
+    if (!token) throw new Error('Enter an API token.');
+    const snapshot = structuredClone(selected);
+    // Permission requests remain directly inside the user's click gesture.
+    const granted = await chrome.permissions.request({ origins: [`${base.protocol}//${base.hostname}/*`] });
+    if (!granted) throw new Error('API host permission was not granted.');
+    get<HTMLButtonElement>('upload').disabled = true;
+    get('upload-status').textContent = 'Sending selected scan…';
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let response: Response;
+      try {
+        response = await fetch(`${base.origin}/api/scans`, { method: 'POST', signal: AbortSignal.timeout(15000), headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ scanId: snapshot.scanId, observation: snapshot.observation }) });
+      } catch (error) { if (attempt === 0) continue; throw error; }
+      if ((response.status === 503 || response.status === 429) && attempt === 0) continue;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? `Upload failed (${response.status})`);
+      get('upload-status').textContent = 'Scan saved to your workspace. Open the dashboard to review it.'; return;
+    }
+  })().catch(error => { get('upload-status').textContent = error.message ?? 'Upload failed. Retry when the API is available.'; }).finally(() => { get<HTMLButtonElement>('upload').disabled = false; });
 };
 get('clear').onclick = () => {
   if (confirm('Delete all 30 retained local scans? This cannot be undone.')) void send({ type: 'CLEAR' }).then(refresh).catch(error => { get('message').textContent = error.message; });

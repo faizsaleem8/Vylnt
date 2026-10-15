@@ -44,6 +44,10 @@ describe('configuration rules', () => {
   });
 });
 describe('privacy boundaries', () => {
+  it('redacts CSP nonces and URL secrets without losing policy structure', () => {
+    expect(securityHeaders([{ name: 'Content-Security-Policy', value: "script-src 'nonce-secret' https://user:pass@cdn.test/a.js?token=secret; frame-ancestors 'none'" }])['content-security-policy'])
+      .toBe("script-src 'nonce-[redacted]' https://cdn.test/a.js; frame-ancestors 'none'");
+  });
   it('drops credentials, queries and fragments from URLs', () => {
     expect(safeUrl('https://user:password@example.test/path?code=secret#token')).toBe('https://example.test/path');
     expect(safeUrl('data:text/plain,secret')).toBe('[unsupported URL]');

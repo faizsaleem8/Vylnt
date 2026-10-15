@@ -29,13 +29,27 @@ beforeEach(async () => {
     permissions: { contains: async () => true, getAll: async () => ({ origins: ['https://example.test/*'] }), onAdded: event('added'), onRemoved: event('removed') },
     scripting: { unregisterContentScripts: async () => {}, registerContentScripts: async () => {} },
     webRequest: { onBeforeRequest: event('request'), onHeadersReceived: event('headers') },
-    webNavigation: { onCommitted: event('committed') },
-    tabs: { onRemoved: event('removedTab'), get: async () => ({ url: 'https://example.test/' }), reload: vi.fn() },
+    webNavigation: { onCommitted: event('committed'), onHistoryStateUpdated: event('historyState') },
+    tabs: { onRemoved: event('removedTab'), get: async () => ({ url: 'https://example.test/' }), reload: vi.fn(), sendMessage: async () => {} },
     cookies: { getAll: async () => [{ name: 'session', value: 'secret-cookie-value', secure: false, httpOnly: false, sameSite: 'lax', session: true }] }
   });
   await import('../apps/extension/background');
 });
 describe('background lifecycle with Chrome API mocks', () => {
+  it('allows trusted extension report tabs while still rejecting website controls', async () => {
+    await navigate();
+    const state = await message({ type: 'STATE', tabId: 1 }, { id: 'extension', tab: { id: 99 }, url: 'chrome-extension://extension/report.html' });
+    expect(state.history).toHaveLength(1);
+    const denied = await message({ type: 'CLEAR' }, { id: 'extension', tab: { id: 1 }, url: 'https://example.test/' });
+    expect(denied.error).toContain('Untrusted');
+  });
+  it('creates a new sanitized scan for SPA path changes in the same document', async () => {
+    await navigate(); const first = (await flush()).scan.scanId;
+    events.get('historyState')!({ tabId: 1, frameId: 0, documentId: 'document-1', url: 'https://example.test/next?token=secret' });
+    const state = await flush();
+    expect(state.scan.scanId).not.toBe(first); expect(state.scan.observation.url).toBe('https://example.test/next');
+    expect(state.scan.observation.headers).toEqual({}); expect(local.history).toHaveLength(2);
+  });
   it('correlates DOM to committed document and drops cookie values and URL secrets', async () => {
     await navigate();
     await message({ type: 'DOM', scripts: [], resources: [] }, { id: 'extension', tab: { id: 1 }, frameId: 0, documentId: 'document-1', url: 'https://example.test/' });

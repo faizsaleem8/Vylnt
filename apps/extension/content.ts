@@ -22,5 +22,8 @@
     timer = setTimeout(collect, 750);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'href', 'integrity'] });
+  chrome.runtime.onMessage.addListener((message, sender) => {
+    if (sender.id === chrome.runtime.id && message.type === 'COLLECT') collect();
+  });
   collect();
 })();

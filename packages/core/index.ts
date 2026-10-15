@@ -23,7 +23,7 @@ export interface Report {
   scanId: string; rulesetVersion: string; observation: Observation;
   findings: Finding[]; score: number;
 }
-export const RULESET_VERSION = '0.1.0';
+export const RULESET_VERSION = '0.2.0';
 export const weights: Record<Severity, number> = { critical: 20, high: 10, medium: 5, low: 2, info: 0 };
 
 // Drop all query/fragment data and credentials, not just a list of known secrets.
@@ -39,7 +39,12 @@ export function securityHeaders(headers: { name: string; value?: string }[]): Re
   const result: Record<string, string> = {};
   for (const h of headers) {
     const key = h.name.toLowerCase();
-    if (allowed.has(key) && h.value) result[key] = result[key] ? `${result[key]}, ${h.value}` : h.value.slice(0, 8192);
+    if (allowed.has(key) && h.value) {
+      // CSP is useful policy metadata, but its source URLs/nonces can contain secrets.
+      const value = h.value.slice(0, 8192).replace(/'nonce-[^']*'/gi, "'nonce-[redacted]'")
+        .replace(/https?:\/\/[^\s;,]+/gi, raw => safeUrl(raw));
+      result[key] = (result[key] ? `${result[key]}, ${value}` : value).slice(0, 8192);
+    }
   }
   return result;
 }
@@ -61,7 +66,7 @@ export function evaluate(observation: Observation): Finding[] {
   };
   const headers = observation.headers;
   if (headers) {
-    if (url.startsWith('https:') && !/max-age\s*=\s*[1-9]\d*/i.test(headers['strict-transport-security'] ?? '')) {
+    if (url.startsWith('https:') && !/(?:^|;)\s*max-age\s*=\s*"?[1-9]\d*"?\s*(?:;|$)/i.test(headers['strict-transport-security'] ?? '')) {
       add('HDR-001', 'HSTS is missing or disabled', 'medium', 'high',
         'The observed HTTPS response does not advertise a positive HSTS lifetime. This does not prove the site is absent from browser preload lists.',
         { policyPresent: Boolean(headers['strict-transport-security']) }, 'Serve a valid Strict-Transport-Security header with a positive max-age after verifying HTTPS coverage.');

@@ -1,8 +1,8 @@
 # VYNLT
 
-A browser-based web security configuration observer. The first implementation is a local Chrome Manifest V3 extension backed by a shared TypeScript rule engine.
+A browser-based web security configuration observer with a Chrome extension, shared TypeScript rule engine, authenticated Express API, React dashboard, and Playwright command-line scanner.
 
-**Development status:** first milestone implemented; see [PLAN.md](PLAN.md) for completed work, validation, limitations, and all remaining modules. Every project change must update that file.
+**Development status:** local connected application implemented; see [PLAN.md](PLAN.md) for verification results and remaining milestones. Supabase adapter/migrations are included; hosted database acceptance, blockchain and ML remain open. Every project change must update the plan.
 
 ## Run locally
 
@@ -10,7 +10,16 @@ Requires Node.js 20.18+ and Chrome 120+. Node.js 22+ is recommended.
 
 ```powershell
 npm.cmd install
+npm.cmd run setup:local
 npm.cmd run check
+npm.cmd run dev
+```
+
+Open `http://127.0.0.1:4318`. Copy the generated `VYNLT_API_TOKEN` from the ignored `.env` into the dashboard connection form. It remains in page memory only. The API stores local reports in `.local/scans.json`.
+
+For the extension's controlled lab, use a second terminal:
+
+```powershell
 npm.cmd run lab
 ```
 
@@ -19,6 +28,7 @@ npm.cmd run lab
 3. Open VYNLT's toolbar popup and select **Rescan page**. Rescanning reloads the page so response headers can be observed.
 4. Open **report & history** to inspect evidence, remediation, and JSON export.
 5. Compare `/secure`, then use `/dynamic` to exercise DOM updates.
+6. In the extension report page, expand **Send selected scan to your workspace**, enter the API token, and select **Send scan**. Refresh the dashboard to inspect the uploaded report. Alternatively, import its exported JSON in the dashboard.
 
 After source edits, run `npm.cmd run build`, reload the extension in Chrome, and reload the test page. Other domains require **Enable this site** in the popup. Chrome host permission patterns apply across ports on that host. Pause stops new collection; resume and rescan to capture a complete new navigation.
 
@@ -26,9 +36,14 @@ After source edits, run `npm.cmd run build`, reload the extension in Chrome, and
 
 - `packages/core`: shared contracts, eight pure configuration rules, scoring, and metadata sanitizers.
 - `apps/extension`: background collector, bounded DOM observer, popup and report history.
-- `labs`: loopback-only controlled HTTP fixture server.
-- `tests`: positive, negative, edge-case and privacy tests.
-- `scripts/build.mjs`: bundles an unpacked Chrome extension.
+- `apps/server`: Express API, local persistence, Supabase adapter and authentication.
+- `apps/dashboard`: React + Vite dashboard and print stylesheet.
+- `apps/cli`: Playwright scanner and severity/confidence gate.
+- `labs`: loopback-only HTTP/HTTPS fixtures.
+- `supabase/migrations`: PostgreSQL schema, RLS and atomic ingestion.
+- `tests`: rule, lifecycle, privacy, API, storage and adapter tests.
+- `scripts/browser-tests.mjs`: real Chromium extension/dashboard/CLI regression checks.
+- `.github/workflows/ci.yml`: build/test workflow with report and screenshot artifacts.
 
 ## What is detected
 
@@ -47,11 +62,25 @@ Score = max(0, 100 − sum of highest severity weight per rule). Weights: critic
 
 ## Privacy and collection boundaries
 
-Reports stay on the device; there is no backend upload. The extension retains at most 30 scans. Tab state uses session storage and history uses local storage, restricted to trusted extension contexts. The report page can clear both. Cookie values are never stored; query strings, URL credentials and fragments are removed. URL paths and cookie names can still be sensitive—review exports before sharing. CSP values are kept locally as security metadata and can contain source URLs or nonces. Raw page text, script source, request bodies, and unrelated response headers are not collected.
+Extension reports stay in the browser unless explicitly uploaded. The extension retains at most 30 scans; the local API supports up to 1,000. Tab state uses session storage and extension history uses trusted-context local storage. Cookie values are never stored; query strings, URL credentials and fragments are removed. CSP nonces and source URL secrets are redacted. URL paths, cookie names, and user-entered review notes can still be sensitive. Raw page text, script source, request bodies, and unrelated response headers are not collected. Backend ingestion rejects extra fields and recomputes findings rather than trusting supplied scores.
 
 Only localhost hosts are granted at install. Other HTTP(S) hosts are optional and granted through the popup. Network visibility is bounded by Chrome's permissions, including cross-origin resources. DOM references do not prove whether a resource loaded, was blocked, or was upgraded. Browser preload lists, meta CSP, full CSP semantics, cached/back-forward navigation edge cases, service-worker-generated responses and JavaScript data flow are not comprehensively analyzed. Cookie purpose is inferred from its name and marked medium confidence.
 
-The content observer collects at most 150 scripts and 300 DOM references per update and stops after 100 mutation callbacks. Network collection is bounded to 300 resources; combined evidence to 600. SPA route changes are not separate scans yet. Rescan gives a fresh snapshot. The HTTP lab cannot establish HTTPS-specific behavior; HSTS and mixed-content rules currently use synthetic test fixtures. A TLS browser lab and Chrome end-to-end acceptance are still required.
+The content observer collects at most 150 scripts and 300 DOM references per update and stops after 100 mutation callbacks. Network collection is bounded to 300 resources; combined evidence to 600. SPA path changes create new snapshots and reuse the same document's response policies. Query-only/fragment changes intentionally do not create separate snapshots. Browser performance baselines and broader SPA/back-forward-cache coverage remain future work.
+
+## Automated browser checks and HTTPS lab
+
+```powershell
+npm.cmd run setup:browser
+npm.cmd run lab:tls
+npm.cmd run test:browser
+```
+
+The TLS setup needs OpenSSL (included with Git for Windows) and generates a self-signed localhost certificate in `.local/tls`; it does not change the system trust store. The suite starts and stops isolated test servers and headless Chromium profiles. Close an existing lab on ports 5174/5443 before running it. Screenshots and CLI reports go in ignored `test-results/`.
+
+For interactive HTTPS fixtures, run `npm run lab` after TLS setup and visit `https://127.0.0.1:5443/insecure`. The self-signed certificate requires a browser exception for this local fixture. The automated test context ignores certificate errors only for the controlled test run.
+
+See [docs/API.md](docs/API.md) for API endpoints, Supabase setup, CLI commands, exit codes, authentication and deployment limitations. Use `npm run dev:dashboard` for frontend hot reload while the built API runs on port 4318.
 
 ## Manual acceptance checklist
 
@@ -70,5 +99,5 @@ The content observer collects at most 150 scripts and 300 DOM references per upd
 - [Chrome permissions](https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions)
 - [Chrome storage](https://developer.chrome.com/docs/extensions/reference/api/storage)
 
-The Express/Supabase backend, React dashboard, Playwright scanner, blockchain anchoring, and ML experiments are planned in `PLAN.md`; they are not implemented yet.
+Blockchain anchoring and ML experiments are not implemented. Local SHA-256 verification in the dashboard is only a report-consistency check. Browser **Print / PDF** uses your browser's print dialog; a dedicated server PDF generator remains future work.
 

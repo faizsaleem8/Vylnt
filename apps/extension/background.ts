@@ -70,6 +70,15 @@ chrome.webNavigation.onCommitted.addListener(details => { void enqueue(async () 
   scan.documentId = details.documentId;
   await save(details.tabId, scan);
 }); });
+chrome.webNavigation.onHistoryStateUpdated.addListener(details => { void enqueue(async () => {
+  if (details.frameId !== 0 || !await active() || !await allowed(details.url)) return;
+  const scan = await getScan(details.tabId);
+  if (!scan || scan.documentId !== details.documentId || safeUrl(details.url) === scan.report.observation.url) return;
+  const observation = { ...scan.report.observation, url: safeUrl(details.url), scannedAt: new Date().toISOString() };
+  await save(details.tabId, { requestId: `spa:${crypto.randomUUID()}`, documentId: scan.documentId, report: createReport(crypto.randomUUID(), observation) });
+  // The document's response headers remain applicable; refresh DOM and cookie metadata.
+  await chrome.tabs.sendMessage(details.tabId, { type: 'COLLECT' }, { documentId: details.documentId }).catch(() => {});
+}); });
 chrome.tabs.onRemoved.addListener(tabId => { void enqueue(() => chrome.storage.session.remove(key(tabId))); });
 
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
@@ -91,7 +100,8 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       return { ok: true };
     }
     // Content scripts cannot control monitoring, read history, or clear reports.
-    if (sender.tab || !sender.url?.startsWith(chrome.runtime.getURL(''))) throw new Error('Untrusted control message');
+    // An extension report opened as a tab also has sender.tab. Its verified extension URL is the trust boundary.
+    if (!sender.url?.startsWith(chrome.runtime.getURL(''))) throw new Error('Untrusted control message');
     if (message.type === 'STATE') {
       const { paused = false, history = [] } = await chrome.storage.local.get(['paused', 'history']);
       return { paused, history, scan: (await getScan(message.tabId))?.report };

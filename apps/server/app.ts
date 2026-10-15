@@ -5,14 +5,16 @@ import { resolve } from 'node:path';
 import { feedbackSchema, parseSubmission } from '../../packages/core/validation';
 import { ConflictError, reportHash, type Identity, type Store, type StoredScan } from './store';
 import type { Authenticator } from './auth';
+import type { PublicSupabaseConfig } from './config';
 
 const summary = ({ report, hash, receivedAt }: StoredScan) => ({ scanId: report.scanId, url: report.observation.url,
   scannedAt: report.observation.scannedAt, score: report.score, findingCount: report.findings.length,
   highCount: report.findings.filter(f => ['high', 'critical'].includes(f.severity)).length,
   coverage: { headers: report.observation.headers !== undefined, dom: report.observation.domCollected, cookies: report.observation.cookies !== undefined }, hash, receivedAt });
-export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[] }) {
+export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[]; supabase?: PublicSupabaseConfig }) {
   const app = express(); app.disable('x-powered-by');
-  app.use(helmet({ contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null } } }));
+  app.use(helmet({ contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null,
+    'connect-src': ["'self'", ...(options.supabase ? [options.supabase.url] : [])] } } }));
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     // Extension requests need bearer auth too; CORS is not authentication.
@@ -25,6 +27,10 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     next();
   });
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', mode: options.mode ?? 'local' }));
+  app.get('/api/config', (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ mode: options.mode ?? 'local', ...(options.supabase ? { supabase: { url: options.supabase.url, publishableKey: options.supabase.publishableKey } } : {}) });
+  });
   app.use('/api', async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     const token = /^Bearer (\S+)$/i.exec(req.headers.authorization ?? '')?.[1];

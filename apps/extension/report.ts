@@ -1,8 +1,61 @@
 import type { Report } from '../../packages/core';
 import { element, get, send } from './ui';
+import { createMemoryClient, type SupabaseConfig } from '../../packages/auth/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 let selected: Report | undefined;
 let reports: Report[] = [];
+let authClient: SupabaseClient | undefined;
+let authConfig: SupabaseConfig | undefined;
+let authOrigin: string | undefined;
+let accessToken = '';
+function apiOrigin() {
+  const base = new URL(get<HTMLInputElement>('api-url').value);
+  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
+  if (base.username || base.password || base.search || base.hash || base.pathname !== '/' || (base.protocol !== 'https:' && !(base.protocol === 'http:' && loopback))) throw new Error('Use an HTTPS API origin, or HTTP on localhost, without a path or credentials.');
+  return base;
+}
+get('load-auth').onclick = () => { void (async () => {
+  const base = apiOrigin();
+  if (!await chrome.permissions.request({ origins: [`${base.protocol}//${base.hostname}/*`] })) throw new Error('API host permission was not granted.');
+  const response = await fetch(`${base.origin}/api/config`, { signal: AbortSignal.timeout(10000) });
+  if (!response.ok) throw new Error('Could not load workspace configuration.');
+  const config = await response.json();
+  await authClient?.auth.dispose(); authClient = undefined; accessToken = ''; authConfig = undefined;
+  authOrigin = base.origin; get<HTMLInputElement>('api-token').value = ''; get('sign-out').hidden = true; get('sign-in').hidden = false;
+  if (config.mode === 'supabase') {
+    const project = new URL(config.supabase.url);
+    if (project.protocol !== 'https:' || project.username || project.password || project.pathname !== '/' || project.search || project.hash) throw new Error('Invalid Supabase project URL.');
+    authConfig = config.supabase;
+    get('supabase-auth').hidden = false; get('token-field').hidden = true;
+    get('upload-status').textContent = `Workspace ready. Sign in to ${project.hostname}.`;
+  } else if (config.mode === 'local') {
+    get('supabase-auth').hidden = true; get('token-field').hidden = false;
+    get('upload-status').textContent = 'Local workspace ready. Enter its API token.';
+  } else throw new Error('Unsupported workspace mode.');
+})().catch(error => { get('upload-status').textContent = error.message; }); };
+get('sign-in').onclick = () => { void (async () => {
+  if (!authConfig || apiOrigin().origin !== authOrigin) throw new Error('Load the workspace connection first.');
+  const email = get<HTMLInputElement>('auth-email').value.trim();
+  const password = get<HTMLInputElement>('auth-password').value; get<HTMLInputElement>('auth-password').value = '';
+  if (!email || !password) throw new Error('Enter your email and password.');
+  const project = new URL(authConfig.url);
+  if (!await chrome.permissions.request({ origins: [`${project.origin}/*`] })) throw new Error('Supabase host permission was not granted.');
+  get<HTMLButtonElement>('sign-in').disabled = true;
+  if (!authClient) {
+    authClient = createMemoryClient(authConfig);
+    authClient.auth.onAuthStateChange((_event, session) => { accessToken = session?.access_token ?? ''; });
+  }
+  const { data, error } = await authClient.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  accessToken = data.session.access_token;
+  get('sign-in').hidden = true; get('sign-out').hidden = false;
+  get('upload-status').textContent = 'Signed in. Select Send scan to upload the current report.';
+})().catch(error => { get('upload-status').textContent = error.message; }).finally(() => { get<HTMLButtonElement>('sign-in').disabled = false; }); };
+get('sign-out').onclick = () => { void (async () => {
+  try { await authClient?.auth.signOut({ scope: 'local' }); }
+  finally { await authClient?.auth.dispose(); authClient = undefined; accessToken = ''; get('sign-in').hidden = false; get('sign-out').hidden = true; get('upload-status').textContent = 'Signed out on this page.'; }
+})().catch(() => { get('upload-status').textContent = 'Disconnected locally; remote sign-out could not be confirmed.'; }); };
 function show(report?: Report) {
   selected = report;
   get<HTMLButtonElement>('export').disabled = !report;
@@ -42,11 +95,10 @@ get('export').onclick = () => {
 get('upload').onclick = () => {
   void (async () => {
     if (!selected) throw new Error('Select a scan first.');
-    const base = new URL(get<HTMLInputElement>('api-url').value);
-    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
-    if (base.username || base.password || base.search || base.hash || base.pathname !== '/' || (base.protocol !== 'https:' && !(base.protocol === 'http:' && loopback))) throw new Error('Use an HTTPS API origin, or HTTP on localhost, without a path or credentials.');
-    const token = get<HTMLInputElement>('api-token').value.trim();
-    if (!token) throw new Error('Enter an API token.');
+    const base = apiOrigin();
+    if (authOrigin && base.origin !== authOrigin) throw new Error('API origin changed. Load its workspace connection again before uploading.');
+    const token = authConfig ? accessToken : get<HTMLInputElement>('api-token').value.trim();
+    if (!token) throw new Error(authConfig ? 'Sign in first.' : 'Enter an API token.');
     const snapshot = structuredClone(selected);
     // Permission requests remain directly inside the user's click gesture.
     const granted = await chrome.permissions.request({ origins: [`${base.protocol}//${base.hostname}/*`] });

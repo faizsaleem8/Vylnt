@@ -15,7 +15,7 @@ npm.cmd run check
 npm.cmd run dev
 ```
 
-Open `http://127.0.0.1:4318`. Copy the generated `VYNLT_API_TOKEN` from the ignored `.env` into the dashboard connection form. It remains in page memory only. The API stores local reports in `.local/scans.json`.
+Open `http://127.0.0.1:4318`. With `VYNLT_STORAGE=local`, use the generated `VYNLT_API_TOKEN` from the ignored `.env`; reports are stored in `.local/scans.json`. With `VYNLT_STORAGE=supabase`, use email/password sign-in (or create an account and confirm your email). Sessions remain in page memory only. `setup:local` leaves an existing `.env` unchanged.
 
 For the extension's controlled lab, use a second terminal:
 
@@ -28,7 +28,7 @@ npm.cmd run lab
 3. Open VYNLT's toolbar popup and select **Rescan page**. Rescanning reloads the page so response headers can be observed.
 4. Open **report & history** to inspect evidence, remediation, and JSON export.
 5. Compare `/secure`, then use `/dynamic` to exercise DOM updates.
-6. In the extension report page, expand **Send selected scan to your workspace**, enter the API token, and select **Send scan**. Refresh the dashboard to inspect the uploaded report. Alternatively, import its exported JSON in the dashboard.
+6. In the extension report page, expand **Send selected scan to your workspace** and select **Load workspace connection**. For Supabase, sign in with the same email/password as the dashboard; for local mode, enter the API token. Select **Send scan**, then refresh the dashboard. Alternatively, import its exported JSON in the dashboard.
 
 After source edits, run `npm.cmd run build`, reload the extension in Chrome, and reload the test page. Other domains require **Enable this site** in the popup. Chrome host permission patterns apply across ports on that host. Pause stops new collection; resume and rescan to capture a complete new navigation.
 
@@ -74,6 +74,7 @@ The content observer collects at most 150 scripts and 300 DOM references per upd
 npm.cmd run setup:browser
 npm.cmd run lab:tls
 npm.cmd run test:browser
+npm.cmd run test:auth-browser
 ```
 
 The TLS setup needs OpenSSL (included with Git for Windows) and generates a self-signed localhost certificate in `.local/tls`; it does not change the system trust store. The suite starts and stops isolated test servers and headless Chromium profiles. Close an existing lab on ports 5174/5443 before running it. Screenshots and CLI reports go in ignored `test-results/`.
@@ -81,6 +82,8 @@ The TLS setup needs OpenSSL (included with Git for Windows) and generates a self
 For interactive HTTPS fixtures, run `npm run lab` after TLS setup and visit `https://127.0.0.1:5443/insecure`. The self-signed certificate requires a browser exception for this local fixture. The automated test context ignores certificate errors only for the controlled test run.
 
 See [docs/API.md](docs/API.md) for API endpoints, Supabase setup, CLI commands, exit codes, authentication and deployment limitations. Use `npm run dev:dashboard` for frontend hot reload while the built API runs on port 4318.
+
+Supabase email confirmations should return to your dashboard: configure **Authentication → URL Configuration → Site URL** and allowed **Redirect URLs** as `http://127.0.0.1:4318` for this local setup. `npm run check:supabase` performs read-only live checks; the auth browser tests use controlled mock responses and do not create accounts or send email.
 
 ## Manual acceptance checklist
 

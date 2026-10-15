@@ -4,6 +4,9 @@ import type { Finding, Report, Severity } from '../../../packages/core';
 import type { StoredScan } from '../../server/store';
 import type { FeedbackInput } from '../../../packages/core/validation';
 import './styles.css';
+import { createMemoryClient, type SupabaseConfig } from './auth';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseLogin } from './SupabaseLogin';
 
 type Summary = { scanId: string; url: string; scannedAt: string; score: number; findingCount: number; highCount: number; coverage: { headers: boolean; dom: boolean; cookies: boolean }; hash: string };
 type Site = { origin: string; scanCount: number; latest: Summary };
@@ -19,6 +22,7 @@ function App() {
   const [selected, setSelected] = useState<StoredScan>(); const [previous, setPrevious] = useState<StoredScan>();
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState('');
   const [filter, setFilter] = useState('all'); const [query, setQuery] = useState(''); const [mode, setMode] = useState('');
+  const [client, setClient] = useState<SupabaseClient>(); const [authConfig, setAuthConfig] = useState<SupabaseConfig>();
   const importRef = useRef<HTMLInputElement>(null); const requestSequence = useRef(0);
   async function api<T>(path: string, init: RequestInit = {}, authToken = token): Promise<T> {
     const response = await fetch(`/api${path}`, { ...init, headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json', ...init.headers } });
@@ -34,7 +38,36 @@ function App() {
     const seq = ++requestSequence.current;
     await action(async () => { const scan = await api<StoredScan>(`/scans/${id}`); if (seq !== requestSequence.current) return; setSelected(scan); setPrevious(undefined); setView('Scan details'); setFilter('all'); });
   }
-  useEffect(() => { void fetch('/api/health').then(r => r.json()).then(r => setMode(r.mode)).catch(() => setMode('unavailable')); }, []);
+  function clearWorkspace() { ++requestSequence.current; setToken(''); setDraftToken(''); setScans([]); setSites([]); setSelected(undefined); setPrevious(undefined); setTotal(0); setPage(1); setView('Overview'); setError(''); setNotice(''); }
+  useEffect(() => {
+    let cancelled = false;
+    void fetch('/api/config').then(async r => { if (!r.ok) throw new Error('Unable to load workspace configuration.'); return r.json(); }).then(config => {
+      if (cancelled) return;
+      setMode(config.mode);
+      if (config.mode === 'supabase') {
+        if (!config.supabase?.url || !config.supabase?.publishableKey) throw new Error('Supabase sign-in is not configured.');
+        setAuthConfig(config.supabase); setClient(createMemoryClient(config.supabase));
+      }
+    }).catch(e => { if (!cancelled) { setMode('unavailable'); setError(e.message); } });
+    return () => { cancelled = true; };
+  }, []);
+  useEffect(() => {
+    if (!client) return;
+    // Keep callbacks synchronous: Supabase auth operations acquire their own lock.
+    const { data } = client.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' && session) setToken(session.access_token);
+      if (event === 'SIGNED_OUT') clearWorkspace();
+    });
+    return () => { data.subscription.unsubscribe(); void client.auth.dispose(); };
+  }, [client]);
+  async function disconnect() {
+    setBusy(true);
+    try {
+      if (client) { const { error } = await client.auth.signOut({ scope: 'local' }); if (error) throw error; }
+      clearWorkspace();
+    } catch { clearWorkspace(); setNotice('Disconnected on this device. Remote sign-out could not be confirmed.'); }
+    finally { if (client && authConfig) { await client.auth.dispose(); setClient(createMemoryClient(authConfig)); } setBusy(false); }
+  }
   async function importFile(file?: File) {
     if (!file) return;
     await action(async () => {
@@ -57,12 +90,12 @@ function App() {
       <nav aria-label="Main navigation">{navigation.map((item, i) => <button key={item} className={view === item ? 'active' : ''} onClick={() => { setView(item); setError(''); }}><span>{['◈', '◎', '◷', '⚙'][i]}</span>{item}{item === 'History' && <small>{total}</small>}</button>)}</nav>
       <div className="sidebar-bottom"><span className="connection-dot" />{token ? 'Workspace connected' : 'Awaiting connection'}<p>{mode === 'supabase' ? 'Supabase · user-scoped data' : 'Local development workspace'}</p><span className="version">VYNLT / 0.2</span></div>
     </aside>
-    <div className="main-shell"><header className="topbar"><span>Workspace <b>/</b> {view}</span><div><span className="mode-pill">{mode === 'supabase' ? 'SUPABASE' : 'LOCAL'}</span>{token && <button className="text-button" onClick={() => { ++requestSequence.current; setToken(''); setScans([]); setSites([]); setSelected(undefined); setPrevious(undefined); setTotal(0); setError(''); }}>Disconnect</button>}</div></header>
+    <div className="main-shell"><header className="topbar"><span>Workspace <b>/</b> {view}</span><div><span className="mode-pill">{mode === 'supabase' ? 'SUPABASE' : mode === 'local' ? 'LOCAL' : 'CONNECTING'}</span>{token && <button disabled={busy} className="text-button" onClick={() => void disconnect()}>{client ? 'Sign out' : 'Disconnect'}</button>}</div></header>
       <main><div className="page-heading"><div><p className="eyebrow">OBSERVE. UNDERSTAND. IMPROVE.</p><h1>{view === 'Overview' ? 'Your security overview' : view === 'Scan details' ? 'Scan report' : view}</h1><p className="muted">{view === 'Overview' ? 'Evidence-backed observations. Clear next steps.' : view === 'Scan details' ? 'Inspect the evidence before deciding what to fix.' : 'Keep track of your websites and their security configuration.'}</p></div>
         {token && <div className="heading-actions"><button disabled={busy} onClick={() => void action(() => refresh())}>↻ Refresh</button><button className="primary" disabled={busy} onClick={() => importRef.current?.click()}>↑ Import report</button><input ref={importRef} type="file" accept="application/json,.json" hidden onChange={e => { void importFile(e.target.files?.[0]); e.target.value = ''; }} /></div>}
       </div>
       {error && <div className="alert error" role="alert">{error}</div>}{notice && <div className="alert success" role="status">{notice}</div>}{busy && <p className="loading" role="status">Working…</p>}
-      {!token ? <section className="connect-card"><div className="connect-symbol">◇</div><div><p className="eyebrow">CONNECT YOUR WORKSPACE</p><h2>Bring your scans together.</h2><p className="muted">Connect to view history, compare findings, and track remediation. Your token stays in this page’s memory.</p><form onSubmit={e => { e.preventDefault(); void action(async () => { await refresh(draftToken.trim(), 1); setToken(draftToken.trim()); setDraftToken(''); }); }}><label htmlFor="token">{mode === 'supabase' ? 'Supabase user access token' : 'Local API token from your .env file'}</label><input id="token" type="password" value={draftToken} onChange={e => setDraftToken(e.target.value)} autoComplete="off" required placeholder="Paste your access token" /><button className="primary" disabled={busy || !draftToken.trim()}>Connect workspace →</button></form><p className="small muted">First time? Run <code>npm run setup:local</code>, then open <code>.env</code> to copy your token.</p></div></section> : <>
+      {!token ? mode === 'supabase' && client ? <SupabaseLogin client={client} onSignedIn={async accessToken => { await refresh(accessToken, 1); setToken(accessToken); setError(''); setNotice('Signed in to your Supabase workspace.'); }} /> : mode === 'local' ? <section className="connect-card"><div className="connect-symbol">◇</div><div><p className="eyebrow">CONNECT YOUR WORKSPACE</p><h2>Bring your scans together.</h2><p className="muted">Connect to view history, compare findings, and track remediation. Your token stays in this page’s memory.</p><form onSubmit={e => { e.preventDefault(); void action(async () => { await refresh(draftToken.trim(), 1); setToken(draftToken.trim()); setDraftToken(''); }); }}><label htmlFor="token">Local API token from your .env file</label><input id="token" type="password" value={draftToken} onChange={e => setDraftToken(e.target.value)} autoComplete="off" required placeholder="Paste your access token" /><button className="primary" disabled={busy || !draftToken.trim()}>Connect workspace →</button></form><p className="small muted">First time? Run <code>npm run setup:local</code>, then open <code>.env</code> to copy your token.</p></div></section> : <p className="muted">{mode === 'unavailable' ? 'Check the server configuration and reload to retry.' : 'Loading sign-in…'}</p> : <>
       {view === 'Overview' && <><section className="metric-grid"><Metric label="STORED SCANS" value={total} subtitle="Reports in this workspace" /><Metric label="MONITORED WEBSITES" value={sites.length} subtitle="Unique origins observed" /><Metric label="HIGH / CRITICAL" value={latestHigh} subtitle="Across each site's latest scan" warning={latestHigh > 0} /><Metric label="AVG. CONFIGURATION SCORE" value={average === undefined ? '—' : `${average}/100`} subtitle="Latest scan per website · heuristic" /></section>
         <section className="overview-grid"><div className="panel"><div className="section-heading"><h2>Latest observations</h2><button className="text-button" onClick={() => setView('History')}>View history ↗</button></div>{sites.length ? sites.slice(0, 5).map(site => <button key={site.origin} className="site-line" onClick={() => void openScan(site.latest.scanId)}><div className="site-icon">◎</div><div><strong>{new URL(site.origin).host}</strong><p className="muted">{formatTime(site.latest.scannedAt)} · {site.latest.findingCount} findings</p></div><span className="score-mini">{site.latest.score}<small>/100</small></span><span className="arrow">↗</span></button>) : <Empty title="Your workspace is ready." text="Scan a localhost page with the extension or CLI, then import its JSON report here." />}</div>
         <div className="panel guide"><p className="eyebrow">YOUR NEXT STEP</p><h2>Turn observations<br />into improvements.</h2><p>Start with high-severity findings, confirm their context, and record your decision.</p><ol><li>Scan a site you own</li><li>Review evidence and coverage</li><li>Fix, rescan, and compare</li></ol><div className="guide-note">A score is a configuration heuristic, not a guarantee that a website is secure.</div></div></section></>}

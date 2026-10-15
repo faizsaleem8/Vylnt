@@ -22,8 +22,10 @@ Local connected application implemented and verified: Chromium extension, authen
   - [x] Supabase Auth adapter, PostgreSQL migration, RLS policies and atomic ingestion RPC source.
   - [x] Validated scan ingestion, list/detail APIs and domain summaries.
   - [x] Extension upload with explicit action, one retry, idempotent submissions and integration tests.
-  - [ ] Apply migration to an actual Supabase project; verify two-user RLS, persistence and RPC behavior there.
-  - [ ] Dedicated Supabase login/token refresh UI, production rate limiting and database pagination/aggregates beyond 1,000 scans.
+  - [x] Configure supplied Supabase project; user reports migration applied; verify Auth connectivity and anonymous table-access denial.
+  - [x] Dedicated Supabase login, registration/confirmation guidance, memory-only token refresh and sign-out in dashboard; sign-in for extension uploads.
+  - [ ] Verify authenticated persistence/RPC behavior and two-user RLS in the real project after user sign-in.
+  - [ ] Production rate limiting and database pagination/aggregates beyond 1,000 scans.
 - [ ] M3 — React dashboard and reports
   - [x] Connected overview, sites, scan/finding details, paginated history, settings and deletion.
   - [x] Same-URL comparison within loaded history page, review feedback, JSON import/export and responsive layout.
@@ -53,6 +55,17 @@ Local connected application implemented and verified: Chromium extension, authen
 - Library advisory matching and DOM data-flow analysis need trustworthy evidence and remain deferred.
 
 ## Change log and validation
+
+### 2026-10-15 — Supabase connection and sign-in
+- User supplied the Supabase project URL and publishable key and reported successful execution of `001_initial.sql` (no rows returned is expected for schema creation).
+- Configured ignored `.env` for the supplied project with `VYNLT_STORAGE=supabase`; preserved unrelated local settings. The project accepts native names and the supplied NEXT_PUBLIC aliases.
+- Added public runtime configuration with secret/service-role key rejection, a project-scoped connection policy, dashboard email/password sign-in and user-initiated registration, automatic memory-only session refresh, sign-out, and extension email/password sign-in.
+- Live read-only checks passed: Auth accepts the supplied publishable key, email provider/sign-up are enabled, email confirmation is required, and anonymous access is denied on all four tables. No accounts or scan rows were created by these checks.
+- Validation: TypeScript and all builds pass; 35 tests in 5 suites pass. Existing Chromium extension/CLI/dashboard suite passes. Mocked Supabase browser tests pass invalid credentials, confirmation-required registration, sign-in, automatic refresh, sign-out, reload session clearing, empty browser token storage and mobile layout. Screenshots visually reviewed. Extension-specific Auth regression also passes connection discovery, email/password sign-in, user-JWT upload, sign-out and no credentials in extension/browser storage.
+- Fixed a test-clock setup issue: SDK timers must be created after the controlled browser clock is installed. No application change was needed for refresh.
+- Added documentation for Auth Site URL/Redirect URLs, sign-in, extension connection discovery, and the remaining live two-account acceptance checklist.
+- Final startup check: dashboard returned HTTP 200 in Supabase mode and its public runtime configuration matched the supplied project. Opened the local preview; the temporary preview server is stopped after verification (restart with `npm run dev`). Authenticated live CRUD/RLS remains explicitly unverified until the user creates/confirms an account and signs in.
+- No user passwords, refresh tokens or access tokens will be written to project files. Real authenticated storage/RLS tests require the user to sign in; migration success is currently user-reported.
 
 ### 2026-10-15 — Connected application work started
 - Re-read the existing implementation and plan. Continuing the original roadmap in this checkout.
@@ -89,7 +102,7 @@ Local connected application implemented and verified: Chromium extension, authen
 
 ## Next implementation steps
 
-1. Configure an actual Supabase project and run two-user RLS/ingestion tests; add proper sign-in and token refresh.
+1. User sets Supabase Auth Site URL/Redirect URLs to the local dashboard, creates/confirms a test account, and signs in. Then verify real scan persistence/RPC and two-user isolation; no passwords/tokens should be sent in chat.
 2. Complete installed-Chrome permission/popup acceptance and benchmark observer/storage overhead on dynamic pages.
 3. Create/connect the GitHub repository and run the added CI workflow; add explicit accepted-risk policies and branch protection configuration.
 4. Build M5's Solidity/local-EVM anchor and verify flow on the existing immutable report/hash contract.

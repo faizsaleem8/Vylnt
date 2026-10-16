@@ -15,7 +15,7 @@ interface Job {
 }
 const preparing = 'Preparing scan for sync. Waiting up to 10 seconds for page metadata.';
 export class SyncFailure extends Error {
-  constructor(message: string, readonly retryable = true) { super(message); }
+  constructor(message: string, readonly retryable = true, readonly retryAt?: number) { super(message); }
 }
 /** One immutable snapshot per navigation. Queue and credentials never persist to disk. */
 export class ScanSync {
@@ -26,8 +26,9 @@ export class ScanSync {
   private queueFull = false;
   private activeJob: Job | undefined;
   private lastStatus = '';
+  private cooldownUntil = 0;
   constructor(private since: number, private upload: (report: Report) => Promise<void>, private status: (text: string) => void) {}
-  stop() { this.stopped = true; this.jobs.clear(); this.queueFull = false; this.lastStatus = ''; }
+  stop() { this.stopped = true; this.jobs.clear(); this.queueFull = false; this.lastStatus = ''; this.cooldownUntil = 0; }
   setPaused(value: boolean) { this.paused = value; }
   /** A detached status for the browser's original scan ID, including an adopted pre-login scan. */
   statusFor(scanId: string): ScanSyncStatus | undefined {
@@ -70,7 +71,7 @@ export class ScanSync {
   }
   retry() {
     for (const job of this.jobs.values()) if (!job.done && job !== this.activeJob) {
-      job.attempts = 0; job.next = 0;
+      job.attempts = 0; job.next = this.cooldownUntil;
       if (job.error) { job.state = 'retrying'; job.text = 'Retry requested. Previous attempt failed: ' + job.error; }
     }
     this.publish();
@@ -95,8 +96,9 @@ export class ScanSync {
         }
       }
       this.publish();
+      if (now >= this.cooldownUntil) this.cooldownUntil = 0;
       for (const job of this.jobs.values()) {
-        if (this.stopped || this.paused) break;
+        if (this.stopped || this.paused || now < this.cooldownUntil) break;
         if (job.done || job.attempts >= 5 || now < job.next || (!job.frozen && now - job.first < 10000 && (!job.report.observation.domCollected || now - job.changed < 2000))) continue;
         job.frozen = true; job.attempts++; this.activeJob = job;
         job.state = job.error ? 'retrying' : 'saving';
@@ -112,6 +114,9 @@ export class ScanSync {
           if (this.stopped) break;
           const reason = error instanceof Error && error.message ? error.message : 'Workspace request failed.';
           job.error = reason;
+          if (error instanceof SyncFailure && error.retryAt !== undefined) {
+            this.cooldownUntil = Math.max(this.cooldownUntil, error.retryAt);
+          }
           if (error instanceof SyncFailure && !error.retryable) {
             job.next = Infinity; job.state = 'failed'; job.text = 'Scan not saved. ' + reason; this.publish(); continue;
           }

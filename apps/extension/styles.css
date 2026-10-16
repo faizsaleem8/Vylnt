@@ -1,6 +1,6 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 0; }
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button {
   display: inline-flex; justify-content: center; align-items: center; gap: .5rem;
@@ -14,7 +14,7 @@ button.primary { background: var(--accent-fill); color: #fff; border-color: tran
 button.primary:not(:disabled):active { background: var(--accent-fill); filter: brightness(.9); }
 button.quiet { background: transparent; border-color: transparent; color: var(--accent); }
 button.danger { color: var(--danger); background: var(--danger-soft); border-color: transparent; }
-:is(button, a, input, summary):focus-visible { outline: .1875rem solid var(--accent); outline-offset: .1875rem; }
+:is(button, a, input, select, textarea, summary):focus-visible { outline: .1875rem solid var(--accent); outline-offset: .1875rem; }
 @media (hover: hover) and (pointer: fine) {
   button:not(:disabled):hover { border-color: var(--accent); }
   .quiet:not(:disabled):hover, summary:hover { background: var(--inset); }
@@ -55,7 +55,18 @@ details[open] > summary::after, details[open] > summary .finding-disclosure { tr
 .advanced-settings { border-top: 1px solid var(--line); margin-bottom: .75rem; }
 .advanced-settings > summary { padding-inline: 0; color: var(--muted); font-size: .8125rem; }
 label { display: flex; flex-direction: column; gap: .375rem; color: var(--muted); font-size: .8125rem; margin: .75rem 0; }
-input { width: 100%; min-width: 0; min-height: 2.75rem; padding: .625rem .75rem; border: 1px solid var(--line); border-radius: .625rem; color: var(--text); background: var(--background); font-size: 1rem; }
+input, select, textarea { width: 100%; min-width: 0; min-height: 2.75rem; padding: .625rem .75rem; border: 1px solid var(--line); border-radius: .625rem; color: var(--text); background: var(--background); font-size: 1rem; }
+textarea { resize: vertical; }
+.finding-review { border-top: 1px solid var(--line); padding-top: .75rem; }
+.review-status { margin-top: .75rem; font-size: .8125rem; overflow-wrap: anywhere; }
+.review-status:empty { display: none; }
+.comparison-panel { border: 1px solid var(--line); border-radius: .375rem; background: var(--surface); margin-block: 1rem; }
+.comparison-panel > summary { padding: .875rem 1rem; font-size: .875rem; font-weight: 600; }
+.comparison-body { padding: 0 1rem 1rem; }
+.comparison-result { margin-top: 1rem; font-size: .875rem; overflow-wrap: anywhere; }
+.comparison-result li { white-space: pre-wrap; margin-bottom: .75rem; }
+.comparison-result ul { padding-left: 1.25rem; }
+.comparison-result summary { padding-block: .75rem; }
 form { margin-top: 1rem; }
 form button { flex: 1; }
 .connection-actions { padding: 0 1rem .875rem; }

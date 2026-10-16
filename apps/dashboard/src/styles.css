@@ -108,6 +108,10 @@ td .text-button { text-align: left; font-size: .8125rem; }
 .score-cell { color: var(--accent); font-weight: 600; }
 .high-count { display: inline-block; margin-left: .625rem; font-size: .75rem; color: var(--negative); }
 .pagination { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: 1.25rem; color: var(--muted); font-size: .75rem; }
+.comparison-picker, .comparison-result { margin-block: 1rem; overflow-wrap: anywhere; }
+.comparison-picker > summary, .comparison-result summary { cursor: pointer; min-height: 2.75rem; padding-block: .75rem; }
+.comparison-picker select { width: 100%; }
+.comparison-picker .pagination { flex-wrap: wrap; padding-inline: 0; }
 .search { width: 18rem; }
 .url { overflow-wrap: anywhere; word-break: break-word; }
 .scan-summary { display: flex; align-items: center; gap: 2rem; padding: 1.75rem; border-top: .1875rem solid var(--accent); }
@@ -284,12 +288,13 @@ footer { display: flex; justify-content: space-between; gap: 1.25rem; margin-top
 
 @media print {
   :root { color-scheme: light; color: #111; background: #fff; --text: #111; --muted: #444; --surface: #fff; --line: #bbb; --accent: #174c80; }
-  .sidebar, .topbar, .page-heading, .scan-tools, .heading-actions, .export-actions, .feedback, .integrity button, .status-region, .alert, footer { display: none !important; }
+  .sidebar, .topbar, .page-heading, .scan-tools, .comparison-picker, .heading-actions, .export-actions, .feedback, .integrity button, .status-region, .alert, footer { display: none !important; }
   .main-shell { width: 100%; margin: 0; }
   main { padding: 0; }
   .panel, .finding { color: #111; background: #fff; border: 1px solid #bbb; box-shadow: none; break-inside: avoid; }
   .finding-content { display: block !important; }
   .finding::details-content { content-visibility: visible; }
+  .comparison-result details::details-content { content-visibility: visible; }
   .muted, .finding-status, .coverage, .integrity code { color: #444; }
   .large-score, .finding-columns h3 { color: #174c80; }
   pre { color: #111; background: #f5f5f5; }

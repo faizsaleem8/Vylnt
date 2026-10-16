@@ -22,7 +22,7 @@ const server = createServer(async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       const data = path === '/api/config' ? { mode: 'local' } :
         path === '/api/scans' ? { scans: emptyWorkspace ? [] : [summary], total: emptyWorkspace ? 0 : 1, page: 1, limit: 30 } :
-        path === '/api/sites' ? { sites: emptyWorkspace ? [] : [{ origin: new URL(summary.url).origin, scanCount: 1, latest: summary }] } :
+        path === '/api/sites' ? { sites: emptyWorkspace ? [] : [{ origin: new URL(summary.url).origin, scanCount: 1, latest: summary }], total: emptyWorkspace ? 0 : 1, page: 1, limit: 30, overview: { latestHigh: emptyWorkspace ? 0 : summary.highCount, averageScore: emptyWorkspace ? null : summary.score } } :
         { report, hash: 'a'.repeat(64), receivedAt: new Date().toISOString(), feedback: [] };
       res.end(JSON.stringify(data)); return;
     }

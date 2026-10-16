@@ -4,7 +4,7 @@ Last updated: 2026-10-16 (Asia/Calcutta)
 
 ## Current milestone
 
-Extension-first inspection workspace redesigned using the user-requested Anthropic frontend-design skill: a shared violet/slate theme, locally bundled IBM Plex Sans, real collection coverage and consistent report/account/history/settings screens. Stable scan reading, keyboard sign-in and explicit sync outcomes remain. All 50 unit tests, both browser suites and the expanded UI regression suite pass. The final typography/layout refinements passed TypeScript, production build and the full UI rerun. Real authenticated Supabase persistence/RLS remains pending user sign-in.
+Extension-first inspection workspace with database pagination and complete owner-scoped site aggregates implemented beyond the former 1,000-row read cap. The optional dashboard uses global overview metrics and paginated websites. Current validation: TypeScript, 71 tests in nine suites (including real local PostgreSQL migration/RLS checks) production builds, both browser suites and the UI regression pass. Migration 002 is prepared but has not been applied to the hosted project. Live authenticated Supabase persistence/RLS remains pending.
 
 ## Milestones and remaining work
 
@@ -25,7 +25,11 @@ Extension-first inspection workspace redesigned using the user-requested Anthrop
   - [x] Configure supplied Supabase project; user reports migration applied; verify Auth connectivity and anonymous table-access denial.
   - [x] Dedicated Supabase login, registration/confirmation guidance, memory-only token refresh and sign-out in dashboard; sign-in for extension uploads.
   - [ ] Verify authenticated persistence/RPC behavior and two-user RLS in the real project after user sign-in.
-  - [ ] Production rate limiting and database pagination/aggregates beyond 1,000 scans.
+  - [x] Per-process API request/write limits with retry-aware extension sync and controlled browser recovery tests.
+  - [ ] Shared gateway/distributed rate limits for multi-instance production deployment.
+  - [x] Database pagination/aggregates beyond 1,000 scans, with local SQL/API tests.
+  - [ ] Apply migration 002 to the hosted project and verify signed-in history/site totals.
+  - [ ] Production load measurements; cursor pagination/cached aggregates for very large histories.
 - [ ] M3 — React dashboard and reports
   - [x] Connected overview, sites, scan/finding details, paginated history, settings and deletion.
   - [x] Same-URL comparison within loaded history page, review feedback, JSON import/export and responsive layout.
@@ -60,6 +64,30 @@ Extension-first inspection workspace redesigned using the user-requested Anthrop
 - Library advisory matching and DOM data-flow analysis need trustworthy evidence and remain deferred.
 
 ## Change log and validation
+
+### 2026-10-16 — Side-panel review and comparison (in progress)
+- Adding saved-finding review decisions/notes to the extension and same-URL comparison selection across history pages in both clients. Shared comparison logic will distinguish newly observed, no-longer-observed and changed findings, with collection/ruleset caveats.
+- Preparing an owner-scoped comparison-page API/RPC and migration 003. Implementation, local tests and browser acceptance are pending; hosted migrations 002/003 and live acceptance remain pending.
+
+### 2026-10-16 — Database pagination
+- Replaced the Supabase adapter’s 1,000-full-report read with security-invoker `list_scan_page` / `list_site_page` RPCs. Migration 002 adds ordering indexes, bounded summary projections, exact totals and all-history latest-site metrics, with explicit owner scoping and authenticated-only execution. Existing reports/feedback are not rewritten; repeated migration execution is supported. Missing RPCs produce actionable migration guidance.
+- Added a shared typed summary/page contract and local-store parity. Both APIs validate page/limit; deterministic timestamp/UUID ordering handles ties. Website groups exclude origins with no remaining scans. No evidence or review notes are returned in list pages. Local storage retains its 1,000-scan cap.
+- Added dashboard website pagination, global metrics and total-aware coverage labels, keeping the overview’s latest-five list separate from the website page. Refresh resets website pagination; disconnected workspaces discard pending list results. Extension history keeps its existing response contract, respects the API page ceiling and explains empty pages after deletion.
+- Added PGlite as a development-only dependency. Local PostgreSQL tests apply both migrations (002 twice), seed 1,105 scans across 1,103 sites, and verify pages beyond 1,000, exact counts, latest-only nonzero high counts, deterministic ties, empty/out-of-range pages, direct RPC bounds, two-owner RLS, anonymous denial, deletion fallback and local/SQL projection parity. No real Supabase credentials or data are used.
+- Validation: `npm run check` passes TypeScript, all 71 tests in nine suites and production builds, including the strengthened nonzero aggregate/deletion assertions. Initial npm download hit sandbox DNS and Vitest hit Windows temporary-file rename restrictions; approved reruns succeeded. Both `npm run test:browser` and `npm run test:auth-browser` passed against the final build.
+- Browser coverage now checks 1,105-history totals and 31 paginated websites, global overview values, unchanged latest-five overview selection and 390px layout. These dashboard checks passed. The first full Auth run timed out in its pre-existing missing-DOM fixture; replaced a fixed sleep with explicit initial collection readiness and added failure diagnostics. The rerun passed the complete dashboard and extension suites, including adopted partial-scan saving, immutable retry/cooldown and exclusion of unrelated history.
+- `node scripts/ui-audit.mjs` passed with adapted paged-site fixtures: 0px refresh displacement, disclosure/focus retention, filter recovery, Enter/click login counts, light/dark/preference handling, >=44px controls and no horizontal overflow including 200% root text. Visually reviewed the new mobile website-pagination screenshot. Test browsers/servers closed cleanly. Native installed-Chrome/assistive-technology acceptance remains open.
+- Updated README and API docs with migration order, response contracts and limits. Migration 002 and live authenticated CRUD/two-user isolation remain unverified on the hosted project. Offset pages can shift during concurrent changes; each RPC has one snapshot but separate API requests do not share one. Exact aggregates still process owner data; load benchmarks/cursor pagination/caching remain open. No automatic Supabase retention was added.
+- Activation: apply `supabase/migrations/002_pagination.sql` in the existing project’s SQL editor, restart the rebuilt API, reload the unpacked extension and sign in again. Do not rerun migration 001. The user’s existing API process and live data have not been modified.
+
+### 2026-10-16 — API request limits and sync recovery
+- Reviewed the plan, API deployment guide, server/auth/store and extension retry code. The next local M2 increment adds request/write limits before expensive processing and makes automatic sync honor server retry timing.
+- Implemented per-socket, per-owner and per-owner write budgets using `express-rate-limit`, with strict environment configuration, expiring HMAC counter keys, HTTP 429/Retry-After and exposed CORS rate headers. Forwarded addresses are ignored; no raw addresses or credentials are persisted by the limiter.
+- Added shared retry-header parsing and wait guidance in extension/dashboard, including HTML proxy responses. Automatic sync pauses the whole queue until the response deadline; manual Retry sync cannot shorten it, and the attempted report remains frozen. Added package/lockfile dependency, deployment/configuration documentation and browser regressions.
+- Validation: `npm run check` passed TypeScript, all 62 tests in eight suites and production builds after the sandboxed Vitest run failed to rename temporary files and the approved rerun succeeded. Tests cover limits before authentication/body parsing, independent owners across refreshed tokens, forged forwarding headers, CORS retry headers, exact reset boundaries, configuration rejection, immutable retries, queue-wide cooldown and recovery. Initial dependency download failed sandbox DNS; the approved `express-rate-limit` install succeeded and updated the lockfile.
+- Both `test:browser` and `test:auth-browser` passed. The expanded Auth browser fixture sends an HTML 429 with an eight-second Retry-After, checks that Retry sync and new scans do not bypass the wait, and confirms the frozen snapshot plus queued scan eventually save. Dashboard HTML 429 guidance is checked too. Existing scanning/permissions/privacy, history/export/import, feedback/comparison/deletion, authentication and session-clearing flows still pass. Temporary test browsers/servers closed; the user's existing API process was not restarted. A final wording-only correction avoids calling dashboard activity automatic sync; final production rebuild passed. Visually reviewed the dashboard throttling message in the synthetic browser fixture.
+- Updated `.env.example`, README and `docs/API.md` with defaults (600 socket requests, 300 owner requests, 60 owner writes per minute), configuration, recovery and deployment boundaries. Counter keys are expiring in-memory hashes; they reset on restart and are not shared between replicas. Behind a proxy the socket budget is shared; trusted gateway/distributed enforcement and direct Supabase limits remain separate work. No database migration or new extension permission is required.
+- Remaining/next: database pagination and site aggregates beyond 1,000 scans; live authenticated Supabase persistence/two-user RLS; installed-Chrome acceptance; shared gateway limits/load tests before public multi-instance deployment. Later comparison/PDF/ML/blockchain tasks remain open. To activate this increment, restart the API after the build and reload the unpacked extension; reconnect because panel credentials remain memory-only.
 
 ### 2026-10-16 — Frontend design workspace
 - Read and applied the user's linked Anthropic frontend-design skill. Documented palette, typography, alternative layouts, selected coverage matrix and pre-implementation critique in `docs/FRONTEND_DESIGN.md`. This supersedes the Apple visual direction; earlier audits remain historical and their interaction fixes remain protected.
@@ -163,10 +191,10 @@ Extension-first inspection workspace redesigned using the user-requested Anthrop
 
 ## Next implementation steps
 
-1. Accept the implemented Apple design in installed Chrome: reload `dist/extension`, inspect light/dark appearance, account setup, expanded evidence, keyboard controls and save status. Complete physical-touch/screen-reader, browser text/zoom and full contrast checks; measure toolbar blur under load. The controlled browser regressions for the original interaction findings now pass.
-2. Run the API, reload the unpacked extension, open its side panel and sign in (or create/confirm an account there). Rescan and verify persistence in Saved scans; repeat with a second account to verify real RLS isolation. Keep a valid Supabase email confirmation return URL; never send passwords/tokens in chat. The audit does not establish the cause of the user's live saving issue.
-3. Complete installed-Chrome side-panel open/close and permission acceptance, browser-restart checks and observer/storage overhead benchmarks on dynamic pages.
-4. Create/connect the GitHub repository and run the added CI workflow; add explicit accepted-risk policies and branch protection configuration.
-5. Build M5's Solidity/local-EVM anchor and verify flow on the existing immutable report/hash contract.
-6. Extend the side panel with review feedback, cross-scan comparisons, trend charts and a dedicated PDF renderer; these advanced features are not all ported from the optional web dashboard.
+1. Apply migration 002 in the existing Supabase SQL editor, restart the API, reload the extension and sign in. Migration 001 was previously user-reported applied; do not rerun it. Verify saving and paginated history, then repeat with a second account to confirm hosted owner isolation. Never share passwords/tokens in chat.
+2. Next feature increment: add review feedback and cross-scan comparison directly to the primary side panel; extend comparison selection beyond the current history page. Trend charts and a dedicated PDF renderer follow separately.
+3. Complete installed-Chrome side-panel open/close, host permission grant/revocation and browser-restart acceptance. Check keyboard, screen reader, contrast and browser zoom with the implemented frontend design.
+4. Measure observer/storage overhead on dynamic pages and database aggregate performance at larger volumes. Configure a trusted gateway/shared rate limits before public multi-instance deployment; consider cursor pagination and cached site summaries when measurements justify them.
+5. Create/connect the GitHub repository and run the existing CI workflow; configure branch protection and explicit accepted-risk policies.
+6. Build M5's Solidity/local-EVM anchor and verify flow on the existing immutable report/hash contract.
 7. Define/collect labeled examples before implementing or evaluating the baseline classifier and LSTM. Do not claim measured ML improvements without held-out data.

@@ -5,7 +5,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../apps/server/app';
-import { FileStore, reportHash } from '../apps/server/store';
+import { FileStore, MigrationRequiredError, reportHash } from '../apps/server/store';
 import { localAuth } from '../apps/server/auth';
 import { canonicalJson } from '../packages/core/integrity';
 import { parseSubmission } from '../packages/core/validation';
@@ -18,6 +18,35 @@ const app = () => createApp({ auth, store: new FileStore(), origins: ['http://12
 const dirs: string[] = [];
 afterEach(async () => { for (const dir of dirs.splice(0)) await rm(dir, { recursive: true, force: true }); });
 describe('API contracts and ownership', () => {
+  it('offers paginated same-page comparisons scoped to the selected owner', async () => {
+    const store = new FileStore(), server = createApp({ auth, store }), identity = { ownerId: 'owner-a', token: 'a' };
+    const inputs = Array.from({ length: 13 }, () => payload());
+    for (const input of inputs) await store.put(identity, parseSubmission(input));
+    await store.put(identity, parseSubmission({ ...payload(), observation: { ...observation(), url: 'https://example.test/other' } }));
+    const path = `/api/scans/${inputs[0].scanId}/comparisons?page=2&limit=10`;
+    const response = await request(server).get(path).set('Authorization', 'Bearer owner-a');
+    expect(response.status).toBe(200); expect(response.body.total).toBe(12); expect(response.body.scans).toHaveLength(2);
+    expect(response.body.scans.every((s: { url: string; scanId: string }) => s.url === 'https://example.test/path' && s.scanId !== inputs[0].scanId)).toBe(true);
+    expect((await request(server).get(path).set('Authorization', 'Bearer owner-b')).status).toBe(404);
+    expect((await request(server).get('/api/scans/not-a-uuid/comparisons').set('Authorization', 'Bearer owner-a')).status).toBe(400);
+  });
+  it('bounds both page endpoints and keeps site metrics global', async () => {
+    const store = new FileStore(), server = createApp({ auth, store });
+    const identity = { ownerId: 'owner-a', token: 'owner-a' };
+    for (let n = 1; n <= 3; n++) await store.put(identity, parseSubmission({ ...payload(), observation: { ...observation(), url: `https://site-${n}.test/` } }));
+    const get = (path: string) => request(server).get(path).set('Authorization', 'Bearer owner-a');
+    const first = (await get('/api/sites?page=1&limit=1')).body, second = (await get('/api/sites?page=2&limit=1')).body;
+    expect(first.total).toBe(3); expect(first.sites).toHaveLength(1);
+    expect(second.sites[0].origin).not.toBe(first.sites[0].origin); expect(second.overview).toEqual(first.overview);
+    expect((await get('/api/scans?page=2&limit=2')).body).toMatchObject({ total: 3, page: 2, limit: 2 });
+    expect((await get('/api/scans?page=2&limit=2')).body.scans).toHaveLength(1);
+    for (const path of ['scans', 'sites']) for (const query of ['page=0', 'limit=101', 'page=10001', 'limit=no', 'page=1.5']) expect((await get(`/api/${path}?${query}`)).status).toBe(400);
+  });
+  it('returns actionable missing-migration guidance', async () => {
+    const store = new FileStore(); store.listPage = async () => { throw new MigrationRequiredError(); };
+    const response = await request(createApp({ auth, store })).get('/api/scans').set('Authorization', 'Bearer owner-a');
+    expect(response.status).toBe(503); expect(response.body.error).toContain('002_pagination.sql');
+  });
   it('requires authentication and rejects unknown origins', async () => {
     const server = app();
     expect((await request(server).get('/api/scans')).status).toBe(401);
@@ -78,7 +107,7 @@ describe('durability and integrity', () => {
     const file = join(dir, 'scans.json'); const store = new FileStore(file); const identity = { ownerId: 'owner-a', token: 'a' };
     const input = payload();
     await Promise.all([store.put(identity, parseSubmission(input)), store.put(identity, parseSubmission(input))]);
-    expect(await new FileStore(file).list(identity)).toHaveLength(1);
+    expect((await new FileStore(file).listPage(identity, { page: 1, limit: 30 })).total).toBe(1);
   });
   it('canonicalizes object order, retains array order, and detects tampering', () => {
     expect(canonicalJson({ b: 2, a: 1 })).toBe(canonicalJson({ a: 1, b: 2 }));

@@ -72,6 +72,8 @@ Automatic sync snapshots a navigation after DOM metadata settles for two seconds
 
 Only one panel can hold an active sync connection per browser profile. Sign out or close that panel before connecting another window, so the same observations cannot be automatically sent to two different accounts.
 
+The API now limits requests per connection and verified owner, with a separate write allowance. If an upload receives HTTP 429, the panel waits for `Retry-After` before retrying any queued scan; **Retry sync** does not bypass that cooldown. Reports retain their original frozen snapshots. The dashboard shows how long to wait before repeating an action. Defaults and deployment boundaries are in [API request limits](docs/API.md#request-limits-and-recovery). The request limits themselves require no migration. For the pagination update below, apply migration 002 before restarting the updated API.
+
 Only localhost hosts are granted at install. Other HTTP(S) hosts are optional and granted through the side panel. Network visibility is bounded by Chrome's permissions, including cross-origin resources. DOM references do not prove whether a resource loaded, was blocked, or was upgraded. Browser preload lists, meta CSP, full CSP semantics, cached/back-forward navigation edge cases, service-worker-generated responses and JavaScript data flow are not comprehensively analyzed. Cookie purpose is inferred from its name and marked medium confidence.
 
 The extension uses Chrome's `tabs` permission to identify the active website when you switch tabs with the side panel open. Chrome may display a browsing-history permission warning for this capability. VYNLT only queries the active tab for these controls; it does not collect browsing history, tab titles or favicons. This permission does not authorize scanning: each additional website still requires **Enable this site**. Browser internal pages, local files and Chrome Web Store pages show an explanation with scanning disabled. After upgrading, reload the unpacked extension and reopen the side panel so the new permission takes effect.
@@ -97,6 +99,14 @@ For interactive HTTPS fixtures, run `npm run lab` after TLS setup and visit `htt
 See [docs/API.md](docs/API.md) for API endpoints, Supabase setup, CLI commands, exit codes, authentication and deployment limitations. Use `npm run dev:dashboard` for frontend hot reload while the built API runs on port 4318.
 
 Supabase email confirmations need a valid return URL; after confirming, return to the extension side panel and sign in. Configure the existing local return page under **Authentication → URL Configuration → Site URL** and allowed **Redirect URLs** as `http://127.0.0.1:4318` for this local setup. `npm run check:supabase` performs read-only live checks; the auth browser tests use controlled mock responses and do not create accounts or send email.
+
+## Database pagination update
+
+History now fetches bounded summaries from PostgreSQL, with totals and site counts covering scans beyond the previous 1,000-row read cap. The optional dashboard has website pagination and global overview metrics; saved history in the extension uses the same paginated API. Local file storage retains its 1,000-scan limit.
+
+**Existing Supabase installation:** run [002_pagination.sql](supabase/migrations/002_pagination.sql) in your project’s SQL editor (001 is already applied if you followed the earlier setup), then restart the API with `npm run dev` and reload `dist/extension`. The current production build includes these changes. Do not rerun 001 on an existing schema. No new credentials or extension permissions are needed. Hosted migration application and signed-in acceptance remain pending.
+
+The test suite now applies both SQL migrations in local PostgreSQL via PGlite, including more than 1,000 scans, complete site aggregates and owner isolation. See [pagination contracts and limits](docs/API.md#pagination-and-complete-totals) for offset behavior and deployment limitations.
 
 ## Manual acceptance checklist
 

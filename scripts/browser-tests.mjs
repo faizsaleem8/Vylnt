@@ -86,6 +86,65 @@ try {
   await reportPage.getByRole('button').filter({ hasText: 'https://127.0.0.1:5443/insecure' }).click();
   await reportPage.getByText(insecure.findings.length + ' findings', { exact: true }).waitFor();
   await reportPage.locator('.finding-card summary').first().click();
+  const review = reportPage.locator('.finding-review').first();
+  await review.getByLabel('Review decision', { exact: true }).selectOption('false_positive');
+  await review.getByLabel('Review notes', { exact: true }).fill('Controlled fixture review, no secrets.');
+  const reviewRoute = apiOrigin + '/api/scans/*/findings/**/feedback';
+  let reviewFailures = 1;
+  await reportPage.route(reviewRoute, async route => {
+    if (reviewFailures-- > 0) await route.fulfill({ status: 503, json: { error: 'Temporary review fixture failure' } });
+    else await route.continue();
+  });
+  await review.getByRole('button', { name: 'Save decision', exact: true }).click();
+  await review.getByText('Temporary review fixture failure', { exact: true }).waitFor();
+  assert.equal(await review.getByLabel('Review notes', { exact: true }).inputValue(), 'Controlled fixture review, no secrets.');
+  await review.getByRole('button', { name: 'Save decision', exact: true }).click();
+  await review.getByText('Review decision saved.', { exact: false }).waitFor();
+  await reportPage.unroute(reviewRoute);
+  const reviewed = await (await fetch(`${apiOrigin}/api/scans/${insecure.scanId}`, { headers: authHeaders })).json();
+  assert.equal(reviewed.feedback[0].verdict, 'false_positive');
+  await reportPage.locator('#history .history-item').first().click();
+  await reportPage.locator('.finding-card summary').first().click();
+  assert.equal(await reportPage.locator('.finding-review').first().getByLabel('Review notes', { exact: true }).inputValue(), 'Controlled fixture review, no secrets.');
+  await reportPage.getByText('Saved decision: False positive', { exact: false }).waitFor();
+  // Create older snapshots beyond one comparison page, then clean only these fixtures.
+  const baselineIds = [];
+  for (let n = 0; n < 13; n++) {
+    const scanId = randomUUID(); baselineIds.push(scanId);
+    const response = await fetch(`${apiOrigin}/api/scans`, { method: 'POST', headers: authHeaders, body: JSON.stringify({ scanId,
+      observation: { ...insecure.observation, scannedAt: new Date(Date.parse(insecure.observation.scannedAt) - (n + 1) * 60000).toISOString(), cookies: [], resources: [], domCollected: false } }) });
+    assert.equal(response.status, 201);
+  }
+  await reportPage.locator('.comparison-panel > summary').click();
+  await reportPage.getByText('Page 1 / 13 other scans', { exact: true }).waitFor();
+  await reportPage.getByRole('button', { name: 'Next comparisons', exact: true }).click();
+  await reportPage.getByText('Page 2 / 13 other scans', { exact: true }).waitFor();
+  await reportPage.getByLabel('Compare with', { exact: true }).selectOption(baselineIds[12]);
+  await reportPage.locator('.comparison-result').getByText('Collection coverage differs.', { exact: false }).waitFor();
+  assert.match(await reportPage.locator('.comparison-result').textContent(), /newly observed.*no longer observed.*changed/);
+  assert.ok(await reportPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await reportPage.screenshot({ path: 'test-results/extension-review-comparison.png', fullPage: true });
+  await reportPage.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  assert.ok(await reportPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Review and comparison fit enlarged text');
+  await reportPage.screenshot({ path: 'test-results/extension-review-large-text.png', fullPage: true });
+  await reportPage.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await reportPage.getByRole('button', { name: 'Clear comparison', exact: true }).click();
+  assert.equal(await reportPage.locator('.comparison-result').textContent(), '');
+  // A delayed comparison response must not replace the current-page view.
+  let releaseBaseline;
+  const delayedBaseline = new Promise(resolveReply => { releaseBaseline = resolveReply; });
+  let baselineRequested = false;
+  await reportPage.route(`${apiOrigin}/api/scans/${baselineIds[12]}`, async route => { baselineRequested = true; await delayedBaseline; await route.continue(); });
+  await reportPage.getByLabel('Compare with', { exact: true }).selectOption(baselineIds[12]);
+  await until(() => baselineRequested, 'delayed baseline request');
+  await reportPage.getByRole('button', { name: 'Current scan', exact: true }).click();
+  releaseBaseline(); await reportPage.waitForTimeout(300);
+  assert.equal(await reportPage.locator('.comparison-panel').count(), 0);
+  assert.equal(await reportPage.locator('.finding-review').count(), 0);
+  await reportPage.unroute(`${apiOrigin}/api/scans/${baselineIds[12]}`);
+  for (const scanId of baselineIds) assert.equal((await fetch(`${apiOrigin}/api/scans/${scanId}`, { method: 'DELETE', headers: authHeaders })).status, 204);
+  await reportPage.getByRole('button', { name: 'Saved scans', exact: true }).click();
+  await reportPage.locator('#history .history-item').first().click();
   await reportPage.getByRole('button', { name: 'Verify hash', exact: true }).click();
   await reportPage.getByText('Stored report matches its SHA-256 hash.', { exact: false }).waitFor();
   const panelDownload = reportPage.waitForEvent('download');
@@ -151,6 +210,8 @@ try {
   await dashboard.setViewportSize({ width: 1440, height: 1000 });
   await dashboard.locator('input[type=file]').setInputFiles('test-results/insecure.json');
   await dashboard.getByText('Report imported.', { exact: false }).waitFor();
+  await dashboard.locator('.comparison-picker > summary').click();
+  await until(() => dashboard.getByLabel('Compare with', { exact: true }).locator(`option[value="${insecure.scanId}"]`).count(), 'dashboard comparison candidates');
   await dashboard.getByLabel('Compare with').selectOption(insecure.scanId);
   await dashboard.getByText('Compared with', { exact: false }).waitFor();
   await dashboard.getByLabel('Filter findings').selectOption('high'); assert.equal(await dashboard.locator('.finding').count(), 1);
@@ -159,7 +220,7 @@ try {
   await until(async () => (await (await fetch(`${apiOrigin}/api/scans`, { headers: authHeaders })).json()).total === 2, 'dashboard deletion');
   assert.deepEqual(errors, []); console.log('PASS dashboard: auth, history/detail, feedback, integrity, JSON download/import, comparison, severity filter, deletion, mobile layout, no JS errors');
   console.log('Browser acceptance passed. Screenshots and CLI reports: test-results/');
-} catch (error) { console.error(error); if (reportPage && !reportPage.isClosed()) console.error('Extension status:', await reportPage.locator('#message').textContent().catch(() => 'unavailable')); if (logs.length) console.error(logs.join('')); process.exitCode = 1; }
+} catch (error) { console.error(error); if (reportPage && !reportPage.isClosed()) { console.error('Extension status:', await reportPage.locator('#message').textContent().catch(() => 'unavailable')); console.error('Review controls:', await reportPage.locator('.finding-review').first().evaluate(node => node.outerHTML).catch(() => 'unavailable')); await reportPage.screenshot({ path: 'test-results/browser-failure.png', fullPage: true }).catch(() => {}); } if (logs.length) console.error(logs.join('')); process.exitCode = 1; }
 finally {
   await dashboardBrowser?.close(); await context?.close();
   if (apiProcess) { const stopped = new Promise(resolveStop => { if (apiProcess.exitCode !== null) resolveStop(); else apiProcess.once('exit', resolveStop); }); apiProcess.kill(); await stopped; }

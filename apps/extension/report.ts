@@ -3,6 +3,10 @@ import { element, get, send } from './ui';
 import { createMemoryClient, type SupabaseConfig } from '../../packages/auth/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ScanSync, SyncFailure } from './sync';
+import { rateLimitMessage, retryDeadline } from '../../packages/http/retry';
+import type { Feedback, FeedbackInput } from '../../packages/core/validation';
+import { findingReview } from './review';
+import { comparisonPanel } from './comparison';
 
 let selected: Report | undefined;
 let currentScan: Report | undefined;
@@ -43,14 +47,21 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
   if (response.status === 204) return undefined as T;
+  // Proxies may return HTML on throttling; read the status/header before parsing JSON.
+  if (response.status === 429) {
+    const deadline = retryDeadline(response.headers.get('Retry-After'));
+    throw new SyncFailure(rateLimitMessage(deadline), Number.isFinite(deadline), deadline);
+  }
   const data = await response.json().catch(() => { throw new SyncFailure('The API returned an invalid response. Check the API base URL and restart the VYNLT server.'); });
   if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
   if (!response.ok) {
     if (response.status === 401) throw new SyncFailure('Your workspace session was rejected. Sign out and sign in again.', false);
     if (response.status === 403) throw new SyncFailure('Workspace access denied. Check the account and API permissions.', false);
-    if (response.status === 400) throw new SyncFailure('The API rejected this scan’s metadata (HTTP 400). Rescan after updating the extension and server.', false);
+    if (response.status === 400) throw new SyncFailure('The API rejected this request (HTTP 400). Check the inputs and update the extension and server.', false);
+    if (response.status === 404) throw new SyncFailure('This saved scan or finding is no longer available. Refresh saved history.', false);
     if (response.status === 409) throw new SyncFailure('This snapshot cannot be saved (HTTP 409). Rescan to create a new report, or check workspace capacity.', false);
     if (response.status === 413) throw new SyncFailure('This scan exceeds the API upload limit (512 KB).', false);
+    if (response.status === 503 && typeof data.error === 'string') throw new SyncFailure(data.error);
     throw new SyncFailure('Workspace request failed (HTTP ' + response.status + '). Check the API server and Supabase database connection.', response.status >= 500 || response.status === 429);
   }
   return data as T;
@@ -110,6 +121,7 @@ get('load-auth').onclick = () => authAction(async () => {
   resetConnection(); await authClient?.auth.dispose(); authClient = undefined; authConfig = undefined; authOrigin = '';
   get('supabase-auth').hidden = true; get('local-auth').hidden = true;
   const response = await fetch(base.origin + '/api/config', { signal: AbortSignal.timeout(10000) });
+  if (response.status === 429) throw new Error(rateLimitMessage(retryDeadline(response.headers.get('Retry-After'))));
   if (!response.ok) throw new Error('Could not load workspace configuration. Is the API running?');
   const config = await response.json();
   if (config.mode === 'supabase') {
@@ -164,6 +176,7 @@ get('retry').onclick = () => { sync?.retry(); handle(refreshState); };
 interface FindingNodes {
   card: HTMLDetailsElement; severity: HTMLElement; title: HTMLElement; rule: HTMLElement;
   description: HTMLElement; context: HTMLElement; evidence: HTMLElement; recommendation: HTMLElement;
+  review?: HTMLFormElement;
 }
 interface ReportNodes {
   identity: string; score: HTMLElement; title: HTMLElement; metadata: HTMLElement;
@@ -213,7 +226,7 @@ function renderSyncStatus() {
   node.dataset.state = scanStatus?.state ?? (sync ? 'idle' : 'disconnected');
   text(node, scanStatus ? 'Current scan / ' + scanStatus.text : !sync ? 'Sign in to save this scan automatically.' : currentScan ? 'Current scan is not queued. Rescan to save a new report.' : 'No current scan to save yet.');
 }
-function show(report?: Report) {
+function show(report?: Report, feedback: Feedback[] = []) {
   selected = report;
   get<HTMLButtonElement>('export').disabled = !report;
   get('verify').hidden = view !== 'saved' || !report;
@@ -233,6 +246,9 @@ function show(report?: Report) {
   const readingAnchor = focused ?? visibleCard;
   const anchorTop = readingAnchor?.getBoundingClientRect().top;
   const nodes = sameScan ? renderedReport! : (renderedReport = createReportNodes(identity));
+  const session = epoch;
+  const isCurrent = () => epoch === session && view === 'saved' && renderedReport === nodes && selected?.scanId === report.scanId;
+  if (!sameScan && view === 'saved') nodes.heading.before(comparisonPanel(report, api, isCurrent));
   const o = report.observation;
   text(nodes.score, String(report.score)); text(nodes.title, o.url);
   text(nodes.metadata, new Date(o.scannedAt).toLocaleString() + ' / Ruleset ' + report.rulesetVersion);
@@ -248,6 +264,12 @@ function show(report?: Report) {
   report.findings.forEach((finding, index) => {
     const findingNodes = nodes.findings.get(finding.id) ?? createFinding();
     nodes.findings.set(finding.id, findingNodes); updateFinding(findingNodes, finding);
+    if (view === 'saved' && !findingNodes.review) {
+      findingNodes.review = findingReview(feedback.find(item => item.findingId === finding.id),
+        (input: FeedbackInput) => api<Feedback>(`/scans/${report.scanId}/findings/${encodeURIComponent(finding.id)}/feedback`, { method: 'POST', body: JSON.stringify(input) }),
+        () => isCurrent() && nodes.findings.get(finding.id) === findingNodes);
+      findingNodes.card.querySelector('.finding-body')!.append(findingNodes.review);
+    }
     // Keep unchanged nodes in place so open disclosures and keyboard focus survive collection updates.
     if (nodes.list.children[index] !== findingNodes.card) nodes.list.insertBefore(findingNodes.card, nodes.list.children[index] ?? null);
   });
@@ -268,17 +290,17 @@ async function loadHistory() {
   const data = await api<ScanList>('/scans?page=' + page + '&limit=10');
   if (version !== listVersion || session !== epoch || view !== 'saved') return;
   get('page-label').textContent = 'Page ' + page + ' / ' + data.total + ' scans';
-  get<HTMLButtonElement>('previous').disabled = page <= 1; get<HTMLButtonElement>('next').disabled = page * 10 >= data.total;
+  get<HTMLButtonElement>('previous').disabled = page <= 1; get<HTMLButtonElement>('next').disabled = page * 10 >= data.total || page >= 10000;
   get('history').replaceChildren(...data.scans.map(row => {
     const button = element('button', '', 'history-item');
     button.append(element('strong', row.url), element('span', new Date(row.scannedAt).toLocaleString(), 'muted'), element('span', row.findingCount + ' findings / ' + row.score + '/100', 'history-meta'));
     button.onclick = () => handle(async () => {
       const version = ++selectionVersion;
-      const result = await api<{ report: Report }>('/scans/' + row.scanId);
-      if (version === selectionVersion && view === 'saved') show(result.report);
+      const result = await api<{ report: Report; feedback?: Feedback[] }>('/scans/' + row.scanId);
+      if (version === selectionVersion && view === 'saved') { renderedReport = undefined; show(result.report, result.feedback ?? []); }
     }); return button;
   }));
-  if (!data.scans.length) get('history').append(element('p', 'No saved scans yet. Sign in, then rescan a page.', 'muted'));
+  if (!data.scans.length) get('history').append(element('p', data.total ? 'No scans on this page. Go to the previous page or refresh history.' : 'No saved scans yet. Sign in, then rescan a page.', 'muted'));
 }
 get('current').onclick = () => { selectionVersion++; view = 'current'; setView(); show(currentScan); };
 get('saved').onclick = () => handle(async () => { selectionVersion++; view = 'saved'; setView(); show(); await loadHistory(); });

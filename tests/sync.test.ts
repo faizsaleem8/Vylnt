@@ -4,6 +4,34 @@ import { ScanSync, SyncFailure } from '../apps/extension/sync';
 
 const report = (time = 1000, id = 'one') => createReport(id, { url: 'https://example.test/', scannedAt: new Date(time).toISOString(), domCollected: true, scripts: [], resources: [] });
 describe('automatic immutable scan syncing', () => {
+  it('honors a server cooldown across the entire queue, even after Retry sync, and recovers with the frozen snapshot', async () => {
+    const upload = vi.fn().mockRejectedValueOnce(new SyncFailure('Wait 30 seconds.', true, 33000)).mockResolvedValue(undefined);
+    const sync = new ScanSync(0, upload, vi.fn()); const first = report(), second = report(1000, 'two');
+    await sync.tick([first, second], 1000); await sync.tick([first, second], 3000);
+    expect(upload).toHaveBeenCalledTimes(1); expect(sync.statusFor('two')?.attempts).toBe(0);
+    first.observation.resources.push({ url: 'https://example.test/later.js', type: 'script', outcome: 'referenced' });
+    sync.retry(); await sync.tick([first, second], 8000); await sync.tick([first, second], 32999);
+    expect(upload).toHaveBeenCalledTimes(1);
+    await sync.tick([first, second], 33000);
+    expect(upload).toHaveBeenCalledTimes(3); expect(upload.mock.calls[0][0]).toEqual(upload.mock.calls[1][0]);
+    expect(sync.snapshot()).toMatchObject({ saved: 2, failed: 0 });
+  });
+  it('uses the response deadline even if the server responds long after a tick begins', async () => {
+    const upload = vi.fn().mockRejectedValueOnce(new SyncFailure('Wait after response.', true, 45000)).mockResolvedValue(undefined);
+    const sync = new ScanSync(0, upload, vi.fn());
+    await sync.tick([report()], 1000); await sync.tick([report()], 3000);
+    await sync.tick([report()], 33000); expect(upload).toHaveBeenCalledTimes(1);
+    await sync.tick([report()], 45000); expect(upload).toHaveBeenCalledTimes(2);
+  });
+  it('requires reconnecting after an excessive wait and clears the old account cooldown on stop', async () => {
+    const upload = vi.fn().mockRejectedValueOnce(new SyncFailure('Reconnect later.', false, Infinity)).mockResolvedValue(undefined);
+    const sync = new ScanSync(0, upload, vi.fn());
+    await sync.tick([report()], 1000); await sync.tick([report()], 3000); sync.retry();
+    await sync.tick([report(), report(4000, 'two')], 99999999); expect(upload).toHaveBeenCalledTimes(1);
+    sync.stop();
+    const next = new ScanSync(0, upload, vi.fn()); await next.tick([report()], 100000000); await next.tick([report()], 100002000);
+    expect(upload).toHaveBeenCalledTimes(2);
+  });
   it('includes only the current pre-login scan with a new immutable upload identity', async () => {
     const upload = vi.fn().mockResolvedValue(undefined); const sync = new ScanSync(5000, upload, vi.fn());
     const current = report(1000, 'current'); const other = report(1000, 'other-account-history');

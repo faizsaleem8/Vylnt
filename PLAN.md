@@ -1,10 +1,10 @@
 # VYNLT implementation plan
 
-Last updated: 2026-10-16 (Asia/Calcutta)
+Last updated: 2026-10-20 (Asia/Calcutta)
 
 ## Current milestone
 
-Extension-first inspection workspace with database pagination and complete owner-scoped site aggregates implemented beyond the former 1,000-row read cap. The optional dashboard uses global overview metrics and paginated websites. Current validation: TypeScript, 71 tests in nine suites (including real local PostgreSQL migration/RLS checks) production builds, both browser suites and the UI regression pass. Migration 002 is prepared but has not been applied to the hosted project. Live authenticated Supabase persistence/RLS remains pending.
+Extension-first inspection workspace with saved-finding reviews and paginated same-page comparisons implemented in the extension and optional dashboard. Shared comparison logic identifies additions, removals and evidence/assessment changes with coverage and ruleset caveats. TypeScript, 78 tests in ten suites, production builds, both browser suites and the UI regression passed. The final spacing-only build also passed the full browser workflow. Hosted migrations 002/003 and real authenticated Supabase acceptance remain pending.
 
 ## Milestones and remaining work
 
@@ -28,16 +28,19 @@ Extension-first inspection workspace with database pagination and complete owner
   - [x] Per-process API request/write limits with retry-aware extension sync and controlled browser recovery tests.
   - [ ] Shared gateway/distributed rate limits for multi-instance production deployment.
   - [x] Database pagination/aggregates beyond 1,000 scans, with local SQL/API tests.
-  - [ ] Apply migration 002 to the hosted project and verify signed-in history/site totals.
+  - [ ] Apply migrations 002/003 to the hosted project and verify signed-in history, totals and comparisons.
   - [ ] Production load measurements; cursor pagination/cached aggregates for very large histories.
 - [ ] M3 — React dashboard and reports
   - [x] Connected overview, sites, scan/finding details, paginated history, settings and deletion.
-  - [x] Same-URL comparison within loaded history page, review feedback, JSON import/export and responsive layout.
+  - [x] Review feedback, JSON import/export and responsive layout in the dashboard.
+  - [x] Saved-finding decisions/notes directly in the extension, with failed-save draft recovery.
+  - [x] Same-URL comparison selection across history pages in both clients, with shared evidence/coverage comparison logic.
   - [x] Browser print/PDF layout and print action (dedicated server PDF generation remains open).
   - [x] First Apple design increment across side panel/dashboard; responsive themes, larger controls, stable interaction feedback and controlled browser validation.
   - [x] Full frontend-design visual pass across existing extension/dashboard screens; shared local typography, coverage matrix, themes and evidence hierarchy.
   - [ ] Installed-Chrome, physical-touch, screen-reader and full contrast/zoom acceptance for the updated UI; measure font/loading performance on slow devices.
-  - [ ] Cross-page comparison selection, history charts and dedicated PDF generator with pagination QA.
+  - [ ] History trend charts in the extension, with coverage-aware interpretation.
+  - [ ] Dedicated PDF generator accessible from the extension, with pagination QA.
 - [ ] M4 — Automated scanner and GitHub Actions
   - [x] Playwright CLI using shared rules, JSON artifacts, confidence/severity gate and documented exit codes.
   - [x] Real secure/insecure fixture regression: secure passes, insecure fails; CLI/extension rule IDs agree.
@@ -65,9 +68,17 @@ Extension-first inspection workspace with database pagination and complete owner
 
 ## Change log and validation
 
-### 2026-10-16 — Side-panel review and comparison (in progress)
-- Adding saved-finding review decisions/notes to the extension and same-URL comparison selection across history pages in both clients. Shared comparison logic will distinguish newly observed, no-longer-observed and changed findings, with collection/ruleset caveats.
-- Preparing an owner-scoped comparison-page API/RPC and migration 003. Implementation, local tests and browser acceptance are pending; hosted migrations 002/003 and live acceptance remain pending.
+### 2026-10-20 — Side-panel review and comparison
+- Completed the work started on 2026-10-16. Saved findings now have review verdicts and bounded notes directly in the extension. Failed saves retain the draft on the open report, saved decisions reload correctly, and evidence/score/hash remain immutable. Unsaved drafts are discarded on report switch/sign-out; no persistent browser storage was added.
+- Added same-URL comparison pickers in both clients with independent ten-row candidate pages, plus the owner-scoped comparison API and security-invoker RPC in migration 003. The selected scan is excluded, missing/unowned targets return 404, and candidate reads enforce owner RLS. Migration 003 depends on 002 and can be reapplied.
+- Shared pure comparison code identifies newly observed, no-longer-observed and changed severity/confidence/evidence, ignoring observation time alone. Results show score delta and coverage/ruleset caveats; missing observations are never automatically marked fixed. Comparison results remain in memory and do not alter report exports.
+- Validation: TypeScript, all 78 automated tests in ten suites and production builds passed on 2026-10-20. Local PostgreSQL tests apply/reapply migration 003 and check paging, exact URL matching, target exclusion, owner isolation and anonymous denial; API/adapter tests verify contracts and missing-migration guidance. Shared comparison tests cover ordering, changed evidence, coverage/rulesets and invalid pairings. Hosted Supabase is not exercised by these tests.
+- Both browser suites passed: extension review save/reopen, draft recovery after simulated HTTP 503, preserved hash, second comparison page with 13 candidates, coverage warnings, clear action and delayed baseline ignored after switching to Current scan. Dashboard comparison selection on page two, mobile overflow and print hiding of picker controls passed. Auth/sync/retry/session/privacy regressions also passed. Expanded fixture writes use a test-only 200-write budget; production defaults are unchanged.
+- The first dashboard comparison run failed on an exact accessible-label lookup. Added an explicit stable name to the picker and reran successfully. Visual review of mobile screenshots led to consistent padding around the dashboard picker; the final spacing rerun passed the complete extension/API/CLI/dashboard workflow. The extension review controls also use explicit accessible names.
+- Existing UI audit passed: 0px refresh displacement, disclosure/focus retention, empty-filter recovery, Enter/click request counts, themes/preferences, minimum control heights and narrow/enlarged-text layouts. New extension review/comparison screens also passed 200% text overflow checks. Screenshots: test-results/extension-review-comparison.png, extension-review-large-text.png and dashboard-comparison-mobile.png. Browser print checks do not establish paginated PDF acceptance.
+- Updated README and API usage/deployment docs. Remaining: apply 002 then 003 in hosted Supabase (skip already-applied migrations), restart the API, reload the extension and verify real-account saving/reviews/comparisons and two-user isolation. Production query/load tuning, collaborative review conflict handling and native Chrome/assistive-technology acceptance remain open. The existing API process and hosted database have not been modified.
+- Next development: history trends in the primary side panel, followed by dedicated PDF generation and pagination QA. Later CI deployment, hardening, blockchain and ML milestones remain open.
+- Final visual review aligned the result panel's padding with the picker. This CSS-only refinement is covered by a production rebuild; browser workflow results above precede that last spacing adjustment.
 
 ### 2026-10-16 — Database pagination
 - Replaced the Supabase adapter’s 1,000-full-report read with security-invoker `list_scan_page` / `list_site_page` RPCs. Migration 002 adds ordering indexes, bounded summary projections, exact totals and all-history latest-site metrics, with explicit owner scoping and authenticated-only execution. Existing reports/feedback are not rewritten; repeated migration execution is supported. Missing RPCs produce actionable migration guidance.
@@ -191,8 +202,8 @@ Extension-first inspection workspace with database pagination and complete owner
 
 ## Next implementation steps
 
-1. Apply migration 002 in the existing Supabase SQL editor, restart the API, reload the extension and sign in. Migration 001 was previously user-reported applied; do not rerun it. Verify saving and paginated history, then repeat with a second account to confirm hosted owner isolation. Never share passwords/tokens in chat.
-2. Next feature increment: add review feedback and cross-scan comparison directly to the primary side panel; extend comparison selection beyond the current history page. Trend charts and a dedicated PDF renderer follow separately.
+1. Apply missing migrations 002 then 003 in the existing Supabase SQL editor, restart the API, reload the extension and sign in. Migration 001 was previously user-reported applied; do not rerun it. Verify saving and paginated history, then repeat with a second account to confirm hosted owner isolation. Never share passwords/tokens in chat.
+2. Next feature increment: add history trend charts in the primary side panel, showing score, findings and collection coverage over time for the same page. Then implement dedicated PDF report generation with multi-page layout validation.
 3. Complete installed-Chrome side-panel open/close, host permission grant/revocation and browser-restart acceptance. Check keyboard, screen reader, contrast and browser zoom with the implemented frontend design.
 4. Measure observer/storage overhead on dynamic pages and database aggregate performance at larger volumes. Configure a trusted gateway/shared rate limits before public multi-instance deployment; consider cursor pagination and cached site summaries when measurements justify them.
 5. Create/connect the GitHub repository and run the existing CI workflow; configure branch protection and explicit accepted-risk policies.

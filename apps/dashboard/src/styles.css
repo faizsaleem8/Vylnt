@@ -109,6 +109,7 @@ td .text-button { text-align: left; font-size: .8125rem; }
 .high-count { display: inline-block; margin-left: .625rem; font-size: .75rem; color: var(--negative); }
 .pagination { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: 1.25rem; color: var(--muted); font-size: .75rem; }
 .comparison-picker, .comparison-result { margin-block: 1rem; overflow-wrap: anywhere; }
+.comparison-picker, .comparison-result { padding: 1.25rem; }
 .comparison-picker > summary, .comparison-result summary { cursor: pointer; min-height: 2.75rem; padding-block: .75rem; }
 .comparison-picker select { width: 100%; }
 .comparison-picker .pagination { flex-wrap: wrap; padding-inline: 0; }

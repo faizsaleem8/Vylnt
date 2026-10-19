@@ -69,3 +69,7 @@ Native installed-Chrome side-panel lifecycle, physical-touch/screen-reader check
 - [Report evidence](../test-results/frontend-design/dashboard-evidence.png), [mobile overview](../test-results/frontend-design/dashboard-overview-mobile-light.png) and [measurements](../test-results/frontend-design/measurements.json).
 
 Rebuild with `npm run build`; reload the unpacked extension from `dist/extension` and refresh the optional dashboard to see changes. Closing/reloading the panel clears its in-memory sign-in as before.
+
+## 2026-10-20 — Review and comparison extension
+
+Added saved-finding review forms inside existing disclosures, explicit accessible control names, and a collapsible same-page comparison picker with independent pagination. Both clients use shared comparison semantics and coverage/ruleset caveats. Mobile visual review added consistent dashboard picker padding. The existing theme, local fonts and interaction protections remain the design basis. See PLAN.md for current test results, migration 003 activation and remaining manual acceptance.

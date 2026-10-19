@@ -30,7 +30,7 @@ export function ComparisonPicker({ report, api, onChoose }: { report: Report; ap
   return <details className="panel comparison-picker" onToggle={event => setOpen(event.currentTarget.open)}>
     <summary>Compare saved scans</summary>
     <p className="muted">Choose another saved scan of this exact page URL, across all history pages. Changes are relative to the baseline you choose.</p>
-    <label>Compare with<select disabled={busy || !data?.scans.length} value={choice} onChange={event => void choose(event.target.value)}><option value="">Select a baseline scan</option>{data?.scans.map(scan => <option key={scan.scanId} value={scan.scanId}>{new Date(scan.scannedAt).toLocaleString()} / {scan.score}/100 / {scan.scanId.slice(-8)}</option>)}</select></label>
+    <label>Compare with<select aria-label="Compare with" disabled={busy || !data?.scans.length} value={choice} onChange={event => void choose(event.target.value)}><option value="">Select a baseline scan</option>{data?.scans.map(scan => <option key={scan.scanId} value={scan.scanId}>{new Date(scan.scannedAt).toLocaleString()} / {scan.score}/100 / {scan.scanId.slice(-8)}</option>)}</select></label>
     <div className="pagination"><button disabled={busy || !data || data.page <= 1} onClick={() => void load(data!.page - 1)}>Previous comparisons</button><span>Page {data?.page ?? 1} / {data?.total ?? 0} other scans</span><button disabled={busy || !data || data.page * 10 >= data.total || data.page >= 10000} onClick={() => void load(data!.page + 1)}>Next comparisons</button></div>
     <button disabled={busy} onClick={() => { setChoice(''); onChoose(undefined); }}>Clear comparison</button>
     {busy && <p role="status">Loading comparison…</p>}

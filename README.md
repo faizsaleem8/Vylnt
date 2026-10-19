@@ -28,12 +28,20 @@ npm.cmd run lab
 3. Click VYNLT's toolbar icon to open its side panel alongside the website.
 4. Expand **Account & automatic sync**, select **Load workspace connection**, then **Sign in** (or **Create account**, confirm your email and return here). Pressing Enter also submits sign-in. Local development mode instead asks for its API token. The default API address is localhost; expand **Connection settings** only when you need to change it.
 5. Select **Rescan page**. This reloads the current page to observe response headers. Inspect evidence and remediation under **Current scan**; select **Export JSON** to download it.
-6. Sign-in checks authenticated API/database access, then automatically syncs the current page's existing scan and new scans while the panel stays open. **Saved scans** retrieves paginated history from the API/Supabase; select a scan to inspect, export, verify its hash or delete it. No manual send button or separate dashboard login is needed.
+6. Sign-in checks authenticated API/database access, then automatically syncs the current page's existing scan and new scans while the panel stays open. **Saved scans** retrieves paginated history from the API/Supabase; select a scan to inspect, review findings, compare saved observations, export, verify its hash or delete it. No manual send button or separate dashboard login is needed.
 7. Compare `/secure`, then use `/dynamic` to exercise DOM updates. Rescan to save later changes as a new immutable report.
 
 After source edits, run `npm.cmd run build`, reload the extension in Chrome, and reload the test page. Other domains require **Enable this site** in the side panel. Chrome host permission patterns apply across ports on that host. Pause stops collection and new sync attempts; an already submitted request can finish. Resume and rescan to capture a complete new navigation.
 
 The side panel and optional dashboard share an inspection-workspace design: violet navigation, locally bundled IBM Plex Sans, cool neutral evidence surfaces and a collection coverage matrix. Coverage says what was collected, not whether a site is secure. Both surfaces follow system light/dark appearance and provide scalable text, reduced-motion and increased-contrast treatments with opaque toolbars. Live scan updates preserve expanded findings and keyboard focus. The current-page status identifies that scan's save outcome; account feedback retains unresolved failures even when another scan saves. Counts describe the open panel's bounded sync queue, not the workspace's full history. The requested frontend-design skill, design plan, implementation and acceptance limits are recorded in [docs/FRONTEND_DESIGN.md](docs/FRONTEND_DESIGN.md). Earlier audits remain historical evidence.
+
+## Review and compare inside the extension
+
+In **Saved scans**, open a report and expand a finding. Choose **Open**, **Fixed**, **Accepted risk**, or **False positive**, add optional notes, and select **Save decision**. Reviews persist separately from the immutable report. Failed saves retain your draft while the report remains open; switching reports or signing out discards unsaved edits.
+
+Open **Compare saved scans** to select another saved observation of the same page URL. Use **Previous comparisons** / **Next comparisons** to reach baselines beyond the current history page. Results show newly observed, no longer observed and changed evidence, plus score differences and coverage/ruleset warnings. These differences do not prove remediation. The optional dashboard has the same comparison workflow.
+
+Supabase comparisons require [003_comparison.sql](supabase/migrations/003_comparison.sql), applied after migration 002. Review storage uses the existing feedback table. Apply missing migrations in order, restart the API and reload the extension. Local mode requires no SQL setup. Hosted migration application and real-account verification remain pending.
 
 ## Structure
 
@@ -104,9 +112,9 @@ Supabase email confirmations need a valid return URL; after confirming, return t
 
 History now fetches bounded summaries from PostgreSQL, with totals and site counts covering scans beyond the previous 1,000-row read cap. The optional dashboard has website pagination and global overview metrics; saved history in the extension uses the same paginated API. Local file storage retains its 1,000-scan limit.
 
-**Existing Supabase installation:** run [002_pagination.sql](supabase/migrations/002_pagination.sql) in your project’s SQL editor (001 is already applied if you followed the earlier setup), then restart the API with `npm run dev` and reload `dist/extension`. The current production build includes these changes. Do not rerun 001 on an existing schema. No new credentials or extension permissions are needed. Hosted migration application and signed-in acceptance remain pending.
+**Existing Supabase installation:** run [002_pagination.sql](supabase/migrations/002_pagination.sql), followed by [003_comparison.sql](supabase/migrations/003_comparison.sql), in your project’s SQL editor (001 is already applied if you followed the earlier setup), then restart the API with `npm run dev` and reload `dist/extension`. The current production build includes these changes. Do not rerun 001 on an existing schema. No new credentials or extension permissions are needed. Hosted migration application and signed-in acceptance remain pending.
 
-The test suite now applies both SQL migrations in local PostgreSQL via PGlite, including more than 1,000 scans, complete site aggregates and owner isolation. See [pagination contracts and limits](docs/API.md#pagination-and-complete-totals) for offset behavior and deployment limitations.
+The test suite now applies all three SQL migrations in local PostgreSQL via PGlite, including more than 1,000 scans, complete site aggregates and owner isolation. See [pagination contracts and limits](docs/API.md#pagination-and-complete-totals) for offset behavior and deployment limitations.
 
 ## Manual acceptance checklist
 

@@ -25,7 +25,7 @@ async function until(work, label, timeout = 15000) {
 const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 try {
   servers = await startLabs(); assert.equal(servers.length, 2, 'Run npm run lab:tls first');
-  apiProcess = spawn(process.execPath, ['dist/server/index.js'], { env: { ...process.env, PORT: '4319', HOST: '127.0.0.1', VYNLT_STORAGE: 'local', VYNLT_API_TOKEN: token, VYNLT_DATA_FILE: dataFile, VYNLT_ALLOWED_ORIGINS: apiOrigin }, stdio: ['ignore', 'pipe', 'pipe'] });
+  apiProcess = spawn(process.execPath, ['dist/server/index.js'], { env: { ...process.env, PORT: '4319', HOST: '127.0.0.1', VYNLT_STORAGE: 'local', VYNLT_API_TOKEN: token, VYNLT_DATA_FILE: dataFile, VYNLT_ALLOWED_ORIGINS: apiOrigin, VYNLT_RATE_WRITE_MAX: '200' }, stdio: ['ignore', 'pipe', 'pipe'] });
   apiProcess.stderr.on('data', d => logs.push(d.toString()));
   await until(async () => (await fetch(`${apiOrigin}/api/health`)).ok, 'API readiness');
   const extension = resolve('dist/extension');
@@ -210,10 +210,32 @@ try {
   await dashboard.setViewportSize({ width: 1440, height: 1000 });
   await dashboard.locator('input[type=file]').setInputFiles('test-results/insecure.json');
   await dashboard.getByText('Report imported.', { exact: false }).waitFor();
+  const dashboardBaselines = [];
+  for (let n = 0; n < 12; n++) {
+    const scanId = randomUUID(); dashboardBaselines.push(scanId);
+    const response = await fetch(apiOrigin + '/api/scans', { method: 'POST', headers: authHeaders, body: JSON.stringify({ scanId,
+      observation: { ...cliReport.observation, scannedAt: new Date(Date.parse(cliReport.observation.scannedAt) - (n + 1) * 60000).toISOString(), domCollected: false } }) });
+    assert.equal(response.status, 201);
+  }
   await dashboard.locator('.comparison-picker > summary').click();
   await until(() => dashboard.getByLabel('Compare with', { exact: true }).locator(`option[value="${insecure.scanId}"]`).count(), 'dashboard comparison candidates');
   await dashboard.getByLabel('Compare with').selectOption(insecure.scanId);
   await dashboard.getByText('Compared with', { exact: false }).waitFor();
+  await dashboard.getByRole('button', { name: 'Next comparisons', exact: true }).click();
+  await dashboard.getByText('Page 2 / 13 other scans', { exact: true }).waitFor();
+  await dashboard.getByLabel('Compare with', { exact: true }).selectOption(dashboardBaselines[11]);
+  await dashboard.locator('.comparison-result').getByText('Collection coverage differs.', { exact: false }).waitFor();
+  await dashboard.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await dashboard.screenshot({ path: 'test-results/dashboard-comparison-mobile.png', fullPage: true });
+  await dashboard.emulateMedia({ media: 'print' });
+  assert.equal(await dashboard.locator('.comparison-picker').isVisible(), false);
+  assert.equal(await dashboard.locator('.comparison-result').isVisible(), true);
+  await dashboard.emulateMedia({ media: 'screen' });
+  await dashboard.setViewportSize({ width: 1440, height: 1000 });
+  for (const scanId of dashboardBaselines) assert.equal((await fetch(apiOrigin + '/api/scans/' + scanId, { method: 'DELETE', headers: authHeaders })).status, 204);
+  await dashboard.getByRole('button', { name: 'Clear comparison', exact: true }).click();
+  assert.equal(await dashboard.locator('.comparison-result').count(), 0);
   await dashboard.getByLabel('Filter findings').selectOption('high'); assert.equal(await dashboard.locator('.finding').count(), 1);
   await dashboard.getByRole('button', { name: 'Settings', exact: false }).click();
   dashboard.once('dialog', dialog => dialog.accept()); await dashboard.getByRole('button', { name: 'Delete', exact: true }).first().click();

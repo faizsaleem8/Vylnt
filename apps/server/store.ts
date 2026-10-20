@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
+import { assertReportSize, ReportSizeError } from '../../packages/core/report-size';
 import type { Report } from '../../packages/core';
 import { canonicalJson } from '../../packages/core/integrity';
 import type { Feedback, FeedbackInput } from '../../packages/core/validation';
@@ -74,6 +75,7 @@ export class FileStore implements Store {
   }
   get(identity: Identity, id: string) { return this.transaction(data => data.owners[identity.ownerId]?.find(s => s.report.scanId === id)); }
   put(identity: Identity, report: Report) {
+    assertReportSize(report);
     return this.transaction(data => {
       const rows = data.owners[identity.ownerId] ??= [];
       const existing = rows.find(s => s.report.scanId === report.scanId);
@@ -108,6 +110,7 @@ export class SupabaseStore implements Store {
     const response = await fetch(`${this.url}/rest/v1/${path}`, { ...init, signal: AbortSignal.timeout(10000),
       headers: { apikey: this.anonKey, Authorization: `Bearer ${identity.token}`, 'Content-Type': 'application/json', ...init.headers } });
     if (!response.ok) {
+      if (path === 'rpc/ingest_scan' && response.status === 413) throw new ReportSizeError();
       if (response.status === 404 && ['rpc/list_scan_page', 'rpc/list_site_page', 'rpc/list_comparison_page'].includes(path)) {
         const error = await response.json().catch(() => ({}));
         if (error.code === 'PGRST202') throw new MigrationRequiredError(path === 'rpc/list_comparison_page' ? '003_comparison.sql' : undefined);
@@ -133,6 +136,7 @@ export class SupabaseStore implements Store {
     return rows[0] ? this.map(rows[0]) : undefined;
   }
   async put(identity: Identity, report: Report) {
+    assertReportSize(report);
     const created = await this.request(identity, 'rpc/ingest_scan', { method: 'POST', body: JSON.stringify({ p_report: report, p_hash: reportHash(report) }) });
     const scan = await this.get(identity, report.scanId); if (!scan) throw new Error('Database did not return saved scan');
     return { scan, created: Boolean(created) };

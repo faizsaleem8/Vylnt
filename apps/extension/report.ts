@@ -7,6 +7,8 @@ import { rateLimitMessage, retryDeadline } from '../../packages/http/retry';
 import type { Feedback, FeedbackInput } from '../../packages/core/validation';
 import { findingReview } from './review';
 import { comparisonPanel } from './comparison';
+import { trendsPanel } from './trends';
+import { reportSizeMessage, submissionSizeMessage } from '../../packages/core/report-size';
 
 let selected: Report | undefined;
 let currentScan: Report | undefined;
@@ -24,6 +26,7 @@ let requests = new AbortController();
 let epoch = 0;
 let busy = false;
 let stateBusy = false;
+let pdfBusy = false;
 let renderKey = '';
 let releaseConnection: (() => void) | undefined;
 const text = (node: HTMLElement, value: string) => { if (node.textContent !== value) node.textContent = value; };
@@ -35,12 +38,12 @@ function apiOrigin() {
   if (base.username || base.password || base.search || base.hash || base.pathname !== '/' || (base.protocol !== 'https:' && !(base.protocol === 'http:' && loopback))) throw new Error('Use an HTTPS API origin, or HTTP on localhost, without a path or credentials.');
   return base;
 }
-async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function api<T>(path: string, init: RequestInit = {}, pdf = false): Promise<T> {
   if (!accessToken || apiOrigin().origin !== authOrigin) throw new Error('Connect your workspace first.');
   const version = epoch;
   let response: Response;
   try {
-    response = await fetch(authOrigin + '/api' + path, { ...init, signal: AbortSignal.any([requests.signal, AbortSignal.timeout(15000)]), headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' } });
+    response = await fetch(authOrigin + '/api' + path, { ...init, signal: AbortSignal.any([requests.signal, AbortSignal.timeout(pdf ? 45000 : 15000)]), headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' } });
   } catch (error) {
     if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
     throw new SyncFailure('Cannot reach the workspace API. Keep npm run dev running and check the API base URL.');
@@ -52,6 +55,18 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     const deadline = retryDeadline(response.headers.get('Retry-After'));
     throw new SyncFailure(rateLimitMessage(deadline), Number.isFinite(deadline), deadline);
   }
+  // Proxies can return HTML for size errors too. The status remains terminal.
+  if (response.status === 413) {
+    const payload = await response.json().catch(() => ({}));
+    if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
+    throw new SyncFailure(payload?.code === 'REPORT_TOO_LARGE' ? reportSizeMessage : submissionSizeMessage, false, undefined, false);
+  }
+  if (pdf && response.ok) {
+    if (!response.headers.get('Content-Type')?.startsWith('application/pdf')) throw new SyncFailure('The API did not return a PDF. Update the server and retry.');
+    const blob = await response.blob();
+    if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
+    return blob as T;
+  }
   const data = await response.json().catch(() => { throw new SyncFailure('The API returned an invalid response. Check the API base URL and restart the VYNLT server.'); });
   if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
   if (!response.ok) {
@@ -60,7 +75,6 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     if (response.status === 400) throw new SyncFailure('The API rejected this request (HTTP 400). Check the inputs and update the extension and server.', false);
     if (response.status === 404) throw new SyncFailure('This saved scan or finding is no longer available. Refresh saved history.', false);
     if (response.status === 409) throw new SyncFailure('This snapshot cannot be saved (HTTP 409). Rescan to create a new report, or check workspace capacity.', false);
-    if (response.status === 413) throw new SyncFailure('This scan exceeds the API upload limit (512 KB).', false);
     if (response.status === 503 && typeof data.error === 'string') throw new SyncFailure(data.error);
     throw new SyncFailure('Workspace request failed (HTTP ' + response.status + '). Check the API server and Supabase database connection.', response.status >= 500 || response.status === 429);
   }
@@ -230,6 +244,8 @@ function show(report?: Report, feedback: Feedback[] = []) {
   selected = report;
   get<HTMLButtonElement>('export').disabled = !report;
   get('verify').hidden = view !== 'saved' || !report;
+  get('pdf').hidden = view !== 'saved' || !report;
+  get<HTMLButtonElement>('pdf').disabled = pdfBusy;
   get('delete').hidden = view !== 'saved' || !report;
   if (!report) {
     renderedReport = undefined;
@@ -248,7 +264,7 @@ function show(report?: Report, feedback: Feedback[] = []) {
   const nodes = sameScan ? renderedReport! : (renderedReport = createReportNodes(identity));
   const session = epoch;
   const isCurrent = () => epoch === session && view === 'saved' && renderedReport === nodes && selected?.scanId === report.scanId;
-  if (!sameScan && view === 'saved') nodes.heading.before(comparisonPanel(report, api, isCurrent));
+  if (!sameScan && view === 'saved') nodes.heading.before(trendsPanel(report, api, isCurrent), comparisonPanel(report, api, isCurrent));
   const o = report.observation;
   text(nodes.score, String(report.score)); text(nodes.title, o.url);
   text(nodes.metadata, new Date(o.scannedAt).toLocaleString() + ' / Ruleset ' + report.rulesetVersion);
@@ -322,6 +338,24 @@ get('export').onclick = () => {
   if (!selected) return;
   const url = URL.createObjectURL(new Blob([JSON.stringify(selected, null, 2)], { type: 'application/json' }));
   const link = element('a'); link.href = url; link.download = 'vynlt-' + selected.scanId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+get('pdf').onclick = () => {
+  if (!selected || view !== 'saved' || pdfBusy) return;
+  const id = selected.scanId, session = epoch, selection = selectionVersion;
+  const stillSelected = () => epoch === session && selectionVersion === selection && view === 'saved' && selected?.scanId === id;
+  pdfBusy = true; get<HTMLButtonElement>('pdf').disabled = true;
+  get('message').textContent = 'Preparing PDF…';
+  void (async () => {
+    try {
+      const blob = await api<Blob>(`/reports/${id}/pdf`, {}, true);
+      if (!stillSelected()) return;
+      const url = URL.createObjectURL(blob), link = element('a');
+      link.href = url; link.download = `vynlt-${id}.pdf`; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      get('message').textContent = 'PDF download started. Saved reviews are included; unsaved drafts are not.';
+    } catch (error) { if (stillSelected()) get('message').textContent = error instanceof Error ? error.message : 'PDF download failed. Retry.'; }
+    finally { pdfBusy = false; get<HTMLButtonElement>('pdf').disabled = false; }
+  })();
 };
 async function refreshState() {
   if (stateBusy) return; stateBusy = true;

@@ -7,15 +7,19 @@ import { ConflictError, MigrationRequiredError, reportHash, type Identity, type 
 import type { Authenticator } from './auth';
 import type { PublicSupabaseConfig } from './config';
 import { createRateLimits, defaultRateLimits, type RateLimits } from './rate-limits';
+import { generatePdf, PdfUnavailableError } from './pdf';
+import { analyseScan } from '../../packages/ml/automatic-analysis';
+import { assertReportSize, ReportSizeError, reportByteLimit, submissionSizeMessage } from '../../packages/core/report-size';
+import { RateBackendUnavailable, type RateBackend } from './shared-rate-limits';
 
 const paging = (query: express.Request['query']) => ({
   page: z.coerce.number().int().min(1).max(10000).parse(query.page ?? 1),
   limit: z.coerce.number().int().min(1).max(100).parse(query.limit ?? 50)
 });
-export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[]; supabase?: PublicSupabaseConfig; rateLimits?: RateLimits }) {
+export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[]; supabase?: PublicSupabaseConfig; rateLimits?: RateLimits; rateBackend?: RateBackend; trustedProxies?: string[]; renderPdf?: typeof generatePdf }) {
   const app = express(); app.disable('x-powered-by');
-  app.set('trust proxy', false);
-  const limits = createRateLimits(options.rateLimits ?? defaultRateLimits);
+  app.set('trust proxy', options.trustedProxies?.length ? options.trustedProxies : false);
+  const limits = createRateLimits(options.rateLimits ?? defaultRateLimits, options.rateBackend);
   app.use(helmet({ contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null,
     'connect-src': ["'self'", ...(options.supabase ? [options.supabase.url] : [])] } } }));
   app.use((req, res, next) => {
@@ -47,7 +51,9 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
   app.use('/api', limits.user, limits.writes, express.json({ limit: '512kb' }));
   const identity = (res: express.Response) => res.locals.identity as Identity;
   app.post('/api/scans', async (req, res) => {
-    const { scan, created } = await options.store.put(identity(res), parseSubmission(req.body));
+    const report = parseSubmission(req.body);
+    assertReportSize(report);
+    const { scan, created } = await options.store.put(identity(res), report);
     res.status(created ? 201 : 200).json(scan);
   });
   app.get('/api/scans', async (req, res) => {
@@ -75,6 +81,31 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
     res.json({ matches: reportHash(row.report) === row.hash, hash: row.hash, method: 'local-sha256', anchored: false });
   });
+  app.get('/api/reports/:id/pdf', async (req, res) => {
+    const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
+    if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
+    const pdf = await (options.renderPdf ?? generatePdf)(row, 'full');
+    if (!res.destroyed) res.attachment(`vynlt-${row.report.scanId}.pdf`).type('application/pdf').send(pdf);
+  });
+  app.post('/api/reports/:id/insights/pdf', async (req, res) => {
+    const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
+    if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
+    const prediction = z.union([
+      z.object({ findingId: z.string().max(5000), score: z.number().finite().min(0).max(1), label: z.enum(['actionable', 'contextual']) }).strict(),
+      z.object({ findingId: z.string().max(5000), reason: z.string().max(300) }).strict(),
+    ]);
+    const supplied = z.object({ modelHash: z.string().regex(/^[a-f0-9]{64}$/), values: z.array(prediction).max(1000) }).strict().parse(req.body);
+    const analysis = await analyseScan(row.report);
+    const matches = supplied.values.length === analysis.values.length && analysis.values.every((expected, index) => {
+      const actual = supplied.values[index];
+      return actual.findingId === expected.findingId && ('score' in expected ? 'score' in actual && actual.label === expected.label && Math.abs(actual.score - expected.score) <= 1e-12 : 'reason' in actual && actual.reason === expected.reason);
+    });
+    if (supplied.modelHash !== analysis.modelHash || !matches) {
+      res.status(409).json({ error: 'The scan or model analysis has changed. Refresh scan details and retry the insights download.' }); return;
+    }
+    const pdf = await (options.renderPdf ?? generatePdf)(row, 'insights', analysis);
+    if (!res.destroyed) res.attachment(`vynlt-${row.report.scanId}-insights.pdf`).type('application/pdf').send(pdf);
+  });
   app.post('/api/scans/:id/findings/:findingId/feedback', async (req, res) => {
     const feedback = await options.store.feedback(identity(res), z.uuid().parse(req.params.id), req.params.findingId as string, feedbackSchema.parse(req.body));
     if (!feedback) { res.status(404).json({ error: 'Finding not found' }); return; } res.json(feedback);
@@ -88,7 +119,10 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     if (error instanceof z.ZodError) { res.status(400).json({ error: 'Invalid request payload', fields: error.issues.map(i => ({ path: i.path.join('.'), message: i.message })) }); return; }
     if (error instanceof ConflictError) { res.status(409).json({ error: error.message }); return; }
     if (error instanceof MigrationRequiredError) { res.status(503).json({ error: error.message }); return; }
-    if (error.type === 'entity.too.large') { res.status(413).json({ error: 'Payload exceeds 512 KB' }); return; }
+    if (error instanceof PdfUnavailableError) { res.set('Retry-After', '5').status(503).json({ error: error.message }); return; }
+    if (error instanceof RateBackendUnavailable) { res.set('Retry-After', '5').status(503).json({ error: error.message, code: 'RATE_LIMIT_UNAVAILABLE' }); return; }
+    if (error instanceof ReportSizeError) { res.status(413).json({ error: error.message, code: 'REPORT_TOO_LARGE', limitBytes: reportByteLimit, ...(error.bytes === undefined ? {} : { reportBytes: error.bytes }) }); return; }
+    if (error.type === 'entity.too.large') { res.status(413).json({ error: submissionSizeMessage, code: 'SUBMISSION_TOO_LARGE', limitBytes: reportByteLimit }); return; }
     if (error.type === 'entity.parse.failed') { res.status(400).json({ error: 'Invalid JSON' }); return; }
     console.error('API operation failed:', error.name ?? 'Error'); res.status(503).json({ error: 'Operation unavailable. Check server configuration and retry.' });
   });

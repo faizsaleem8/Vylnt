@@ -18,7 +18,9 @@
   let updates = 0;
   const observer = new MutationObserver(() => {
     clearTimeout(timer);
-    if (++updates > 100) { observer.disconnect(); return; }
+    // Stop observing at the budget, but retain a final debounced snapshot.
+    // Otherwise a continuous burst can cancel every scheduled collection.
+    if (++updates >= 100) observer.disconnect();
     timer = setTimeout(collect, 750);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'href', 'integrity'] });

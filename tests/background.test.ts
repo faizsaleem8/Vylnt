@@ -37,6 +37,27 @@ beforeEach(async () => {
   await import('../apps/extension/background');
 });
 describe('background lifecycle with Chrome API mocks', () => {
+  it('stops collection after host revocation and registers content scripts after re-grant', async () => {
+    await navigate();
+    const first = (await flush()).scan;
+    const contains = vi.spyOn(chrome.permissions, 'contains').mockImplementation(async () => false);
+    const origins = vi.spyOn(chrome.permissions, 'getAll').mockImplementation(async () => ({ origins: [] }));
+    const registerScripts = vi.spyOn(chrome.scripting, 'registerContentScripts');
+    const unregister = vi.spyOn(chrome.scripting, 'unregisterContentScripts');
+    events.get('removed')!(); await flush();
+    expect(unregister).toHaveBeenCalled(); expect(registerScripts).not.toHaveBeenCalled();
+    const rejected = await message({ type: 'DOM', scripts: [], resources: [] }, { id: 'extension', tab: { id: 1 }, frameId: 0, documentId: 'document-1', url: 'https://example.test/' });
+    expect(rejected.ok).toBe(false);
+    await navigate(1, 'revoked-request', 'revoked-document');
+    expect((await flush()).scan).toBeUndefined();
+    expect(session.history).toHaveLength(1); expect(session.history[0].scanId).toBe(first.scanId);
+    contains.mockImplementation(async () => true);
+    origins.mockImplementation(async () => ({ origins: ['https://example.test/*'] }));
+    events.get('added')!(); await flush();
+    expect(registerScripts).toHaveBeenCalledWith([expect.objectContaining({ matches: ['https://example.test/*'] })]);
+    await navigate(1, 'granted-request', 'granted-document');
+    expect((await flush()).scan.scanId).not.toBe(first.scanId);
+  });
   it('opens the side panel from the toolbar and removes legacy disk history', async () => {
     local.history = [{ old: true }];
     events.get('installed')!(); await flush();

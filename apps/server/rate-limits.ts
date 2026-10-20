@@ -1,6 +1,7 @@
 import { createHmac, randomBytes } from 'node:crypto';
 import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import type { Identity } from './store';
+import type { RateBackend } from './shared-rate-limits';
 
 export interface RateLimits { windowMs: number; ipMax: number; userMax: number; writeMax: number }
 export const defaultRateLimits: Readonly<RateLimits> = { windowMs: 60000, ipMax: 600, userMax: 300, writeMax: 60 };
@@ -22,20 +23,20 @@ export function readRateLimits(env: NodeJS.ProcessEnv): RateLimits {
 }
 
 /** Per-process counters, never an archive of addresses, credentials or requests. */
-export function createRateLimits(config: RateLimits) {
-  const salt = randomBytes(32);
+export function createRateLimits(config: RateLimits, backend: RateBackend = {}) {
+  const salt = backend.secret ?? randomBytes(32);
   const key = (value: string) => createHmac('sha256', salt).update(value).digest('hex');
-  const common = { windowMs: config.windowMs, standardHeaders: 'draft-8' as const, legacyHeaders: false };
+  const common = { windowMs: config.windowMs, standardHeaders: 'draft-8' as const, legacyHeaders: false, passOnStoreError: false };
   return {
     // Use the socket, not caller-controlled Forwarded/X-Forwarded-For headers.
     // IPv6 /64 grouping prevents rotating host addresses within that subnet.
-    client: rateLimit({ ...common, identifier: 'client-requests', limit: config.ipMax,
-      keyGenerator: req => key(ipKeyGenerator(req.socket.remoteAddress ?? 'unknown', 64)),
+    client: rateLimit({ ...common, store: backend.store?.('client'), identifier: 'client-requests', limit: config.ipMax,
+      keyGenerator: req => key(ipKeyGenerator(req.ip ?? req.socket.remoteAddress ?? 'unknown', 64)),
       message: { error: 'Too many requests from this connection. Wait before trying again.', code: 'RATE_LIMITED' } }),
-    user: rateLimit({ ...common, identifier: 'workspace-requests', limit: config.userMax,
+    user: rateLimit({ ...common, store: backend.store?.('user'), identifier: 'workspace-requests', limit: config.userMax,
       keyGenerator: (_req, res) => key((res.locals.identity as Identity).ownerId),
       message: { error: 'Workspace request limit reached. Wait before trying again.', code: 'RATE_LIMITED' } }),
-    writes: rateLimit({ ...common, identifier: 'workspace-writes', limit: config.writeMax,
+    writes: rateLimit({ ...common, store: backend.store?.('writes'), identifier: 'workspace-writes', limit: config.writeMax,
       keyGenerator: (_req, res) => key((res.locals.identity as Identity).ownerId),
       skip: req => !['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method),
       message: { error: 'Workspace write limit reached. Wait before saving more changes.', code: 'RATE_LIMITED' } }),

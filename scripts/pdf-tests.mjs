@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { build } from 'esbuild';
+
+await mkdir('.local', { recursive: true });
+await mkdir('test-results/pdf', { recursive: true });
+const modulePath = resolve('.local/pdf-fixture.mjs');
+await build({ stdin: { contents: `export { generatePdf } from './apps/server/pdf'; export { parseSubmission } from './packages/core/validation'; export { reportHash } from './apps/server/store'; export { analyseScan } from './packages/ml/automatic-analysis';`, resolveDir: process.cwd() }, bundle: true, outfile: modulePath, platform: 'node', format: 'esm', packages: 'external' });
+const { generatePdf, parseSubmission, reportHash, analyseScan } = await import(pathToFileURL(modulePath).href);
+const report = parseSubmission({ scanId: '00000000-0000-4000-8000-000000000001', observation: { url: 'https://example.test/pdf-fixture', scannedAt: '2026-10-20T00:00:00Z', headers: {}, resources: [], scripts: [], domCollected: true } });
+report.findings[0].evidence = { longPolicy: Array.from({ length: 110 }, (_, n) => `Policy entry ${n + 1}: ${'a'.repeat(90)}`).join('\n'), hostile: '<img src="https://example.test/should-never-load">', unicode: 'café naïve résumé Zażółć gęślą jaźń Český Français Español Português Straße smörgåsbord Ångström € £', tail: 'EVIDENCE-END-MARKER' };
+const row = { report, hash: reportHash(report), receivedAt: '2026-10-20T00:00:01Z', feedback: [{ findingId: report.findings[0].id, verdict: 'accepted_risk', notes: 'Review notes: café. '.repeat(40) + ' REVIEW-END-MARKER', updatedAt: '2026-10-20T01:00:00Z' }] };
+const pending = generatePdf(row, 'full');
+await assert.rejects(generatePdf(row), /busy/);
+const pdf = await pending;
+assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
+await writeFile('test-results/pdf/multipage.pdf', pdf);
+const repeated = parseSubmission({ scanId: '00000000-0000-4000-8000-000000000071', observation: { url: 'https://example.test/repeated', scannedAt: '2026-10-21T00:00:00Z', headers: {}, resources: [], scripts: Array.from({ length: 71 }, (_, i) => ({ url: `https://cdn.example.test/script-${i}.js`, integrity: false })), domCollected: true } });
+await writeFile('test-results/pdf/concise.pdf', await generatePdf({ report: repeated, hash: reportHash(repeated), receivedAt: row.receivedAt, feedback: [] }, 'insights', await analyseScan(repeated)));
+console.log(`Concise fixture: ${repeated.findings.length} findings, including 71 repeated script observations.`);
+report.findings = []; report.score = 100; row.feedback = []; row.hash = reportHash(report);
+await writeFile('test-results/pdf/empty.pdf', await generatePdf(row));
+console.log('PASS PDF renderer: actual Chromium output, overload rejection, recovery and empty report. Render/text pagination inspection remains a separate QA step.');

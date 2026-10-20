@@ -4,6 +4,17 @@ import { ScanSync, SyncFailure } from '../apps/extension/sync';
 
 const report = (time = 1000, id = 'one') => createReport(id, { url: 'https://example.test/', scannedAt: new Date(time).toISOString(), domCollected: true, scripts: [], resources: [] });
 describe('automatic immutable scan syncing', () => {
+  it('never retries a terminal oversized snapshot, while new scans and recoverable failures still progress', async () => {
+    const upload = vi.fn().mockRejectedValueOnce(new SyncFailure('Report exceeds storage limit. Export JSON.', false, undefined, false)).mockResolvedValue(undefined);
+    const sync = new ScanSync(0, upload, vi.fn());
+    const first = report(), next = report(4000, 'next');
+    await sync.tick([first], 1000); await sync.tick([first], 3000);
+    sync.retry(); await sync.tick([first], 100000); sync.retry(); await sync.tick([first], 200000);
+    expect(upload).toHaveBeenCalledOnce(); expect(sync.statusFor('one')).toMatchObject({ state: 'failed', attempts: 1 });
+    await sync.tick([first, next], 200001); await sync.tick([first, next], 202001);
+    expect(upload).toHaveBeenCalledTimes(2); expect(sync.statusFor('next')?.state).toBe('saved');
+    expect(sync.snapshot()).toMatchObject({ failed: 1, saved: 1 });
+  });
   it('honors a server cooldown across the entire queue, even after Retry sync, and recovers with the frozen snapshot', async () => {
     const upload = vi.fn().mockRejectedValueOnce(new SyncFailure('Wait 30 seconds.', true, 33000)).mockResolvedValue(undefined);
     const sync = new ScanSync(0, upload, vi.fn()); const first = report(), second = report(1000, 'two');

@@ -1,3 +1,21 @@
+import { isIP } from 'node:net';
+
+export function readDeploymentConfig(env: NodeJS.ProcessEnv, port: number) {
+  const trustedProxies = env.VYNLT_TRUSTED_PROXIES ? env.VYNLT_TRUSTED_PROXIES.split(',').map(value => value.trim()) : [];
+  for (const proxy of trustedProxies) {
+    const [address, mask, extra] = proxy.split('/'), version = isIP(address);
+    if (!version || extra !== undefined || (mask !== undefined && (!/^\d+$/.test(mask) || Number(mask) < 1 || Number(mask) > (version === 4 ? 32 : 128)))) throw new Error('VYNLT_TRUSTED_PROXIES must contain explicit IP addresses or nonzero CIDR ranges');
+  }
+  const origins = (env.VYNLT_ALLOWED_ORIGINS ?? `http://127.0.0.1:${port},http://localhost:${port},http://127.0.0.1:5173,http://localhost:5173`).split(',').map(origin => origin.trim());
+  for (const raw of origins) {
+    let url: URL; try { url = new URL(raw); } catch { throw new Error('VYNLT_ALLOWED_ORIGINS must contain explicit HTTP(S) origins'); }
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('VYNLT_ALLOWED_ORIGINS must contain explicit HTTP(S) origins');
+    if (env.NODE_ENV === 'production' && url.protocol !== 'https:') throw new Error('Production origins must use HTTPS');
+  }
+  if (env.NODE_ENV === 'production' && (!env.VYNLT_ALLOWED_ORIGINS || env.VYNLT_STORAGE !== 'supabase')) throw new Error('Production requires Supabase storage and explicit HTTPS allowed origins');
+  return { trustedProxies, origins: origins.map(origin => new URL(origin).origin) };
+}
+
 export interface PublicSupabaseConfig { url: string; publishableKey: string }
 export function readSupabaseConfig(env: NodeJS.ProcessEnv): PublicSupabaseConfig {
   const rawUrl = env.SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL ?? '';

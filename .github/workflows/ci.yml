@@ -17,8 +17,18 @@ jobs:
       - run: npx playwright install-deps chromium
       - run: npm run setup:browser
       - run: npm run lab:tls
+      - name: PDF rendering and overload regression
+        run: npm run test:pdf
+      - name: Dynamic-page collection budget regression
+        run: npm run benchmark:observer
+        env:
+          VYNLT_OBSERVER_BENCH_RUNS: 1
       - name: Extension, API, dashboard and security gate regression
         run: npm run test:browser
+      - name: Dashboard and side-panel accessibility regression
+        run: npm run test:ui
+      - name: Scanner cache, browser restart and full-extension stress regression
+        run: npm run test:scanner
       - name: Supabase sign-in and in-memory session regression
         run: npm run test:auth-browser
       - uses: actions/upload-artifact@v4

@@ -110,12 +110,15 @@ try {
   const extensionPage = await extensionContext.newPage();
   await extensionPage.route(`${supabaseUrl}/auth/v1/**`, authRoute);
   const savedScans = new Map(); let posts = 0; let failures = 1; let preflightFailures = 1; const submitted = []; let throttledAt = 0; const throttledAttempts = []; let queuedAttempts = 0;
+  const sizeAttempts = { json: 0, html: 0 };
   await extensionPage.route(origin + '/api/scans**', async route => {
     assert.ok(route.request().headers().authorization?.startsWith('Bearer ey'));
     const path = new URL(route.request().url()).pathname;
     if (route.request().method() === 'POST') {
       const body = route.request().postDataJSON(); submitted.push(body);
       assert.deepEqual(Object.keys(body).sort(), ['observation', 'scanId']);
+      if (body.observation.url.endsWith('/oversized-json')) { sizeAttempts.json++; await route.fulfill({ status: 413, json: { code: 'REPORT_TOO_LARGE', error: 'Generated report too large' } }); return; }
+      if (body.observation.url.endsWith('/oversized-html')) { sizeAttempts.html++; await route.fulfill({ status: 413, contentType: 'text/html', body: '<p>Proxy upload too large</p>' }); return; }
       if (body.observation.url.endsWith('/throttled')) {
         throttledAttempts.push({ at: Date.now(), body });
         if (!throttledAt) { throttledAt = Date.now(); await route.fulfill({ status: 429, headers: { 'Retry-After': '8' }, contentType: 'text/html', body: '<p>Proxy limit</p>' }); return; }
@@ -241,6 +244,25 @@ try {
   assert.equal(adopted.observation.url, 'https://localhost/adopted');
   assert.equal(adopted.observation.domCollected, false); assert.notEqual(adopted.scanId, oldId);
   assert.ok(!submitted.some(s => s.observation.url.endsWith('/unselected')));
+  // Both structured API and HTML proxy 413s are terminal, including manual Retry sync.
+  await extensionPage.evaluate(async () => chrome.storage.session.set({ history: ['json', 'html'].map(kind => ({ scanId: crypto.randomUUID(), rulesetVersion: '0.2.0', observation: { url: `https://localhost/oversized-${kind}`, scannedAt: new Date().toISOString(), resources: [], scripts: [], domCollected: true }, findings: [], score: 100 })) }));
+  await extensionPage.locator('#upload-status').filter({ hasText: 'generated scan report exceeds' }).waitFor();
+  await extensionPage.locator('#upload-status').filter({ hasText: '2 failed' }).waitFor();
+  assert.deepEqual(sizeAttempts, { json: 1, html: 1 });
+  await extensionPage.getByRole('button', { name: 'Retry sync', exact: true }).click();
+  await extensionPage.waitForTimeout(5500);
+  assert.deepEqual(sizeAttempts, { json: 1, html: 1 }, 'Neither manual nor automatic retry resubmits oversized snapshots');
+  assert.ok(!(await extensionPage.locator('#upload-status').textContent()).includes('invalid response'));
+  await extensionPage.evaluate(async () => {
+    const { history } = await chrome.storage.session.get('history');
+    history.push({ ...structuredClone(history[0]), scanId: crypto.randomUUID(), observation: { ...history[0].observation, url: 'https://localhost/valid-after-size-error', scannedAt: new Date().toISOString() } });
+    await chrome.storage.session.set({ history });
+  });
+  for (let attempt = 0; attempt < 60 && posts < 5; attempt++) await extensionPage.waitForTimeout(250);
+  assert.equal(posts, 5, 'A later valid scan saves despite terminal failures');
+  assert.deepEqual(sizeAttempts, { json: 1, html: 1 });
+  assert.ok([...savedScans.values()].some(scan => scan.observation.url.endsWith('/valid-after-size-error')));
+  await extensionPage.screenshot({ path: 'test-results/extension-report-size-error.png', fullPage: true });
   await fixture.close();
   console.log('PASS mocked extension panel: registration, invalid login, database preflight failure, sign-in, automatic upload/retry, Retry-After queue cooldown and recovery, saved details/delete, sign-out, current pre-login partial scan saves, unrelated history excluded, no persistent credentials.');
 } finally {

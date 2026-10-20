@@ -11,11 +11,11 @@ export interface SyncSnapshot {
 }
 interface Job {
   report: Report; fingerprint: string; first: number; changed: number; attempts: number; next: number;
-  frozen: boolean; done: boolean; adopted?: boolean; state: SyncState; text: string; error?: string;
+  frozen: boolean; done: boolean; adopted?: boolean; state: SyncState; text: string; error?: string; blocked?: boolean;
 }
 const preparing = 'Preparing scan for sync. Waiting up to 10 seconds for page metadata.';
 export class SyncFailure extends Error {
-  constructor(message: string, readonly retryable = true, readonly retryAt?: number) { super(message); }
+  constructor(message: string, readonly retryable = true, readonly retryAt?: number, readonly manualRetry = true) { super(message); }
 }
 /** One immutable snapshot per navigation. Queue and credentials never persist to disk. */
 export class ScanSync {
@@ -70,7 +70,7 @@ export class ScanSync {
     this.publish();
   }
   retry() {
-    for (const job of this.jobs.values()) if (!job.done && job !== this.activeJob) {
+    for (const job of this.jobs.values()) if (!job.done && !job.blocked && job !== this.activeJob) {
       job.attempts = 0; job.next = this.cooldownUntil;
       if (job.error) { job.state = 'retrying'; job.text = 'Retry requested. Previous attempt failed: ' + job.error; }
     }
@@ -118,6 +118,7 @@ export class ScanSync {
             this.cooldownUntil = Math.max(this.cooldownUntil, error.retryAt);
           }
           if (error instanceof SyncFailure && !error.retryable) {
+            job.blocked = !error.manualRetry;
             job.next = Infinity; job.state = 'failed'; job.text = 'Scan not saved. ' + reason; this.publish(); continue;
           }
           job.next = now + Math.min(60000, 5000 * 2 ** (job.attempts - 1));

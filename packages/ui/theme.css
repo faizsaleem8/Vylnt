@@ -25,7 +25,7 @@
   --rail-muted: #cdc5ea;
   --line: #d4dde7;
   --control-line: #a6b3c3;
-  --positive: #137b78;
+  --positive: #10716f;
   --positive-soft: #e3f3ef;
   --warning: #82530b;
   --warning-soft: #fbf0d8;
@@ -63,6 +63,8 @@
 ::selection { background: var(--accent); color: var(--accent-contrast); }
 /* Extension pages can supply a browser body font; explicitly inherit our type. */
 body { font: inherit; }
+.skip-link { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: .75rem 1rem; background: var(--surface); color: var(--text); border: 2px solid var(--accent); transform: translateY(-180%); }
+.skip-link:focus { transform: none; }
 p { max-width: 76ch; }
 button, input, select, textarea { font-family: inherit; }
 button, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }

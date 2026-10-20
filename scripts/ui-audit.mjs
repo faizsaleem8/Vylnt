@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import AxeBuilder from '@axe-core/playwright';
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve('.local/browsers');
 const { chromium } = await import('playwright');
 const out = resolve('test-results/frontend-design');
@@ -37,6 +38,12 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const origin = 'http://127.0.0.1:' + server.address().port;
 let browser, context;
 const results = { fixture: 'isolated synthetic API and scan; no live account', panel: {}, dashboard: {} };
+const access = [];
+async function auditAccess(page, name) {
+  await page.evaluate(() => document.fonts.ready);
+  const report = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();
+  access.push({ name, violations: report.violations.map(item => ({ id: item.id, impact: item.impact, description: item.description, nodes: item.nodes.map(node => ({ target: node.target, summary: node.failureSummary })) })), incomplete: report.incomplete.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) })) });
+}
 const metrics = () => ({
   viewport: innerWidth, scrollWidth: document.documentElement.scrollWidth,
   buttons: [...document.querySelectorAll('button')].filter(b => b.getBoundingClientRect().height > 0).map(b => {
@@ -59,6 +66,7 @@ async function inspectAppearance(page, name, toolbarSelector) {
     assert.ok(evidence[colorScheme].scrollWidth <= evidence[colorScheme].width, name + ' ' + colorScheme + ' fits');
     assert.match(evidence[colorScheme].font, /VYNLT Plex/);
     assert.ok(await page.evaluate(() => [...document.fonts].some(font => font.family.includes('VYNLT Plex') && font.status === 'loaded')), name + ' bundled font loaded');
+    await auditAccess(page, name + '-' + colorScheme);
     await page.screenshot({ path: resolve(out, name + '-' + colorScheme + '.png'), fullPage: true });
   }
   assert.notEqual(evidence.light.background, evidence.dark.background, name + ' follows light/dark preference');
@@ -79,6 +87,12 @@ async function inspectAppearance(page, name, toolbarSelector) {
   evidence.largeText = await page.evaluate(() => ({ rootFont: getComputedStyle(document.documentElement).fontSize, width: innerWidth, scrollWidth: document.documentElement.scrollWidth }));
   await page.screenshot({ path: resolve(out, name + '-large-text.png'), fullPage: true });
   assert.ok(evidence.largeText.scrollWidth <= evidence.largeText.width, name + ' fits at 200% root text');
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  const previousViewport = page.viewportSize();
+  await page.setViewportSize({ width: 320, height: 900 });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), name + ' reflows at 320 CSS px (400% equivalent desktop width)');
+  await page.setViewportSize(previousViewport);
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   if (toolbarSelector === '.toolbar') {
     assert.ok(await page.locator(toolbarSelector).evaluate(el => {
       const [brand, control] = [...el.children].map(child => child.getBoundingClientRect());
@@ -90,9 +104,15 @@ async function inspectAppearance(page, name, toolbarSelector) {
 }
 try {
   browser = await chromium.launch({ channel: 'chromium', headless: true });
-  const dashboard = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const dashboardContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const dashboard = await dashboardContext.newPage();
   await dashboard.goto(origin);
   await dashboard.getByLabel('Local API token from your .env file').waitFor();
+  await dashboard.keyboard.press('Tab');
+  await dashboard.getByRole('link', { name: 'Skip to main content', exact: true }).focus();
+  await dashboard.keyboard.press('Enter');
+  assert.equal(await dashboard.evaluate(() => document.activeElement.id), 'main-content', 'Keyboard skip link focuses main content');
+  await auditAccess(dashboard, 'dashboard-local-login');
   await dashboard.evaluate(() => document.fonts.ready);
   await dashboard.screenshot({ path: resolve(out, 'dashboard-local-login.png'), fullPage: true });
   await dashboard.getByLabel('Local API token from your .env file').fill('audit-fixture-token');
@@ -121,6 +141,7 @@ try {
   for (const name of ['Websites', 'Settings', 'History']) {
     await dashboard.getByRole('button', { name, exact: false }).first().click();
     await dashboard.screenshot({ path: resolve(out, 'dashboard-' + name.toLowerCase() + '.png'), fullPage: true });
+    await auditAccess(dashboard, 'dashboard-' + name.toLowerCase());
   }
   await dashboard.getByRole('button', { name: summary.url, exact: true }).click();
   await until(() => dashboard.evaluate(() => document.activeElement?.tagName === 'H1'), 'report heading focus');
@@ -131,15 +152,38 @@ try {
   await dashboard.getByRole('button', { name: 'Clear filter', exact: true }).click();
   assert.equal(await dashboard.locator('.finding').count(), report.findings.length);
   await dashboard.locator('.finding summary').first().click();
+  await dashboard.locator('.finding summary').first().focus();
+  await dashboard.keyboard.press('Space');
+  assert.equal(await dashboard.locator('.finding').first().evaluate(el => el.open), false, 'Space toggles a focused finding');
+  await dashboard.keyboard.press('Enter');
+  assert.equal(await dashboard.locator('.finding').first().evaluate(el => el.open), true, 'Enter opens a focused finding');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-evidence.png'), fullPage: true });
   await dashboard.emulateMedia({ media: 'print' });
   assert.equal(await dashboard.locator('.sidebar').isVisible(), false);
-  assert.ok(await dashboard.locator('.finding-content').last().isVisible(), 'Print exposes collapsed finding evidence');
+  assert.ok(await dashboard.locator('.raw-print').isVisible(), 'Print shows full scan findings');
+  assert.equal(await dashboard.locator('.raw-print-finding').count(), report.findings.length);
+  assert.ok(!(await dashboard.locator('.raw-print').textContent()).includes('Recommended change'));
+  assert.equal(await dashboard.locator('.finding').first().isVisible(), false, 'Print uses a dedicated unfiltered data layout');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-print.png'), fullPage: true });
+  await mkdir('test-results/pdf', { recursive: true });
+  await dashboard.pdf({ path: 'test-results/pdf/dashboard-data.pdf', format: 'A4', printBackground: true, tagged: true });
   await dashboard.emulateMedia({ media: 'screen' });
   await dashboard.setViewportSize({ width: 390, height: 844 });
   results.dashboard.mobile = await dashboard.evaluate(metrics);
   await dashboard.screenshot({ path: resolve(out, 'dashboard-mobile.png'), fullPage: true });
+  const ml = dashboard.locator('.ml-analysis');
+  await ml.getByRole('heading', { name: 'Synthetic ML preview', exact: true }).waitFor();
+  assert.equal(await ml.locator('.ml-results li').count(), report.findings.length);
+  assert.equal(await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).count(), 1);
+  assert.equal(await ml.locator('input').count(), 0);
+  assert.equal(await dashboard.locator('.ml-training').count(), 0);
+  // Move the audited skip-link focus to its destination before component capture.
+  await dashboard.locator('#main-content').focus();
+  results.dashboard.skipLink = await dashboard.locator('.skip-link').evaluate(link => ({ focused: document.activeElement === link, bottom: link.getBoundingClientRect().bottom }));
+  assert.equal(results.dashboard.skipLink.focused, false);
+  assert.ok(results.dashboard.skipLink.bottom <= 0, 'Unfocused skip link stays outside the viewport');
+  // Suppress the sticky toolbar only for an unobscured component capture.
+  await ml.screenshot({ path: resolve(out, 'dashboard-ml-preview-mobile.png'), style: '.topbar { visibility: hidden !important; }' });
   results.dashboard.appearance = await inspectAppearance(dashboard, 'dashboard-mobile', '.topbar');
   await dashboard.setViewportSize({ width: 1440, height: 1000 });
   await dashboard.getByRole('button', { name: 'Overview', exact: false }).first().click();
@@ -160,14 +204,17 @@ try {
   await dashboard.route('https://localhost/auth/v1/**', route => route.fulfill({ status: 400, json: { msg: 'Controlled sign-in failure. Check your details and try again.' } }));
   await dashboard.reload();
   await dashboard.getByLabel('Email address').waitFor();
+  await auditAccess(dashboard, 'dashboard-supabase-login');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-supabase-login.png'), fullPage: true });
   await dashboard.getByRole('button', { name: 'New to VYNLT? Create an account' }).click();
+  await auditAccess(dashboard, 'dashboard-register');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-register.png'), fullPage: true });
   await dashboard.getByRole('button', { name: 'Already have an account? Sign in' }).click();
   await dashboard.getByLabel('Email address').fill('audit@example.test');
   await dashboard.getByLabel('Password', { exact: true }).fill('fixture-only-password');
   await dashboard.getByRole('button', { name: 'Sign in', exact: true }).click();
   await dashboard.getByRole('alert').waitFor();
+  await auditAccess(dashboard, 'dashboard-auth-error');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-auth-error.png'), fullPage: true });
 
   const extension = resolve('dist/extension');
@@ -251,9 +298,25 @@ try {
   await until(() => Promise.resolve(authRequests === 2), 'click sign in submits');
   results.panel.clickLoginRequests = authRequests;
   await panel.locator('#auth-password').fill('');
+  await auditAccess(panel, 'extension-account');
+  const throttled = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const loadingPage = await throttled.newPage(), loadingCdp = await throttled.newCDPSession(loadingPage);
+  await loadingCdp.send('Network.enable'); await loadingCdp.send('Network.setCacheDisabled', { cacheDisabled: true });
+  await loadingCdp.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 128 * 1024, uploadThroughput: 64 * 1024 });
+  await loadingCdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+  const loadingStart = performance.now();
+  await loadingPage.goto(origin, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await loadingPage.getByLabel('Local API token from your .env file').waitFor();
+  await loadingPage.evaluate(() => document.fonts.ready);
+  results.dashboard.throttledLoading = { elapsedToLoginAndFontsMs: Math.round(performance.now() - loadingStart), profile: 'Cold cache, 128 KiB/s download, 150ms artificial latency, 6x CDP CPU slowdown; simulated not physical device', ...(await loadingPage.evaluate(() => ({ firstContentfulPaintMs: performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? null, fonts: [...document.fonts].map(f => ({ family: f.family, status: f.status })), fontTransferBytes: performance.getEntriesByType('resource').filter(e => e.name.endsWith('.ttf')).reduce((sum, e) => sum + e.transferSize, 0) }))) };
+  await throttled.close();
   assert.ok(results.panel.layout.buttons.every(b => b.height >= 44), 'Panel controls have at least 44px height at default size');
   assert.ok(results.dashboard.mobile.buttons.every(b => b.height >= 44), 'Dashboard controls have at least 44px height at default size');
   await writeFile(resolve(out, 'measurements.json'), JSON.stringify(results, null, 2));
+  await writeFile(resolve(out, 'accessibility.json'), JSON.stringify(access, null, 2));
+  const violations = access.flatMap(item => item.violations.map(rule => ({ state: item.name, ...rule })));
+  if (violations.length) console.log(JSON.stringify(violations));
+  assert.equal(violations.length, 0, 'No automated accessibility violations in the audited states');
   console.log(JSON.stringify({ refreshLayoutShiftPx: results.dashboard.refreshLayoutShiftPx, emptyFilter: results.dashboard.emptyFilter, panelBeforeUpdate: results.panel.beforeUpdate, panelAfterUpdate: results.panel.afterUpdate, enterLoginRequests: results.panel.enterLoginRequests, clickLoginRequests: results.panel.clickLoginRequests, screenshots: out }, null, 2));
 } finally {
   await context?.close(); await browser?.close();

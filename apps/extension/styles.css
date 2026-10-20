@@ -127,6 +127,18 @@ footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .7
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) { :root { --line: #c6c6cd; --muted: #e5e5eb; } }
 
 .toolbar button.quiet { color: var(--rail-text); border-color: var(--rail-muted); }
+.trend-figure { margin: 1.25rem 0; }
+.trend-figure figcaption { font-weight: 600; }
+.trend-figure svg { display: block; width: 100%; height: auto; margin-top: .5rem; overflow: visible; }
+.trend-figure svg text { fill: var(--muted); font-size: 12px; }
+.trend-figure circle { stroke: var(--accent); stroke-width: 2; }
+.trend-collected { fill: var(--accent); }
+.trend-partial { fill: var(--surface); }
+.trend-dates { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; font-size: .75rem; color: var(--muted); }
+.trend-caveat { border-left: 3px solid var(--warning); padding-left: .75rem; }
+.trend-values { padding-left: 1.25rem; overflow-wrap: anywhere; }
+.trend-values li { margin: 1rem 0; }
+.trend-values p { margin: .25rem 0; }
 .toolbar button.quiet:not(:disabled):hover, .toolbar button.quiet:not(:disabled):active { color: var(--rail); background: var(--rail-text); }
 .finding-card:has(.badge.high), .finding-card:has(.badge.critical) { border-left-color: var(--negative); }
 .finding-card:has(.badge.medium) { border-left-color: var(--warning); }

@@ -274,6 +274,19 @@ footer { display: flex; justify-content: space-between; gap: 1.25rem; margin-top
 .finding-content > p { max-width: 76ch; }
 .site-grid > .empty { grid-column: 1 / -1; }
 .score-caption { display: block; margin-top: .6rem; font-size: .75rem; line-height: 1.4; letter-spacing: 0; color: var(--muted); white-space: normal; max-width: 7rem; }
+.ml-analysis .ml-body { padding-top: 1.25rem; }
+.ml-loading { padding: 1.25rem; }
+.ml-body { padding: 0 1.25rem 1.25rem; }
+.ml-status { min-height: 1.5em; margin: 1rem 0; }
+.ml-model { padding: 1rem; background: var(--inset); border-left: .1875rem solid var(--accent); overflow-wrap: anywhere; margin-bottom: 1rem; }
+.ml-model p { margin: .5rem 0; }
+.ml-model summary { min-height: 2.75rem; cursor: pointer; }
+.ml-model code { display: block; overflow-wrap: anywhere; }
+.ml-warning { border-left: .1875rem solid var(--warning); padding-left: .75rem; }
+.ml-results { list-style: none; padding: 0; }
+.ml-results li { padding: 1rem 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.ml-results li > span, .ml-score { display: block; margin-top: .375rem; }
+.ml-results p { margin: .625rem 0 0; }
 @media (max-width: 55em) {
   .coverage-panel .section-heading { flex-direction: column; }
   .coverage-table th:first-child { width: 36%; }
@@ -287,7 +300,14 @@ footer { display: flex; justify-content: space-between; gap: 1.25rem; margin-top
   .sidebar nav button:not(:disabled):hover { background: var(--rail-text); color: var(--rail); border-color: transparent; }
 }
 
+.raw-print { display: none; }
 @media print {
+  .raw-print { display: block; overflow-wrap: anywhere; }
+  .raw-print-finding { margin-block: 1.25rem; }
+  .raw-print h3, .raw-print h4 { break-after: avoid; }
+  .raw-print pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .finding, .comparison-result, .section-heading, .empty, .skip-link { display: none !important; }
+  .ml-analysis { display: none !important; }
   :root { color-scheme: light; color: #111; background: #fff; --text: #111; --muted: #444; --surface: #fff; --line: #bbb; --accent: #174c80; }
   .sidebar, .topbar, .page-heading, .scan-tools, .comparison-picker, .heading-actions, .export-actions, .feedback, .integrity button, .status-region, .alert, footer { display: none !important; }
   .main-shell { width: 100%; margin: 0; }

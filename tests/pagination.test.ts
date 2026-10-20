@@ -27,6 +27,8 @@ beforeAll(async () => {
   await db.exec(migration); await db.exec(migration); // Safe to retry migration 002.
   const comparisonMigration = await readFile('supabase/migrations/003_comparison.sql', 'utf8');
   await db.exec(comparisonMigration); await db.exec(comparisonMigration);
+  const indexMigration = await readFile('supabase/migrations/004_comparison_index.sql', 'utf8');
+  await db.exec(indexMigration); await db.exec(indexMigration);
   // 1,105 scans on 1,103 sites. One site's latest scan lies beyond the old cap.
   await db.query(`insert into public.sites(owner_id, origin)
     select $1::uuid, 'https://site-' || i || '.test' from generate_series(1, 1103) i`, [ownerA]);
@@ -56,6 +58,14 @@ it('pages same-URL comparison candidates, excludes the target and preserves RLS'
   const normalize = (value: unknown) => JSON.parse(JSON.stringify(value), (key, v) => key === 'receivedAt' ? undefined : v);
   expect(normalize(second)).toEqual(normalize(await local.comparisonPage(identity, id(3012), { page: 2, limit: 10 })));
   expect(await candidates(id(4000))).toMatchObject({ scans: [], total: 0 });
+  // Long URLs must not exceed btree index-key limits or match a nearby URL.
+  const longUrl = 'https://repeat.test/' + 'long-path-'.repeat(350);
+  for (const n of [5001, 5002, 5003]) {
+    const item = report(n, longUrl + (n === 5003 ? 'other' : ''));
+    await db.query('select public.ingest_scan($1::jsonb, $2)', [JSON.stringify(item), reportHash(item)]);
+  }
+  expect(await candidates(id(5001))).toMatchObject({ total: 1, scans: [{ scanId: id(5002), url: longUrl }] });
+  expect(await candidates(id(5003))).toMatchObject({ total: 0, scans: [] });
   await expect(candidates(id(3012), 0)).rejects.toThrow('Invalid page');
   await asOwner(ownerA); expect(await candidates(id(3012))).toBeNull();
   await db.exec('set role anon'); await expect(candidates(id(3012))).rejects.toThrow('permission denied');

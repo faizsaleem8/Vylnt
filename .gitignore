@@ -7,3 +7,5 @@ coverage/
 reports/
 .local/
 test-results/
+ml/data/
+ml/artifacts/

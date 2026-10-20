@@ -1,0 +1,3 @@
+-r requirements.txt
+# Offline CPU training only; never bundled into the dashboard or API.
+torch>=2.7.1,<3

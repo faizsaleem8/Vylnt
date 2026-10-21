@@ -7,6 +7,7 @@ const cookie = z.object({ name: z.string().min(1).max(100), secure: z.boolean(),
 export const observationSchema = z.object({
   url: httpUrl, scannedAt: z.iso.datetime(),
   headers: z.record(z.string().max(100), z.string().max(8192)).optional().transform(headers => headers === undefined ? undefined : securityHeaders(Object.entries(headers).map(([name, value]) => ({ name, value })))),
+  cspEvidenceComplete: z.boolean().optional(),
   cookies: z.array(cookie).max(100).optional(),
   resources: z.array(z.object({ url: httpUrl, type: z.string().max(30), outcome: z.enum(['referenced', 'requested', 'completed', 'failed']) }).strict()).max(600),
   scripts: z.array(z.object({ url: httpUrl, integrity: z.boolean(), scriptType: z.enum(['classic', 'module', 'other']).optional(), async: z.boolean().optional(), defer: z.boolean().optional() }).strict()).max(150),

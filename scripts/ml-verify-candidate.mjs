@@ -1,0 +1,34 @@
+// Offline artifact integrity/parity, not model quality approval or release staging.
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createHash, randomUUID } from 'node:crypto';
+import { parseArgs } from 'node:util';
+import { build } from 'esbuild';
+const { values } = parseArgs({ options: { candidate: { type: 'string' }, output: { type: 'string' } } });
+if (!values.candidate || !values.output) throw new Error('Use --candidate <frozen candidate directory> --output <new private parity result.json>');
+const root = resolve(values.candidate), output = resolve(values.output);
+const names = ['model.json', 'logistic.json', 'parity.json', 'training.json'];
+if (['candidate.json', 'split.json', 'frozen-input.json', 'evaluation.json', 'test-consumed.json', ...names].some(name => resolve(root, name) === output)) throw new Error('Output must not overwrite candidate input');
+const sha = data => createHash('sha256').update(data).digest('hex');
+await mkdir('.local', { recursive: true });
+const modulePath = resolve(`.local/candidate-verifier-${randomUUID()}.mjs`);
+await build({ stdin: { contents: "export { parseEvidenceLstm } from './packages/core/evidence-lstm'; export { verifyCandidateParity } from './packages/ml/candidate-parity'; export { assertPrivateMlPath } from './packages/ml/private-path';", resolveDir: process.cwd() }, bundle: true, outfile: modulePath, platform: 'node', format: 'esm', packages: 'external' });
+const { parseEvidenceLstm, verifyCandidateParity, assertPrivateMlPath } = await import(pathToFileURL(modulePath).href);
+assertPrivateMlPath(output);
+const candidateBytes = await readFile(resolve(root, 'candidate.json'));
+const candidate = JSON.parse(candidateBytes);
+const legacyPolicy = candidate.version === 2 && candidate.safetyPolicy === 'development-only-v2';
+const controlledPolicy = candidate.version === 3 && candidate.safetyPolicy === 'controlled-evidence-v3';
+if ((!legacyPolicy && !controlledPolicy) || Object.keys(candidate.files ?? {}).sort().join() !== [...names].sort().join()) throw new Error('Unsupported frozen candidate policy');
+const files = Object.fromEntries(await Promise.all(names.map(async name => [name, await readFile(resolve(root, name))])));
+if (names.some(name => sha(files[name]) !== candidate.files[name])) throw new Error('Candidate artifact changed after freezing');
+const model = parseEvidenceLstm(JSON.parse(files['model.json']));
+if (controlledPolicy && (model.schemaVersion !== 'vynlt-evidence-v3' || model.provenance !== 'controlled')) throw new Error('Controlled v3 policy requires compatible controlled evidence');
+if (model.datasetHash !== candidate.datasetHash || model.splitHash !== candidate.splitHash) throw new Error('Candidate dataset/split identity mismatch');
+const parity = verifyCandidateParity(model, candidate.files['model.json'], JSON.parse(files['parity.json']), []);
+const result = { version: 1, schemaVersion: model.schemaVersion, candidateHash: sha(candidateBytes), modelHash: candidate.files['model.json'], modelBytes: files['model.json'].length,
+  datasetHash: model.datasetHash, splitHash: model.splitHash, parity, qualification: 'not-assessed', limitation: 'Numeric artifact integrity/parity only. This check does not consume test data, approve categories, or promote the active model.' };
+await mkdir(dirname(output), { recursive: true });
+await writeFile(output, JSON.stringify(result, null, 2), { flag: 'wx', mode: 0o600 });
+console.log(`Verified ${result.schemaVersion}: ${parity.cases} parity cases, maximum error ${parity.maximumError}; ${result.modelBytes} bytes. No quality approval or release change.`);

@@ -34,15 +34,16 @@ export interface InsightAssessment {
   compatibility: string;
   verification: string;
   remediationReferences: string[];
+  experimentalSignal?: { minScore: number; maxScore: number; scoredVariants: number; reviewOnlyVariants: number };
 }
 export interface InsightAnalysis {
   schemaVersion: typeof insightVersion;
   inputSchema: typeof evidenceVersion;
-  decisionPolicy: typeof decisionVersion;
+  decisionPolicy: typeof decisionVersion | 'vynlt-controlled-signal-v1';
   remediationCatalog: typeof catalogVersion;
   scanId: string;
-  model: { name: string; hash: string | null; status: 'unavailable' | 'experimental' | 'qualified'; approvedCategories: string[] };
-  mode: 'evidence-summary' | 'qualified-model';
+  model: { name: string; hash: string | null; status: 'unavailable' | 'experimental' | 'qualified'; approvedCategories: string[]; evaluationHash?: string; candidateHash?: string; scope?: string };
+  mode: 'evidence-summary' | 'qualified-model' | 'experimental-model';
   limitations: string[];
   summary: string;
   issues: InsightAssessment[];

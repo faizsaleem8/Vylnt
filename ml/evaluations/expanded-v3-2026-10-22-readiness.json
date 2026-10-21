@@ -1,0 +1,135 @@
+{
+  "version": 2,
+  "datasetHash": "7caabbc2143d7acc3708a2dd16668173af7edafdae4ea75e7d12d4cbf5409d94",
+  "splitHash": "e5f9539f213583136465fcf9ddf65e730078f3137bb8026b62d6f549be1650fc",
+  "provenance": "controlled",
+  "families": 11,
+  "uniqueInputVariants": 163,
+  "auditedConflictVariants": 19,
+  "developmentConflictVariants": 17,
+  "partitions": {
+    "train": {
+      "examples": 126,
+      "families": 7,
+      "eligibleBinaryExamples": 86,
+      "bothTrainingClasses": true
+    },
+    "validation": {
+      "examples": 32,
+      "families": 2,
+      "eligibleBinaryExamples": 28,
+      "bothTrainingClasses": true
+    },
+    "test": {
+      "examples": 32,
+      "families": 2,
+      "eligibleBinaryExamples": 30,
+      "bothTrainingClasses": true
+    }
+  },
+  "categories": {
+    "HDR-001": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 0,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "countAndFamilyGates": false
+    },
+    "HDR-002": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 0,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "countAndFamilyGates": false
+    },
+    "HDR-003": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 0,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "countAndFamilyGates": false
+    },
+    "CK-001": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 0,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "countAndFamilyGates": false
+    },
+    "CK-002": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 2,
+        "needs-review": 2
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 2
+      },
+      "countAndFamilyGates": false
+    },
+    "CK-003": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 0,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "countAndFamilyGates": false
+    },
+    "NET-001": {
+      "testCounts": {
+        "change-warranted": 2,
+        "contextual": 0,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "countAndFamilyGates": false
+    },
+    "JS-002": {
+      "testCounts": {
+        "change-warranted": 8,
+        "contextual": 6,
+        "needs-review": 0
+      },
+      "testClassFamilies": {
+        "change-warranted": 2,
+        "contextual": 2
+      },
+      "countAndFamilyGates": false
+    }
+  },
+  "fitReady": true,
+  "reviewedApplicationData": false,
+  "tenTestFamilies": false,
+  "limitations": [
+    "Coverage diagnostics are not measured model quality or proof of independent review.",
+    "Shared application/templates must use one actual family; rule categories and renamed variants are not application families."
+  ]
+}

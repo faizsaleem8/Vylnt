@@ -66,6 +66,8 @@ try {
   const securePage = await context.newPage(); await securePage.goto('https://127.0.0.1:5443/secure');
   const secure = await until(async () => (await history()).find(r => r.observation.url.endsWith('/secure') && r.observation.domCollected && r.observation.headers), 'secure scan');
   assert.equal(secure.findings.length, 0, `Secure fixture findings: ${JSON.stringify(secure.findings)}`);
+  assert.equal(secure.observation.cspEvidenceComplete, true, 'Extension records complete response CSP coverage');
+  assert.equal(insecure.observation.cspEvidenceComplete, false, 'Missing response CSP cannot assert complete policy evidence');
   reportPage = await context.newPage(); await reportPage.setViewportSize({ width: 380, height: 900 });
   await reportPage.goto('chrome-extension://' + extensionId + '/report.html');
   assert.equal(await worker.evaluate(async () => (await chrome.sidePanel.getPanelBehavior()).openPanelOnActionClick), true);
@@ -220,6 +222,8 @@ try {
   const insecureCLI = await run(['dist/cli/index.js', '--url', 'https://127.0.0.1:5443/insecure', '--ignore-https-errors', '--fail-on', 'medium', '--output', 'test-results/insecure.json']);
   assert.equal(secureCLI.code, 0, secureCLI.output); assert.equal(insecureCLI.code, 1, insecureCLI.output);
   const cliReport = JSON.parse(await readFile('test-results/insecure.json', 'utf8'));
+  assert.equal(cliReport.observation.cspEvidenceComplete, false);
+  assert.equal(JSON.parse(await readFile('test-results/secure.json', 'utf8')).observation.cspEvidenceComplete, true);
   assert.deepEqual([...new Set(cliReport.findings.map(f => f.ruleId))].sort(), [...new Set(insecure.findings.map(f => f.ruleId))].sort());
   console.log('PASS CLI: secure passes, insecure fails confidence/severity gate, rule IDs agree with extension');
   dashboardBrowser = await chromium.launch({ channel: 'chromium', headless: true });
@@ -242,7 +246,7 @@ try {
   // VYNLT runs ML without any model upload, training or Run controls.
   const ml = dashboard.locator('.ml-analysis');
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
-  await ml.getByText('A qualified LSTM release is not available', { exact: false }).waitFor();
+  await ml.getByText('Controlled-data scores supplement the evidence', { exact: false }).waitFor();
   assert.equal(await ml.getByText('Recommended change:', { exact: true }).count(), await dashboard.locator('.finding').count());
   assert.equal(await ml.getByText('Structural snapshot order is not runtime execution order.', { exact: false }).count(), 1);
   const originalScore = await dashboard.locator('.large-score').textContent();
@@ -252,7 +256,7 @@ try {
   assert.equal(await ml.locator('input').count(), 0);
   assert.equal(await dashboard.locator('.ml-training').count(), 0);
   assert.equal(await dashboard.getByText('Prepare ML training data', { exact: true }).count(), 0);
-  assert.equal(await ml.getByText('No independently reviewed model category is approved.', { exact: false }).count(), 1);
+  assert.equal(await ml.getByText('no category is qualified for de-emphasis.', { exact: false }).count(), 1);
   await dashboard.route('**/api/insight-reports/*.pdf', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Insights fixture busy. Retry shortly.' }) }), { times: 1 });
   await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).click();
   await dashboard.getByText('Insights fixture busy.', { exact: false }).waitFor();
@@ -279,7 +283,9 @@ try {
   const frozenAfter = JSON.parse(await readFile('test-results/dashboard-frozen-insights.json', 'utf8'));
   assert.equal(frozenAfter.id, frozenBefore[0].id);
   assert.equal(frozenAfter.hash, frozenBefore[0].hash);
-  assert.equal(frozenAfter.content.analysis.mode, 'evidence-summary');
+  assert.equal(frozenAfter.content.analysis.mode, 'experimental-model');
+  assert.equal(frozenAfter.content.analysis.model.status, 'experimental');
+  assert.deepEqual(frozenAfter.content.analysis.model.approvedCategories, []);
   await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await ml.screenshot({ path: 'test-results/dashboard-ml-mobile.png', style: '.topbar { visibility: hidden !important; }' });

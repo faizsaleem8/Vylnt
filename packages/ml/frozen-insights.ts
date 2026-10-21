@@ -20,9 +20,11 @@ export async function verifyFrozenInsights(stored: StoredInsightReport): Promise
   if (stored.id !== stored.hash || await contentHash(stored.content) !== stored.hash) return false;
   if (stored.content.version !== 'vynlt-frozen-insights-v1') return false;
   const modelHash = stored.content.analysis.model.hash;
-  const release = modelHash === null ? null : [bundledEvidenceRelease, ...archivedEvidenceReleases].find(r => r?.modelHash === modelHash);
-  if (release === undefined) return false;
-  const trusted: InsightReport = { version: 'vynlt-frozen-insights-v1', originalScan: stored.content.originalScan,
-    originalScanHash: await contentHash(stored.content.originalScan), analysis: await analyseEvidenceReport(stored.content.originalScan, release) };
-  return canonicalJson(trusted) === canonicalJson(stored.content);
+  const releases = modelHash === null ? [null] : [bundledEvidenceRelease, ...archivedEvidenceReleases].filter(r => r?.modelHash === modelHash);
+  for (const release of releases) {
+    const trusted: InsightReport = { version: 'vynlt-frozen-insights-v1', originalScan: stored.content.originalScan,
+      originalScanHash: await contentHash(stored.content.originalScan), analysis: await analyseEvidenceReport(stored.content.originalScan, release) };
+    if (canonicalJson(trusted) === canonicalJson(stored.content)) return true;
+  }
+  return false;
 }

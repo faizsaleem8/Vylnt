@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "schemaVersion": "vynlt-evidence-v3",
+  "candidateHash": "3c359ae728ed06260c3774de6cfea6045a96239889ece2dcec2346a7d1bf5226",
+  "modelHash": "99810b4880b6df39b1acfbabac9cb47631f01070f87f635e62ceaf34980c2b8e",
+  "modelBytes": 54469,
+  "datasetHash": "7caabbc2143d7acc3708a2dd16668173af7edafdae4ea75e7d12d4cbf5409d94",
+  "splitHash": "e5f9539f213583136465fcf9ddf65e730078f3137bb8026b62d6f549be1650fc",
+  "parity": {
+    "cases": 18,
+    "maximumError": 5.717118400916377e-8,
+    "tolerance": 0.000001
+  },
+  "qualification": "not-assessed",
+  "limitation": "Numeric artifact integrity/parity only. This check does not consume test data, approve categories, or promote the active model."
+}

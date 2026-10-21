@@ -1,13 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { cookieMetadata, createReport, safeUrl, securityHeaders, type Observation, type Resource } from '../../packages/core';
+import { cookieMetadata, createReport, safeUrl, securityHeaders, cspEvidenceComplete, type Observation, type Resource } from '../../packages/core';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 export const isLoopback = (hostname: string) => ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
-export async function scanPage(target: string, options: { allowRemote?: boolean; ignoreHTTPSErrors?: boolean; waitMs?: number } = {}) {
+export async function scanPage(target: string, options: { allowRemote?: boolean; ignoreHTTPSErrors?: boolean; waitMs?: number; allowedLocalOrigins?: string[] } = {}) {
   const url = new URL(target);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('Provide an HTTP(S) URL without embedded credentials.');
   if (!isLoopback(url.hostname) && !options.allowRemote) throw new Error('Remote scans require --allow-remote. Scan only sites you own or are authorized to assess.');
   if (options.ignoreHTTPSErrors && !isLoopback(url.hostname)) throw new Error('--ignore-https-errors is limited to localhost fixtures.');
+  const localOrigins = options.allowedLocalOrigins ? new Set(options.allowedLocalOrigins) : undefined;
+  if (localOrigins && (options.allowRemote || localOrigins.size > 10 || !localOrigins.has(url.origin) || [...localOrigins].some(origin => {
+    try { const parsed = new URL(origin); return !isLoopback(parsed.hostname) || !['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== origin; } catch { return true; }
+  }))) throw new Error('Local origin scope must contain the target and at most ten plain loopback HTTP(S) origins');
   if (!process.env.PLAYWRIGHT_BROWSERS_PATH && existsSync('.local/browsers')) process.env.PLAYWRIGHT_BROWSERS_PATH = resolve('.local/browsers');
   const { chromium } = await import('playwright');
   const browser = await chromium.launch({ channel: 'chromium', headless: true });
@@ -16,7 +20,7 @@ export async function scanPage(target: string, options: { allowRemote?: boolean;
     const page = await context.newPage();
     const resources = new Map<string, Resource>();
     if (!options.allowRemote) await context.route('**/*', route => {
-      try { if (!isLoopback(new URL(route.request().url()).hostname)) { void route.abort(); return; } } catch { /* invalid URLs will be handled by browser */ }
+      try { const requestUrl = new URL(route.request().url()); if (!isLoopback(requestUrl.hostname) || (localOrigins && !localOrigins.has(requestUrl.origin))) { void route.abort(); return; } } catch { /* invalid URLs will be handled by browser */ }
       void route.continue();
     });
     page.on('request', request => {
@@ -43,8 +47,9 @@ export async function scanPage(target: string, options: { allowRemote?: boolean;
     });
     const cookies = (await context.cookies(page.url())).slice(0, 100).map(c => cookieMetadata({ ...c, session: c.expires === -1,
       sameSite: c.sameSite === 'None' ? 'no_restriction' : c.sameSite === 'Strict' ? 'strict' : 'lax' }));
+    const responseHeaders = await response.headersArray();
     const observation: Observation = { url: safeUrl(page.url()), scannedAt: new Date().toISOString(),
-      headers: securityHeaders(await response.headersArray()), cookies, resources: [...resources.values(), ...dom.resources].slice(0, 600), scripts: dom.scripts, domCollected: true };
+      headers: securityHeaders(responseHeaders), cspEvidenceComplete: cspEvidenceComplete(responseHeaders), cookies, resources: [...resources.values(), ...dom.resources].slice(0, 600), scripts: dom.scripts, domCollected: true };
     return createReport(randomUUID(), observation);
   } finally { await browser.close(); }
 }

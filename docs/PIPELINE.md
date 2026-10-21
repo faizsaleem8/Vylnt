@@ -1,54 +1,51 @@
 # VYNLT scan-to-blockchain pipeline
 
-The user-confirmed target flow is:
+Current milestone status (2026-10-22): **experimental M6 is closed by user approval**. [Model qualification](ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Next product work is blockchain M5, then remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](ML_BUILD_PLAN.md).
 
 ```mermaid
 flowchart LR
-  A[Extension collects minimal metadata] --> B[Shared rule checks]
+  A[Extension metadata] --> B[Shared rule checks]
   B --> C[Authenticated API and Supabase]
-  C --> D[React dashboard runs LSTM analysis]
-  D --> E[Report with rule findings, ML predictions and recommended fixes]
-  E --> F[Canonical JSON and SHA-256]
-  F --> G[Anchor hash on blockchain]
+  C --> D[React analysis Worker]
+  D --> E[API verifies and freezes insights]
+  E --> F[Immutable JSON / PDF and combined SHA-256]
+  F --> G[Blockchain anchor - planned]
 ```
 
-The API/storage layer transports scans to the dashboard; the extension does not send directly to a running React page. The API recomputes rule findings from validated observations rather than trusting client scores. React performs inference on the collected metadata and existing alerts; training remains offline.
+The extension sends bounded metadata to the API, which validates it and recomputes pure shared rules. Supabase stores the immutable original scan. React retrieves saved scans through authenticated owner-scoped APIs; the extension does not communicate directly with a running React page.
 
-## Intended LSTM behavior
+## Automatic insights
 
-The user's 71-page report feedback clarifies the acceptance goal: produce a concise, evidence-linked assessment of meaningful issues, why they matter, what to change and how to verify the fix. Repeating per-resource rule text or merely adding actionable/contextual scores is insufficient. The model needs reviewed issue-level relevance/impact labels and representative evaluation, including false-negative analysis, before it can filter noise or rank issues reliably. Supported outputs must retain links to original evidence and disclose uncertain context. Recommendations should use reviewed guidance; original evidence remains available.
+The React Worker matches findings to target cookie/script/resource/response-policy metadata, extracts identifier-free evidence-v2 tensors and groups equivalent contexts while retaining every original finding ID. Structural snapshot order is not runtime execution or source-to-sink evidence. The first release covers the existing eight checks; behavioural detection is outside this scope.
 
-As an immediate presentation fix, Print/PDF and the server PDF now group matching rule/context/severity/fix observations, show affected counts and up to three bounded evidence samples, and print each recommendation once per group. This is deterministic compression ordered by rule severity, not ML insight or vulnerability adjudication. Synthetic LSTM scores do not suppress findings or enter this summary. All groups remain represented. Full findings remain in the workspace/JSON; combined ML-report persistence and measured prioritisation are still open.
+The active v2 release is a trained eight-unit controlled LSTM under `vynlt-controlled-signal-v1`. Compatible, non-conflicting known development input variants get one calibrated, four-decimal experimental score per unique context. Issues summarize score ranges and context counts once; assessments, severity, recommendations and original evidence remain unchanged. Unfamiliar, missing or conflicting evidence receives no score. No category passed quality qualification, so this policy cannot assign contextual states or suppress findings. The reviewed-release policy remains a separate legacy path. High/critical findings remain visible. See `ml/evaluations/README.md` for measured failures and tested scope.
 
-The user clarified that the target ML module analyzes extension-collected security information with an LSTM to identify potential weaknesses and produce recommended changes in the report. The first snapshot LSTM now runs in React alongside the retained logistic comparator. It is synthetic existing-alert triage, not completion of the broader evaluated weakness-detection target.
+VYNLT developers own controlled specifications, automated oracles, training and release. Ordinary users never prepare datasets or upload a model; user verdicts/rule scores are not ground truth. The user removed mandatory independent human review from the current phase; paired-review tooling remains optional. Held-out labels cannot train the safety list or tune model/calibration/thresholds. No background training on user scans or external AI provider is used. Cookie persistence is a controlled fixture correlation, not evidence of real authentication purpose.
 
-Implement a versioned sequence of permitted security observations with explicit event order, boundaries, collection coverage and missing-data handling. A flat list of findings is not evidence of runtime behavior or source-to-sink data flow. Capture only the metadata needed for the chosen weakness categories; never persist credentials, cookie values, request bodies or page text, and sanitize evidence URLs.
+## Frozen report exports
 
-Train and evaluate against independently reviewed examples for defined weakness categories, including negative/contextual cases and application-family-separated held-out data. Compare the LSTM with the existing baseline; do not assume that using an LSTM improves results. Predict only categories supported by available evidence, abstaining on unsupported/incomplete inputs. Broader weakness detection requires its own labels and evaluation; existing alert-triage metrics cannot establish detection of weaknesses missed by rules.
+**Print / PDF** retains every raw finding, severity and full evidence without generated actions or ML. **Download insights PDF/JSON** uses the separate frozen report workflow:
 
-Run the released LSTM in the React dashboard, with model/schema identity and availability checks. Map supported predicted categories to reviewed, versioned remediation guidance explaining the evidence, suggested change and how to verify it. The model does not automatically modify the scanned website. Keep deterministic rule findings and ML predictions visibly distinct; model scores are not calibrated probabilities unless evaluation establishes that interpretation. Freeze both findings and recommendations into the final report before hashing and anchoring.
+1. React submits the canonical analysis hash to `POST /api/scans/:id/insight-reports`.
+2. The authenticated API independently rebuilds trusted assessments/templates and checks compatibility, identity and the 1 MiB combined-report bound. Stale/modified analysis returns 409; oversized content returns 413 without dropping issues.
+3. It freezes the original scan and hash, grouped insights, model identity/status, input schema, decision policy and remediation-catalog versions. Mutable review notes remain separate.
+4. Canonical JSON SHA-256 identifies the combined content. Equal content reuses its version; changed evidence/model/policy creates a new content identity. The original scan hash is preserved separately.
+5. Local storage and Supabase migration 005 persist immutable owner-scoped versions. JSON/PDF retrieval verifies canonical integrity and trusted derivation, including rows inserted through direct user RPCs. Storage alone is not proof of API origin. Source deletion cascades to insights.
 
-## Current implementation
+The PDF is a rendering of frozen JSON. Its displayed hash identifies the JSON content, not PDF bytes. Current and archived model identities are retained; future policy/catalog revisions must retain historical implementations or fail explicitly instead of silently changing saved reports.
 
-Latest PDF decision: **Print / PDF** and the existing server GET export contain full finding data/severity without recommendations or ML. React's separate **Download insights PDF** posts its current model hash and per-finding outputs to the owner-authenticated API; the API checks them against the bundled model and renders trusted recomputed values with grouped recommendations and identity/provenance. A 409 asks the user to refresh after stale/modified results. This adds a verified on-demand ML export, not persisted immutable combined-report finalization. The displayed original scan hash does not cover ML insights, recommendations or PDF bytes. Ordinary automatic inference remains in React; the server repeats inference only to verify an insights export. Earlier descriptions of ML being excluded from all PDFs are historical.
+## Verified status and remaining work
 
 | Stage | Status |
 | --- | --- |
-| Minimal metadata collection and shared rule checks | M1 accepted for documented Edge scope; installed-Chrome coverage remains ongoing |
-| Authenticated upload, storage and dashboard retrieval | M2 development scope accepted; nine hosted two-account checks passed; production deployment remains deferred |
-| React ML inference | Automatic snapshot LSTM when a saved scan opens; real PyTorch training/numeric browser runtime, model identity and rule-linked recommendations implemented; bundled weights are synthetic. Snapshot group order is not runtime data flow. Reviewed-data evaluation, broader detection and behavioral sequences remain open |
-| Final report containing ML insights | Separate on-demand insights PDF implemented with server verification of React results; immutable combined JSON persistence/versioning/export remains pending |
-| SHA-256 of the combined final report | Pending; existing hashes cover the original rule report only |
-| Blockchain anchoring and verification | Pending; existing verification explicitly reports `anchored: false` |
+| Collection, shared rules, authenticated upload | Accepted within documented M1-M3 scope |
+| Automatic worker / fallback / grouped evidence | Implemented; unit, browser and built-worker checks pass |
+| Controlled dataset / trained experimental LSTM / frozen evaluation | Implemented; 60 rows / four families, display-only signals and published failed qualification |
+| Useful LSTM category qualification | Open; no category approved, test coverage and quality gates unmet |
+| Frozen local/Supabase reports, JSON/PDF and combined SHA-256 | Implemented; migration 005 passed live two-account acceptance (14 checks, no skips/failure/cleanup failures) |
+| Blockchain anchoring / on-chain verification | Planned; no anchor is claimed |
+| Remaining GitHub Actions hosted acceptance | Follows blockchain |
 
-## Final-report contract to implement next
+See [ML build plan](ML_BUILD_PLAN.md), [developer workflow](ML_DEVELOPER_WORKFLOW.md) and [evaluation/readiness record](ML_EVALUATION.md). Docker and deployment remain excluded.
 
-Normal users do not prepare datasets or upload models. VYNLT developers own independent labels, offline training, held-out evaluation and bundled model releases. React automatically extracts features and runs the shipped model on the viewed scan. It does not automatically train on user scans or infer ground truth from its own rules. Analysis of all stored scans while React is closed would require separate background processing and is not implemented.
-
-Keep each original scan/report immutable. Create a separately versioned final report that references its scan ID and original hash, includes the original rule findings and collection coverage, and freezes the ML outputs plus model hash, feature/ruleset versions, threshold, provenance, abstentions and experimental limitations. A changed model or analysis creates a new final report rather than replacing a previously hashed result. User review decisions remain separate unless explicitly frozen into a report version.
-
-Persist and export this combined JSON, with PDF as a readable rendering of the same content. Canonicalize and hash the frozen JSON after ML analysis. A PDF may display that JSON hash, but that is not a hash of the PDF bytes. Validate the final-report schema and enforce ownership and size limits before saving.
-
-Blockchain anchoring comes after finalization: store the final report's digest on-chain and retain chain ID, contract address, transaction hash and confirmation status separately. Recompute the digest from an exported report and compare it with the confirmed on-chain value for verification. Submission is not confirmation. Anchoring demonstrates a match to the anchored content; it does not prove the scan is truthful or its ML insights are correct. Keep scan data, credentials and ML inputs off-chain.
-
-No chain, wallet, contract or funded transaction is configured or deployed by this documentation update. Begin with local contract/verification tests before any user-approved public deployment.
+For the later blockchain milestone, anchor only the combined digest. Keep chain ID, contract address, transaction hash and confirmation status separate from immutable content. Recompute the exported content hash before comparing against a confirmed on-chain value. A matching anchor establishes content identity, not scan truth or model accuracy. Scan data and credentials stay off-chain.

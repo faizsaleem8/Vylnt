@@ -1,8 +1,10 @@
 # VYNLT
 
+Current milestone status (2026-10-22): **experimental M6 is closed by user approval**. [Model qualification](docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Next product work is blockchain M5, then remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](docs/ML_BUILD_PLAN.md).
+
 A browser-based web security configuration observer with a Chrome extension, shared TypeScript rule engine, authenticated Express API, React dashboard, and Playwright command-line scanner.
 
-**Development status:** local connected application, experimental React ML inference and reviewed-data training workflow implemented; see [PLAN.md](PLAN.md) for verification results and remaining milestones. Supabase adapter/migrations are included; hosted database acceptance, evaluated ML quality, combined ML reports and blockchain remain open. Every project change must update the plan.
+**Development status:** connected scanning, automatic evidence-based insights, immutable JSON/PDF report versions and developer-owned LSTM training/evaluation/release tooling are implemented. Supabase migration 005 passed live two-account acceptance. A trained controlled LSTM now supplements reports with explicitly experimental scores; it cannot hide findings or change assessments/severity. No category passed quality qualification. Human review is excluded from the current experimental scope. See [PLAN.md](PLAN.md), [ML build plan](docs/ML_BUILD_PLAN.md) and [actual evaluation](ml/evaluations/README.md).
 
 M1's scanner foundation is complete with automated Chromium checks and user-confirmed native Edge acceptance. Repeatable cache/restart/stress checks: `npm run test:scanner`; native loopback fixtures: `npm run lab:m1`. See [M1 acceptance](docs/M1_ACCEPTANCE.md) for evidence and limits.
 
@@ -69,11 +71,13 @@ Run `npm run benchmark:observer` after a build to compare a controlled dynamic p
 
 ## Structure
 
-**Two PDF outputs:** dashboard **Print / PDF** shows all findings with severity and full evidence, independent of the onscreen filter, without recommended actions or ML. The extension's **Download PDF** also returns this full-data report. The React ML panel has a separate **Download insights PDF** for grouped recommendations, affected counts, current experimental model outputs and model identity. The API verifies React's results before rendering; stale/modified results are rejected. The current synthetic LSTM is not validated security advice. Exports do not change saved evidence or the original scan hash; persisted combined reports/blockchain remain open. Restart the rebuilt API and refresh the dashboard to activate the split.
+**Two PDF outputs:** **Print / PDF** and the extension's **Download PDF** retain every raw finding, severity and full evidence without generated actions or ML. React's separate **Download insights PDF/JSON** freezes grouped assessments, evidence references, recommended changes, compatibility and verification steps. The authenticated API verifies browser analysis and persists an immutable version; repeated identical exports reuse it. Combined JSON SHA-256 and original scan SHA-256 remain separate. Neither is blockchain verification.
 
-The React dashboard automatically runs experimental ML when a saved scan opens. VYNLT ships and manages the model; users do not prepare training data, upload models or click Run. No Python service, Docker or SQL migration is needed for browser predictions. Results stay in page memory; original findings, scores and exports remain unchanged. The current bundled model is a synthetic demo with no demonstrated real-world accuracy.
+The React dashboard automatically analyses each selected saved scan in a cancellable Web Worker. Missing/incompatible/unqualified releases use conservative evidence summaries. The legacy synthetic model is a developer fixture and cannot dismiss real findings. Ordinary users do not label data, upload models or click Run; no Python service or external AI provider is required for inference.
 
-Developer-owned ML preparation, training/evaluation and bundling are documented in [ml/README.md](ml/README.md). The dashboard now runs the first **snapshot LSTM**, with rule-linked recommended changes. `npm run ml:demo:lstm` exercises PyTorch CPU training, family-separated comparison and numeric browser export; `ml:prepare -- --sequence` prepares private annotated reports and `ml:bundle` validates/releases the artifact. The logistic baseline remains available via `ml:demo`. Snapshot group order is not runtime execution or source/sink evidence. Independent reviewed data, useful measured quality/calibration, behavioral sequences and combined ML reports remain open. VYNLT does not automatically train on user scans or infer ground truth from rule scores.
+The current [developer workflow](docs/ML_DEVELOPER_WORKFLOW.md) covers private paired-review packets, feature-only preparation, frozen family splits, offline eight-unit LSTM/logistic comparison, validation-selected calibration/thresholds, held-out evaluation and qualified releases. Snapshot order is structural, not runtime execution or source/sink evidence. The controlled generator is one shared template family and cannot establish real-world quality. See [evaluation/readiness](docs/ML_EVALUATION.md); legacy v1 demos remain documented in [ml/README.md](ml/README.md). VYNLT does not train itself on user scans or infer ground truth from user verdicts/rule scores.
+
+The approved [open-source controlled corpus](docs/ML_APPLICATION_CORPUS.md) adds pinned 2048, TodoMVC and reveal.js applications: `npm run ml:applications:fetch` verifies/downloads licensed browser assets; `npm run ml:applications` runs 33 offline localhost configuration/interaction scenarios without upstream installation scripts. With the expanded 33-case generated suite, the private frozen cohort has 60 rows across four families. It trained the first controlled LSTM, but its once-only 30-example test evaluation did not qualify any category. Better distinguishable data and held-out coverage remain necessary.
 
 - `packages/core`: shared contracts, eight pure configuration rules, scoring, and metadata sanitizers.
 - `packages/ui`: shared theme and locally bundled IBM Plex Sans with its SIL Open Font License.
@@ -146,7 +150,7 @@ History now fetches bounded summaries from PostgreSQL, with totals and site coun
 
 For faster comparisons across many pages, apply [004_comparison_index.sql](supabase/migrations/004_comparison_index.sql) after 003. It adds a derived lookup column/index without changing stored report content or API contracts. Backfill/index creation takes table locks, so use a maintenance window appropriate to your data size. This migration has been tested locally, and you reported deploying it on 2026-10-20. Hosted lookup-column and long-URL comparison behavior subsequently passed the M2 checks; physical index/plans and production load remain deferred. Do not rerun the script. Existing comparison functionality works on 003.
 
-The test suite applies all four migrations in local PostgreSQL via PGlite, including more than 1,000 scans, complete site aggregates, long page URLs and owner isolation. See [pagination contracts and limits](docs/API.md#pagination-and-complete-totals) for offset behavior and deployment limitations.
+Saved insights require [005_insight_reports.sql](supabase/migrations/005_insight_reports.sql) after 004. It has been applied and live-verified in the configured project with two accounts: 14 checks passed, no skips/failures/cleanup failures. Do not rerun applied migrations. Local pagination tests cover 001-004; the separate insights migration suite checks 005 ownership, immutable writes, idempotency and cascading deletion. Production load/index-plan inspection remains deferred.
 
 ## Manual acceptance checklist
 
@@ -165,7 +169,7 @@ The test suite applies all four migrations in local PostgreSQL via PGlite, inclu
 - [Chrome permissions](https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions)
 - [Chrome storage](https://developer.chrome.com/docs/extensions/reference/api/storage)
 
-Blockchain anchoring and combined ML-report finalization remain open. Automatic React ML triage runs with a synthetic experimental model; real-world accuracy has not been established. Existing SHA-256 verification only checks the original rule report's consistency. The optional dashboard has browser **Print / PDF**; the extension's **Download PDF** uses the server generator with tagged structure and accessibility finalization. Restart the API after rebuilding to activate server changes.
+Combined report finalisation and separate SHA-256 are implemented and live-verified; blockchain anchoring remains open. Insights now include a display-only experimental LSTM signal for compatible known contexts; evidence-based assessments and every raw finding remain unchanged. Restart the API after rebuilding and refresh/reload clients to activate changed server/collector code.
 
 
 

@@ -1,4 +1,4 @@
-import { cookieMetadata, createReport, safeUrl, securityHeaders, type Observation, type Report, type Resource, type ScriptMetadata } from '../../packages/core';
+import { cookieMetadata, createReport, safeUrl, securityHeaders, cspEvidenceComplete, type Observation, type Report, type Resource, type ScriptMetadata } from '../../packages/core';
 
 interface TabScan { requestId: string; documentId?: string; report: Report }
 // Serialize temporary scan state. Only monitoring preferences persist to disk.
@@ -62,6 +62,7 @@ chrome.webRequest.onHeadersReceived.addListener(details => { void enqueue(async 
   if (!scan || scan.requestId !== details.requestId || !await allowed(details.url)) return;
   scan.report.observation.url = safeUrl(details.url);
   scan.report.observation.headers = securityHeaders(details.responseHeaders ?? []);
+  scan.report.observation.cspEvidenceComplete = cspEvidenceComplete(details.responseHeaders ?? []);
   await save(details.tabId, scan);
 }); return undefined; }, { urls: ['http://*/*', 'https://*/*'] }, ['responseHeaders']);
 

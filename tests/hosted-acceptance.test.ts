@@ -50,3 +50,15 @@ it('reports missing migration probes as failures and still removes generated sca
     expect((await store.listPage(identity('A'), { page: 1, limit: 10 })).total).toBe(0);
   } finally { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); }
 });
+it('verifies frozen insights through normal API paths and confirms cascading cleanup', async () => {
+  const origins: string[] = [], phases: string[] = [];
+  const store = new FileStore(), server = createServer(createApp({ store, auth, origins, renderPdf: async () => Buffer.from('%PDF-fixture') }));
+  await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+  try {
+    const origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`; origins.push(origin);
+    const result = await verifyHostedApi({ origin, tokenA: 'A', tokenB: 'B', insights: true,
+      probeInsightStorage: async (phase, frozen) => { phases.push(phase); expect(Boolean(await store.getInsight(identity('A'), frozen.id))).toBe(phase === 'saved'); } });
+    expect(result.failure).toBeUndefined(); expect(result.cleanupFailures).toEqual([]); expect(phases).toEqual(['saved', 'deleted']);
+    expect(result.checks.filter(c => c.name.startsWith('ML-7'))).toHaveLength(5);
+  } finally { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); }
+});

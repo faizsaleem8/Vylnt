@@ -1,0 +1,2936 @@
+{
+  "evaluationVersion": 3,
+  "safetyPolicy": "controlled-evidence-v3",
+  "candidateHash": "3c359ae728ed06260c3774de6cfea6045a96239889ece2dcec2346a7d1bf5226",
+  "modelHash": "99810b4880b6df39b1acfbabac9cb47631f01070f87f635e62ceaf34980c2b8e",
+  "datasetHash": "7caabbc2143d7acc3708a2dd16668173af7edafdae4ea75e7d12d4cbf5409d94",
+  "splitHash": "e5f9539f213583136465fcf9ddf65e730078f3137bb8026b62d6f549be1650fc",
+  "provenance": "controlled",
+  "testFamilies": 2,
+  "scope": "Only the frozen developer evidence cohort; no universal accuracy claim",
+  "categories": {
+    "HDR-001": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        }
+      },
+      "ruleOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "HDR-002": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        }
+      },
+      "ruleOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "HDR-003": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        }
+      },
+      "ruleOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "CK-001": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        }
+      },
+      "ruleOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "CK-002": {
+      "modelOnly": {
+        "precision": null,
+        "recall": 0.0,
+        "coverage": 0.6666666666666666,
+        "contextualMisclassification": 1,
+        "insufficientEvidenceContextual": 1,
+        "precision95": null,
+        "recall95": [
+          0,
+          0.6576197724933469
+        ],
+        "coverage95": [
+          0.299993315138392,
+          0.9032285888942195
+        ],
+        "uncertainExamples": 2,
+        "sampleCount": 6
+      },
+      "afterSafeguards": {
+        "precision": null,
+        "recall": 0.0,
+        "coverage": 0.6666666666666666,
+        "contextualMisclassification": 1,
+        "insufficientEvidenceContextual": 1,
+        "precision95": null,
+        "recall95": [
+          0,
+          0.6576197724933469
+        ],
+        "coverage95": [
+          0.299993315138392,
+          0.9032285888942195
+        ],
+        "uncertainExamples": 2,
+        "sampleCount": 6
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            2.7755575615628914e-17,
+            0.3903342879021653
+          ],
+          "uncertainExamples": 2,
+          "sampleCount": 6
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            2.7755575615628914e-17,
+            0.3903342879021653
+          ],
+          "uncertainExamples": 2,
+          "sampleCount": 6
+        }
+      },
+      "ruleOnly": {
+        "precision": 0.3333333333333333,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.09677141110578041,
+          0.700006684861608
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.6096657120978346,
+          1
+        ],
+        "uncertainExamples": 2,
+        "sampleCount": 6
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": false,
+        "recall": false,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": false,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 2
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 2
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.3333333333333333,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.3333333333333333,
+                  0.3333333333333333
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.3333333333333333,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  -1.0,
+                  -1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  -0.6666666666666667,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.3333333333333333,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.3333333333333333,
+                  0.3333333333333333
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.3333333333333333,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  -1.0,
+                  -1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  -0.6666666666666667,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "CK-003": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        }
+      },
+      "ruleOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "NET-001": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.6576197724933469
+          ],
+          "coverage95": [
+            0,
+            0.6576197724933469
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 2
+        }
+      },
+      "ruleOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.34238022750665303,
+          1
+        ],
+        "recall95": [
+          0.34238022750665303,
+          1
+        ],
+        "coverage95": [
+          0.34238022750665303,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 2
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": false,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 0
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "JS-002": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.6755924351161198,
+          1
+        ],
+        "recall95": [
+          0.6755924351161198,
+          1
+        ],
+        "coverage95": [
+          0.7846891972623643,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 14
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.6755924351161198,
+          1
+        ],
+        "recall95": [
+          0.6755924351161198,
+          1
+        ],
+        "coverage95": [
+          0.7846891972623643,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 14
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.32440756488388023
+          ],
+          "coverage95": [
+            1.3877787807814457e-17,
+            0.2153108027376358
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 14
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.32440756488388023
+          ],
+          "coverage95": [
+            1.3877787807814457e-17,
+            0.2153108027376358
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 14
+        }
+      },
+      "ruleOnly": {
+        "precision": 0.5714285714285714,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.3259064457965074,
+          0.7861920109552588
+        ],
+        "recall95": [
+          0.6755924351161198,
+          1
+        ],
+        "coverage95": [
+          0.7846891972623643,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 14
+      },
+      "gates": {
+        "tenTestFamilies": false,
+        "classCounts": false,
+        "classFamilies": false,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": true,
+        "controlledApplicationScope": true
+      },
+      "approved": false,
+      "classCounts": {
+        "change-warranted": 8,
+        "contextual": 6
+      },
+      "classFamilies": {
+        "change-warranted": 2,
+        "contextual": 2
+      },
+      "highCriticalContextual": 0,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.5714285714285714,
+                  0.5714285714285714
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.4285714285714286,
+                  0.4285714285714286
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 2,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.5714285714285714,
+                  0.5714285714285714
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.4285714285714286,
+                  0.4285714285714286
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "releaseStatus": "experimental",
+  "limitations": [
+    "Controlled local configurations only. Human review is not required by this policy; do not claim reviewed real-application accuracy.",
+    "Wilson intervals assume independent examples; related within-family contexts can reduce effective sample size."
+  ]
+}

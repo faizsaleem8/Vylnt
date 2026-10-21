@@ -8,6 +8,8 @@ export interface ScriptMetadata { url: string; integrity: boolean; scriptType?: 
 export interface Observation {
   url: string; scannedAt: string;
   headers?: Record<string, string>;
+  /** Collector observed the complete, faithfully representable enforced CSP. Older scans omit this. */
+  cspEvidenceComplete?: boolean;
   cookies?: CookieMetadata[];
   resources: Resource[];
   scripts: ScriptMetadata[];
@@ -47,6 +49,17 @@ export function securityHeaders(headers: { name: string; value?: string }[]): Re
     }
   }
   return result;
+}
+/** Only a boolean survives; raw policy secrets are never retained. */
+export function cspEvidenceComplete(headers: { name: string; value?: string }[]): boolean {
+  const policies = headers.filter(h => h.name.toLowerCase() === 'content-security-policy').map(h => h.value ?? '');
+  if (!policies.length || policies.some(p => !p || p.length >= 8192) || policies.join(', ').length >= 8192) return false;
+  return policies.every(policy => !/'nonce-[^']*'/i.test(policy) && [...policy.matchAll(/https?:\/\/[^\s;,]+/gi)].every(([raw]) => {
+    const safe = safeUrl(raw);
+    // Adding the root slash preserves source-list matching. Other sanitation
+    // can remove distinguishing syntax, so do not claim complete evidence.
+    return safe === raw || safe === `${raw}/`;
+  }));
 }
 export function cookieMetadata(cookie: CookieMetadata): CookieMetadata {
   return { name: cookie.name.slice(0, 100), secure: cookie.secure, httpOnly: cookie.httpOnly,

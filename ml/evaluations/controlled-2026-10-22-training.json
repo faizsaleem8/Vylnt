@@ -1,0 +1,15 @@
+{
+  "seed": 42,
+  "epochs": 60,
+  "selectedEpoch": 60,
+  "validationLoss": 0.06782844662666321,
+  "conflictingVariants": 3,
+  "train": 16,
+  "validation": 8,
+  "testEvaluated": false,
+  "torch": "2.7.1+cpu",
+  "numpy": "1.26.4",
+  "python": "3.12.6",
+  "sklearn": "1.5.2",
+  "safetyPolicy": "development-only-v2"
+}

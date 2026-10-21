@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { createReport } from '../packages/core';
 import { createApp } from '../apps/server/app';
 import { FileStore } from '../apps/server/store';
-import { buildInsightAnalysis } from '../packages/ml/insight-analysis';
+import { analyseEvidenceReport } from '../packages/ml/evidence-release';
 import { contentHash, freezeInsights, verifyFrozenInsights, InsightSizeError } from '../packages/ml/frozen-insights';
 import example from '../docs/examples/insight-report.json';
 import type { StoredInsightReport } from '../packages/core/insight-contracts';
@@ -24,7 +24,7 @@ describe('frozen insights versions', () => {
     let rendered: unknown;
     const app = createApp({ store, auth, renderPdf: async (_row, _mode, _analysis, frozen) => { rendered = frozen; return Buffer.from('%PDF-fixture'); } });
     const path = `/api/scans/${r.scanId}/insight-reports`;
-    const body = { analysisHash: await contentHash(buildInsightAnalysis(r)) };
+    const body = { analysisHash: await contentHash(await analyseEvidenceReport(r)) };
     expect((await request(app).post(path).send(body)).status).toBe(401);
     expect((await request(app).post(path).set('Authorization', 'Bearer b').send(body)).status).toBe(404);
     expect((await request(app).post(path).set('Authorization', 'Bearer a').send({ analysisHash: '0'.repeat(64) })).status).toBe(409);

@@ -34,7 +34,7 @@ describe('evidence-v2 numeric runtime and qualification', () => {
     const model = { ...fixture.model, provenance: 'human-reviewed', weightInput: fixture.model.weightInput.map(r => r.map(() => 0)), outputWeight: Array(8).fill(0), outputBias: -10, thresholds: { contextual: .1, change: .9 } };
     const modelJson = JSON.stringify(model), hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(modelJson)))].map(b => b.toString(16).padStart(2, '0')).join('');
     const metrics = { changeCount: 30, contextualCount: 30, changeFamilies: 3, contextualFamilies: 3, precision: .95, recall: .98, coverage: .6, highCriticalContextual: 0, rulePrecision: .5, ruleRecall: 1, testFamilies: 10 };
-    const release: EvidenceRelease = { name: 'UNIT TEST ONLY', modelJson, modelHash: hash, datasetHash: model.datasetHash, splitHash: model.splitHash, reviewRecordHash: 'a'.repeat(64), reviewedScope: 'Fabricated unit mechanics only', categories: { 'JS-002': metrics, 'CK-001': metrics } };
+    const release: EvidenceRelease = { qualificationPolicy: 'vynlt-reviewed-release-v2', candidateHash: 'b'.repeat(64), evaluationHash: 'c'.repeat(64), name: 'UNIT TEST ONLY', modelJson, modelHash: hash, datasetHash: model.datasetHash, splitHash: model.splitHash, reviewRecordHash: 'a'.repeat(64), reviewedScope: 'Fabricated unit mechanics only', categories: { 'JS-002': metrics, 'CK-001': metrics } };
     const report = createReport(crypto.randomUUID(), { url: 'https://app.test/', headers: {}, cookies: [{ name: 'session', secure: false, httpOnly: true, session: true, sameSite: 'lax' }], domCollected: true, resources: [], scripts: [{ url: 'https://cdn.test/a', integrity: false, scriptType: 'classic', async: false, defer: true }], scannedAt: '2026-10-21T00:00:00Z' });
     const qualified = await analyseEvidenceReport(report, release);
     expect(qualified.mode).toBe('qualified-model'); expect(qualified.contextual.map(g => g.category)).toEqual(['JS-002']);
@@ -48,6 +48,8 @@ describe('evidence-v2 numeric runtime and qualification', () => {
     report.observation.scripts[0].async = undefined;
     expect((await analyseEvidenceReport(report, release)).contextual).toHaveLength(0);
     expect((await analyseEvidenceReport(report, { ...release, modelHash: '0'.repeat(64) })).mode).toBe('evidence-summary');
+    expect((await analyseEvidenceReport(report, { ...release, qualificationPolicy: 'old-policy' } as unknown as EvidenceRelease)).mode).toBe('evidence-summary');
     expect((await analyseEvidenceReport(report, { ...release, categories: { 'JS-002': { ...metrics, recall: .5 } } })).mode).toBe('evidence-summary');
+    expect((await analyseEvidenceReport(report, { ...release, categories: { 'JS-002': { ...metrics, precision: 95 } } })).mode).toBe('evidence-summary');
   });
 });

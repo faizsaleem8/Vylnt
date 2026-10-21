@@ -40,8 +40,8 @@ export function MlAnalysis({ report, onDownloadInsights, onListReports, onDownlo
     finally { setDownloading(false); }
   }
   return <section className="panel ml-analysis" aria-label="Automatic ML analysis"><div className="ml-body">
-    <h2>Report insights <span className="muted">/ {analysis?.mode === 'qualified-model' ? 'Qualified category model' : 'Evidence summary'}</span></h2>
-    <p>VYNLT assesses saved scan metadata automatically. {analysis?.mode === 'qualified-model' ? `Model: ${analysis.model.name}. Qualification applies only to approved categories within the documented scope.` : 'A qualified LSTM release is not available; synthetic scores do not decide which real findings matter.'}</p>
+    <h2>Report insights <span className="muted">/ {analysis?.mode === 'experimental-model' ? 'Experimental LSTM' : analysis?.mode === 'qualified-model' ? 'Qualified category model' : 'Evidence summary'}</span></h2>
+    <p>VYNLT assesses saved scan metadata automatically. {analysis?.mode === 'experimental-model' ? `Model: ${analysis.model.name}. Controlled-data scores supplement the evidence; findings and severity remain unchanged.` : analysis?.mode === 'qualified-model' ? `Model: ${analysis.model.name}. Qualification applies only to approved categories within the documented scope.` : 'A qualified LSTM release is not available; synthetic scores do not decide which real findings matter.'}</p>
     <button disabled={!analysis || downloading} onClick={() => void save('pdf')}>{downloading ? 'Preparing insights PDF…' : 'Download insights PDF'}</button>{' '}
     <button disabled={!analysis || downloading} onClick={() => void save('json')}>Download insights JSON</button>
     <p role="status" className="ml-status">{current?.error ?? analysis?.summary ?? 'Analysing scan…'}</p>
@@ -50,6 +50,7 @@ export function MlAnalysis({ report, onDownloadInsights, onListReports, onDownlo
       <section aria-label="ML prediction results"><h3>Prioritised issues</h3><ul className="ml-results">{analysis.issues.map(issue => <li key={issue.category}>
         <strong>{issue.title}</strong><span className="small muted">{issue.category} / {issue.originalSeverity} rule severity / {issue.findingIds.length} affected observations</span>
         <p><strong>{issue.assessment === 'change-warranted' ? 'Change warranted' : 'Needs review'}</strong> — {issue.explanation}</p>
+        {issue.experimentalSignal && <p><strong>Experimental LSTM signal:</strong> {issue.experimentalSignal.minScore.toFixed(3)} to {issue.experimentalSignal.maxScore.toFixed(3)} across {issue.experimentalSignal.scoredVariants} distinct contexts; {issue.experimentalSignal.reviewOnlyVariants} additional contexts require review. This is not an exploit probability.</p>}
         <p><strong>Recommended change:</strong> {issue.recommendedChange}</p>
         <p><strong>Compatibility:</strong> {issue.compatibility}</p><p><strong>Verify:</strong> {issue.verification}</p>
         <details><summary>Affected items and evidence ({issue.findingIds.length})</summary><p>{issue.missingContext.join(' ')}</p><p>{issue.variants.length} distinct evidence contexts. Full evidence references are preserved in the frozen JSON.</p>

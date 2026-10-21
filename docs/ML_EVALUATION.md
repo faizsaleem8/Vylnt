@@ -1,10 +1,42 @@
 # VYNLT evidence-v2 evaluation record
 
-Date: 2026-10-21. **No category is approved. The shipped release uses evidence-summary mode.**
+## Current expanded result and milestone scope
+
+Experimental M6 is closed by user decision on 2026-10-22. Qualification remains open as [ML-Q](ML_QUALIFICATION_PLAN.md), with all original numerical/safety gates unchanged. Expanded controlled v3 has 190 rows / 11 families overall, but only 32 rows / two held-out families. No category is approved; HttpOnly recall is zero and offline contextual mistakes are unsafe. The developer-only candidate is not bundled. See [exact numeric results](../ml/evaluations/README.md) and [preregistered expansion](ML_CORPUS_EXPANSION.md). Earlier data/review requirements below describe historical tracks; independent human review is not a prerequisite for the current controlled phase.
+
+Date: 2026-10-22. **No category is approved. The shipped controlled release is experimental and display-only.**
+
+Latest experiment: the active release now has `experimental-model` mode with display-only policy `vynlt-controlled-signal-v1`; its underlying evidence assessments remain unchanged. A fit-eligible 60-row/four-family controlled cohort trained the eight-unit LSTM and same-input logistic comparator. Validation selected checkpoint/calibration/thresholds before one frozen 30-row test. All categories failed qualification, including low precision and zero CK-002 recall; the test is only one generated family. Exact metrics and provenance are published in `ml/evaluations/README.md` and its linked JSON files. The 52,581-byte artifact passed 16 parity cases with maximum error ~6.9e-8. This is an experimental reporting implementation, not completion of M6's quality gates. Prior null-release/failed-fitting paragraphs below are historical snapshots, superseded for current implementation status.
+
+Current scope override: the user removed independent human review from the experimental ML phase on 2026-10-22. Controlled specifications and automated oracles supply ground truth; reviewer recruitment is not a prerequisite. Historical reviewed-application gates below remain records of the original policy. Fitting is now eligible after adding genuinely different persistent preference cases; the separately identified display-only release is implemented. Neither that dataset change nor the removal of review establishes accuracy, changes provenance or qualifies a model category.
+
+## Approved upstream controlled corpus
+
+The user approved selecting open-source applications for local assessment. Three MIT-licensed source families (2048, TodoMVC JavaScript ES6 and reveal.js barebones) are now pinned by commit and 23 file hashes. Two full collection runs passed 33 scenarios each, with independent network assertions and working browser interactions. No live upstream deployment was scanned. Headers/cookies/fixture resources and their controlled labels belong to the VYNLT harness, not upstream vulnerability claims. Full scope, source links and reproduction are in `docs/ML_APPLICATION_CORPUS.md`.
+
+The new cohort has 30 rows / 24 input variants / three families and three conflicting variants. The combined frozen snapshot has 59 rows / 37 variants / four families and 12 audited conflicts (three development conflicts). Train/validation/test have 20/10/29 rows across 2/1/1 families; the only test family remains the earlier generated template. Contextual development examples conflict with equally observable change/unknown examples and are excluded. Readiness remains false, no security candidate is fitted and no test evaluation or accuracy claim is published. There are zero independent human reviews. More copies or relabelled families cannot cure missing observable context.
+
+Validation for this increment: 159 tests / 33 suites, TypeScript/build, all 33 final browser scenarios, source-cache integrity/licence checks, private preparation and frozen audit/readiness/collection briefs passed. A separate browser check verified scoped collection sends zero requests to another localhost service while its unscoped control does contact that service. The product release remains null; independently reviewed application acceptance remains open.
+
+## 2026-10-22 collection and evaluation increment
+
+The user confirms no application repositories or independent reviewers are available. The private collection brief (`.local/ml-controlled/collection-plan-reviewed-gates-2026-10-22.json`) records one shared-input component, one observed test family, no eligible training/validation classes and nine conflicting/insufficient-context variants. Because provenance is controlled, reviewed acceptance still requires ten test application families and, for every category, 30 change-required and 30 contextual targets each across three families. No security candidate has been fitted or approved.
+
+Evaluation now publishes deterministic paired family-bootstrap intervals alongside Wilson intervals, separately for raw/guarded LSTM, logistic and rule-only results and paired comparator differences. Single-family cohorts and unstable undefined denominators produce null intervals. These are descriptive, not parameter-selection inputs or new accuracy claims. Release staging now runs Python-reference parity through the JavaScript runtime before writing a release; valid hashes alone cannot satisfy parity. Development fixtures cover every approved category before staging. A separate reproducible synthetic numeric reference covers all eight categories at 2/26/50/74 steps, without adding any training examples or reviews. Validation results are recorded in PLAN.md.
+
+## Continuation correction and readiness
+
+The generated scenarios use one shared server/application template. Earlier per-rule grouping overstated application diversity; **the corrected cohort has one family**, not eight. The original figures below are historical and do not support a release gate. A fresh run passed all 32 controlled scenarios; paired-data preparation retained 29 distinct labelled rows / 13 input variants with nine audited conflicts and zero human-reviewed targets.
+
+The fixed frozen assignment places that single family in test, leaving no training/validation families. Readiness correctly reports fitReady=false. The full audit may report those nine test conflicts, but none enter a learned safety list (developmentConflictVariants=0). Changing held-out labels leaves fitted weights/calibration/thresholds unchanged in regression tests. No security candidate was fitted from the corrected cohort and no test metrics are claimed.
+
+Developer tools now generate private hash-bound review packets and require paired review declarations; disagreements become one needs-review training target. The seeded controlled script packet has two pending cases and no decisions. Controlled fixtures cannot be promoted to independently reviewed application provenance through this workflow. More genuine application families and independent review are required; none have been invented to satisfy gates.
+
+ML-7 is independently live-verified: the private two-account helper recorded 14 passed hosted checks with zero skips, failure or cleanup failures on 2026-10-21, including migration 005, JSON/PDF retrieval, idempotency/stale-analysis rejection, immutable writes, owner isolation and source-delete cascade. This verifies report infrastructure, not model accuracy.
 
 ## Controlled suite and failed training experiment
 
-The expanded localhost suite passed 32 scenario/network assertions across eight generated template families. Preparation produced 29 distinct family/context/label rows after removing three repeated rows. The frozen split audit found nine input variants with conflicting or insufficient-evidence labels. There are zero independently reviewed application targets; annotation agreement is unavailable, not 100%.
+The expanded localhost suite passed 32 scenario/network assertions in one shared template family (the former eight per-rule family identifiers were incorrect). Preparation produced 29 distinct family/context/label rows after removing three repeated rows. The frozen split audit found nine input variants with conflicting or insufficient-evidence labels. There are zero independently reviewed application targets; annotation agreement is unavailable, not 100%.
 
 | Category | Change-required labels | Contextual labels | Needs-review labels |
 |---|---:|---:|---:|

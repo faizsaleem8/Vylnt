@@ -1,0 +1,5 @@
+# Published experiment and source-lock byte hashes must survive checkout unchanged.
+ml/evaluations/*.json text eol=lf
+# Preserve exact frozen Windows experiment bytes, including bound training hashes.
+ml/evaluations/expanded-v3-2026-10-22*.json -text
+ml/applications/sources.lock.json text eol=lf

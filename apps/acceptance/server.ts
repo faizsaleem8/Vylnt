@@ -8,6 +8,7 @@ import { supabaseAuth, type Authenticator } from '../server/auth';
 import { readSupabaseConfig, type PublicSupabaseConfig } from '../server/config';
 import { SupabaseStore, type Identity } from '../server/store';
 import { verifyHostedApi, type AcceptanceResult } from '../../packages/acceptance/hosted';
+import { contentHash } from '../../packages/core/integrity';
 
 export function createAcceptanceApp(options: { origin: string; config: PublicSupabaseConfig; auth: Authenticator; run: (a: Identity, b?: Identity) => Promise<AcceptanceResult>; onResults?: (results: AcceptanceResult) => Promise<void> }) {
   const app = express(); let sessions: Partial<Record<'A' | 'B', Identity>> = {}, running = false;
@@ -44,7 +45,21 @@ export function createAcceptanceApp(options: { origin: string; config: PublicSup
 export async function startAcceptance() {
   const config = readSupabaseConfig(process.env), origin = 'http://127.0.0.1:4321';
   const auth = supabaseAuth(config.url, config.publishableKey);
-  const run = (a: Identity, b?: Identity) => verifyHostedApi({ origin, tokenA: a.token, tokenB: b?.token,
+  const run = (a: Identity, b?: Identity) => verifyHostedApi({ origin, tokenA: a.token, tokenB: b?.token, insights: true,
+    probeInsightStorage: async (phase, frozen, tokenA, tokenB) => {
+      const path = `${config.url}/rest/v1/insight_reports?report_id=eq.${frozen.id}`;
+      const request = async (token: string, init: RequestInit = {}) => fetch(path, { ...init, headers: { apikey: config.publishableKey, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(15000) });
+      const owner = await request(tokenA);
+      if (!owner.ok) throw new Error('Migration 005 unavailable');
+      const rows = await owner.json();
+      if (phase === 'deleted') { if (rows.length !== 0) throw new Error('Insight cascade deletion failed'); return; }
+      if (rows.length !== 1 || rows[0].report_id !== frozen.id || await contentHash(rows[0].content) !== frozen.hash) throw new Error('Insight storage lookup failed');
+      for (const method of ['PATCH', 'DELETE']) {
+        const response = await request(tokenA, { method, ...(method === 'PATCH' ? { body: JSON.stringify({ created_at: '2000-01-01T00:00:00Z' }) } : {}) });
+        if (![401, 403, 405].includes(response.status)) throw new Error('Direct immutable write was not denied');
+      }
+      if (tokenB) { const other = await request(tokenB); if (!other.ok || (await other.json()).length !== 0) throw new Error('Insight RLS isolation failed'); }
+    },
     probeMigration004: async (id, token, pageUrl) => {
       const response = await fetch(`${config.url}/rest/v1/scans?scan_id=eq.${id}&select=page_url_hash`, { headers: { apikey: config.publishableKey, Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error('Migration 004 unavailable');
@@ -67,7 +82,7 @@ export async function startAcceptance() {
   helper.app.get('/acceptance.css', async (_req, res) => res.type('css').send(await readFile('apps/acceptance/style.css', 'utf8')));
   helper.app.use(createApp({ auth, store: new SupabaseStore(config.url, config.publishableKey), mode: 'supabase', supabase: config, origins: [origin] }));
   const server = createServer(helper.app); await new Promise<void>((r, reject) => { server.once('error', reject); server.listen(4321, '127.0.0.1', r); });
-  console.log(`VYNLT private M2 verification: ${origin} (expires in 30 minutes). Sign in through this page, never in chat.`);
+  console.log(`VYNLT private Supabase / ML-7 verification: ${origin} (expires in 30 minutes). Sign in through this page, never in chat.`);
   const timer = setTimeout(() => { helper.clear(); server.close(); }, 30 * 60 * 1000); timer.unref();
   for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => { clearTimeout(timer); helper.clear(); server.closeAllConnections(); server.close(); });
 }

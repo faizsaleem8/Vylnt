@@ -8,7 +8,7 @@ import type { Authenticator } from './auth';
 import type { PublicSupabaseConfig } from './config';
 import { createRateLimits, defaultRateLimits, type RateLimits } from './rate-limits';
 import { generatePdf, PdfUnavailableError } from './pdf';
-import { analyseScan } from '../../packages/ml/automatic-analysis';
+import { freezeInsights, contentHash, verifyFrozenInsights, InsightSizeError, insightByteLimit } from '../../packages/ml/frozen-insights';
 import { assertReportSize, ReportSizeError, reportByteLimit, submissionSizeMessage } from '../../packages/core/report-size';
 import { RateBackendUnavailable, type RateBackend } from './shared-rate-limits';
 
@@ -71,6 +71,33 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     if (!rows) { res.status(404).json({ error: 'Scan not found' }); return; }
     res.json(rows);
   });
+  app.post('/api/scans/:id/insight-reports', async (req, res) => {
+    const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
+    if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
+    const supplied = z.object({ analysisHash: z.string().regex(/^[0-9a-f]{64}$/) }).strict().parse(req.body);
+    const content = await freezeInsights(row.report);
+    if (await contentHash(content.analysis) !== supplied.analysisHash) { res.status(409).json({ error: 'Analysis, evidence or policy changed. Refresh the scan before saving insights.' }); return; }
+    const result = await options.store.putInsight(identity(res), content);
+    res.status(result.created ? 201 : 200).json(result.report);
+  });
+  app.get('/api/scans/:id/insight-reports', async (req, res) => {
+    const scanId = z.uuid().parse(req.params.id), row = await options.store.get(identity(res), scanId);
+    if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
+    const rows = await options.store.listInsights(identity(res), scanId);
+    res.json(rows.map(r => ({ id: r.id, hash: r.hash, createdAt: r.createdAt })));
+  });
+  app.get('/api/insight-reports/:id{.:format}', async (req, res) => {
+    const id = z.string().regex(/^[0-9a-f]{64}$/).parse(req.params.id);
+    const format = z.enum(['json', 'pdf']).parse(req.params.format ?? 'json');
+    const stored = await options.store.getInsight(identity(res), id);
+    if (!stored) { res.status(404).json({ error: 'Insights report not found' }); return; }
+    if (!await verifyFrozenInsights(stored)) { res.status(409).json({ error: 'Frozen report integrity or supported decision policy verification failed.' }); return; }
+    const source = await options.store.get(identity(res), stored.content.originalScan.scanId);
+    if (!source || source.hash !== stored.content.originalScanHash) { res.status(409).json({ error: 'Original scan verification failed.' }); return; }
+    if (format === 'json') { res.attachment(`vynlt-insights-${id}.json`).json(stored); return; }
+    const pdf = await (options.renderPdf ?? generatePdf)({ ...source, report: stored.content.originalScan, feedback: [] }, 'insights', undefined, stored);
+    if (!res.destroyed) res.attachment(`vynlt-${source.report.scanId}-insights.pdf`).type('application/pdf').send(pdf);
+  });
   app.get('/api/reports/:id', async (req, res) => {
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
@@ -90,21 +117,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
   app.post('/api/reports/:id/insights/pdf', async (req, res) => {
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
-    const prediction = z.union([
-      z.object({ findingId: z.string().max(5000), score: z.number().finite().min(0).max(1), label: z.enum(['actionable', 'contextual']) }).strict(),
-      z.object({ findingId: z.string().max(5000), reason: z.string().max(300) }).strict(),
-    ]);
-    const supplied = z.object({ modelHash: z.string().regex(/^[a-f0-9]{64}$/), values: z.array(prediction).max(1000) }).strict().parse(req.body);
-    const analysis = await analyseScan(row.report);
-    const matches = supplied.values.length === analysis.values.length && analysis.values.every((expected, index) => {
-      const actual = supplied.values[index];
-      return actual.findingId === expected.findingId && ('score' in expected ? 'score' in actual && actual.label === expected.label && Math.abs(actual.score - expected.score) <= 1e-12 : 'reason' in actual && actual.reason === expected.reason);
-    });
-    if (supplied.modelHash !== analysis.modelHash || !matches) {
-      res.status(409).json({ error: 'The scan or model analysis has changed. Refresh scan details and retry the insights download.' }); return;
-    }
-    const pdf = await (options.renderPdf ?? generatePdf)(row, 'insights', analysis);
-    if (!res.destroyed) res.attachment(`vynlt-${row.report.scanId}-insights.pdf`).type('application/pdf').send(pdf);
+    res.status(410).json({ error: 'This on-demand synthetic export is retired. Refresh VYNLT and use saved insight reports.' });
   });
   app.post('/api/scans/:id/findings/:findingId/feedback', async (req, res) => {
     const feedback = await options.store.feedback(identity(res), z.uuid().parse(req.params.id), req.params.findingId as string, feedbackSchema.parse(req.body));
@@ -116,6 +129,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
   app.use('/api', (_req, res) => { res.status(404).json({ error: 'Endpoint not found' }); });
   if (options.dashboardDir) app.use(express.static(resolve(options.dashboardDir)));
   app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    if (error instanceof InsightSizeError) { res.status(413).json({ error: error.message, code: 'INSIGHTS_TOO_LARGE', limitBytes: insightByteLimit, reportBytes: error.bytes }); return; }
     if (error instanceof z.ZodError) { res.status(400).json({ error: 'Invalid request payload', fields: error.issues.map(i => ({ path: i.path.join('.'), message: i.message })) }); return; }
     if (error instanceof ConflictError) { res.status(409).json({ error: error.message }); return; }
     if (error instanceof MigrationRequiredError) { res.status(503).json({ error: error.message }); return; }
@@ -124,7 +138,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     if (error instanceof ReportSizeError) { res.status(413).json({ error: error.message, code: 'REPORT_TOO_LARGE', limitBytes: reportByteLimit, ...(error.bytes === undefined ? {} : { reportBytes: error.bytes }) }); return; }
     if (error.type === 'entity.too.large') { res.status(413).json({ error: submissionSizeMessage, code: 'SUBMISSION_TOO_LARGE', limitBytes: reportByteLimit }); return; }
     if (error.type === 'entity.parse.failed') { res.status(400).json({ error: 'Invalid JSON' }); return; }
-    console.error('API operation failed:', error.name ?? 'Error'); res.status(503).json({ error: 'Operation unavailable. Check server configuration and retry.' });
+    console.error('API operation failed:', error.name ?? 'Error', typeof error.code === 'string' ? error.code : ''); res.status(503).json({ error: 'Operation unavailable. Check server configuration and retry.' });
   });
   return app;
 }

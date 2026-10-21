@@ -4,13 +4,19 @@ Last updated: 2026-10-21 (Asia/Calcutta)
 
 ## Current milestone
 
-M1, M2 and M3's agreed development scope are complete. M3 covers desktop Edge and English/accented European reports; the user confirmed keyboard/Narrator/200% zoom/PDF reading and excluded touch testing. Latest ML increment passed TypeScript, 118 tests in twenty-one suites, nine Python tests, builds and browser regression. M3 UI/PDF evidence and compatibility limits remain in `docs/M3_ACCEPTANCE.md`. M2 passed all nine hosted checks with distinct confirmed accounts, including owner isolation, migration RPCs/long URLs, immutable retrieval, reviews/hash/export and cleanup; no skips or cleanup failures. User explicitly does not want Docker or deployment now. Redis, physical-index/plan inspection and production load remain deferred and unverified. M6 now has a trained snapshot LSTM and React recurrent inference, but the bundled release is synthetic with no demonstrated useful security quality; reviewed-data evaluation, behavioral sequences, combined reports and blockchain remain open.
+M1-M3 remain complete in their documented development scope. The ML report-insights implementation now includes evidence-v2 contracts, matched target metadata, conservative grouped assessments, developer-owned data/training/release tooling, an automatic React worker and immutable JSON/PDF report versions. Print / PDF retains full raw findings/severity/evidence without generated actions or ML.
+
+Validation: TypeScript/build, 137 unit tests in 28 suites, 12 Python tests, local PostgreSQL migration-005 tests and the full extension/CLI/dashboard browser regression passed. The browser regression includes frozen JSON retrieval after reload, worker cancellation, incompatible rulesets, 71-script grouping, PDF retry/export and deletion. Fourteen accessibility audit states had zero violations/incomplete results. The three-page frozen PDF fixture (74 observations -> four issues) passed visual/text/layout inspection and veraPDF PDF/UA-1. Native Edge/Narrator confirmation predates these changes and is not new certification. Built-worker stress passed for 318 findings within the scan-size limit: about 226 ms analysis, 24.1 ms maximum main-thread heartbeat gap, working controls, cancellation and handled malformed input. These are local synthetic measurements, not device certification.
+
+The controlled suite passed 32 localhost scenarios. Its 29 distinct labels span eight template families and contain nine conflicting/insufficient-evidence input variants. Training refused safely after auditing; no real-application model category is qualified. Users receive evidence-summary mode. Independently reviewed application data and held-out qualification remain ML work; ordinary users never prepare datasets. Supabase migration 005 is supplied and locally tested, but not applied or live-verified. Docker/deployment remain excluded. See `docs/ML_BUILD_PLAN.md`, `docs/ML_DEVELOPER_WORKFLOW.md` and `docs/ML_EVALUATION.md`.
+
+Earlier browser attempts hit intermittent local-store deletion 503s. Atomic rename now has bounded retries for transient locks and safe error-code diagnostics; the subsequent full run passed. That pass does not establish the historical root cause or production-load reliability. Existing PDF font-descriptor parser warnings and harmless dependency annotation warnings remain documented limits.
 
 ## Milestones and remaining work
 
 Execution order agreed on 2026-10-21: **ML (M6 plus combined-report prerequisites) → blockchain (M5 anchoring/verification) → GitHub Actions (remaining M4 acceptance)**. Milestone numbers stay unchanged for existing references. M1–M3 are complete in their documented scope; Docker and deployment remain excluded.
 
-User-confirmed target pipeline: extension metadata → shared rules → authenticated API/Supabase → React ML → final report with ML insights → SHA-256 of the final report → blockchain anchor. See [docs/PIPELINE.md](docs/PIPELINE.md). The existing rule-report hash predates ML and does not yet represent this final combined report. Next implementation is versioned combined-report finalization, persistence and export before blockchain integration; evaluated ML quality remains a separate open requirement.
+User-confirmed target pipeline: extension metadata → shared rules → authenticated API/Supabase → React ML → final report with ML insights → SHA-256 of the final report → blockchain anchor. See [docs/PIPELINE.md](docs/PIPELINE.md). The existing rule-report hash predates ML and does not yet represent this final combined report. Versioned combined-report finalization, local persistence and export are implemented. Next are developer-owned reviewed-data qualification and hosted migration-005 acceptance before relying on cloud insights exports; blockchain anchoring and GitHub Actions follow.
 
 - [x] M1 — Browser scanner foundation (automated Chromium plus user-confirmed native Edge acceptance)
   - [x] Review supplied roadmap and establish project conventions.
@@ -52,7 +58,7 @@ User-confirmed target pipeline: extension metadata → shared rules → authenti
   - [x] Desktop Edge keyboard/Narrator/200% zoom acceptance reported by user; automated axe/theme/contrast/reflow and simulated slow-font/loading baseline. Touch excluded by user; installed Chrome, other readers and physical slow devices remain ongoing compatibility work.
   - [x] Bounded same-page history trend charts in the extension, with coverage-aware interpretation and readable values.
   - [x] Dedicated saved-report PDF generator accessible from the extension, with multi-page and empty-report pagination QA.
-  - [x] Separate full-data Print/PDF (all severities/evidence, no generated actions/ML) and downloadable experimental insights PDF from React, with owner-scoped verification of model hash/results before rendering. On-demand export only; persisted combined-report finalization remains M5 work.
+  - [x] Separate full-data Print/PDF (all severities/evidence, no generated actions/ML) and saved insights JSON/PDF from React. Owner-scoped finalisation verifies trusted facts/templates; immutable versions survive reload. Migration 005 is locally tested but hosted acceptance remains pending.
   - [x] Reproducible local PDF latency and sampled process-tree memory baseline for typical/medium/large synthetic reports.
   - [x] User-confirmed Edge/Narrator PDF reading/200% zoom; two fixtures pass automated PDF/UA-1 profile and ten pages pass visual/text QA, including accented European samples. Other languages/readers and arbitrary report shapes are not certified.
 - [ ] M4 — Automated scanner and GitHub Actions
@@ -62,25 +68,22 @@ User-confirmed target pipeline: extension metadata → shared rules → authenti
   - [ ] Run workflow in a GitHub repository; configure required checks/branch protection and documented risk exceptions.
 - [ ] M5 — Tamper-evident reports
   - [x] Canonical JSON and SHA-256 consistency check with API/UI and tamper unit tests.
-  - [ ] Versioned final-report contract combining immutable scan/rule results with frozen React ML insights and model identity; authenticated persistence and JSON/PDF export.
-  - [ ] Hash the canonical combined final report after ML analysis; preserve original scan hashes and test changed-model/output tampering.
+  - [x] Versioned final-report contract, frozen evidence/model/policy identity, authenticated local persistence and JSON/PDF export; local PostgreSQL/Supabase source implemented, hosted migration-005 verification pending.
+  - [x] Canonical SHA-256 of the combined frozen report, separate original scan hash, idempotency, tampering and archived-model verification tests. No blockchain anchoring claimed.
   - [ ] Solidity contract, local EVM deployment and transaction metadata.
   - [ ] Blockchain anchor/verify APIs and UI; unchanged/tampered on-chain demonstration.
-- [ ] M6 — Experimental ML
-  - [ ] Target LSTM workflow: versioned ordered metadata sequences, defined weakness categories, independently reviewed labels, React LSTM inference and evidence-linked recommended fixes in the finalized report. The logistic triage preview below is an intermediate baseline, not completion of this target.
-  - [ ] Reviewed, versioned remediation mapping for supported model categories; separate ML predictions from proven rule evidence, disclose missing coverage and abstain when unsupported. Evaluate broader detection separately from existing-alert triage; do not automatically change scanned websites.
-  - [x] Define initial target: offline triage of existing alerts as actionable/contextual/unreviewed, without changing live findings.
-  - [x] Shared metadata-only feature schema, explicit annotation manifest, private HMAC family/sample grouping and preparation CLI.
-  - [x] Deterministic application-family-separated train/validation/test splits and leakage/schema checks.
-  - [x] Offline logistic baseline, rule-only comparator metrics, numeric model artifact and synthetic smoke demo.
-  - [x] Automatic React browser inference using VYNLT's bundled model, model identity/provenance, compatibility checks, unsupported-rule abstention and independent scikit-learn numerical parity checks. No user setup/training controls.
-  - [x] Developer preparation and multi-export offline training with global duplicate/family validation; validated model bundling command. Earlier React annotation form retired after product-flow clarification.
-  - [x] First snapshot LSTM: bounded numeric metadata schema/preparation, PyTorch CPU training, validation-selected checkpoint and same-family-split logistic comparator, numeric React inference and supported-rule abstention. Synthetic release only; structural group order is not runtime behavior.
-  - [x] Display existing rule recommendations beside LSTM results with explicit rule-guidance attribution and synthetic limitations; original findings remain unchanged. Combined persisted/exported ML reports and independently reviewed category remediation remain open.
-  - [ ] Collect independently reviewed real/controlled-application labels with evidence, sufficient family diversity and annotation-agreement audit.
-  - [ ] Safe source/sink/operation sequence instrumentation and sequence schema; existing metadata is not data-flow evidence.
-  - [ ] LSTM training/comparison, frozen held-out evaluation, calibration and acceptance review on representative reviewed data.
-  - [ ] Reviewed-data model acceptance and evaluated retraining protocol; decide whether later models require an optional Python inference service. Browser logistic and snapshot LSTM inference already run without one.
+- [ ] M6 — ML report insights (ML-1..ML-7 in `docs/ML_BUILD_PLAN.md`)
+  - [x] ML-1 contracts, documented schemas, complete example report and acceptance fixtures.
+  - [x] ML-2 target-specific evidence, explicit unknowns, optional script attributes, bounded structural sequences, identity invariance and one inference per unique variant.
+  - [x] ML-3 initial controlled-suite/preparation infrastructure: independent network oracle, private provenance, deduplication/conflict and reviewer-agreement audits, frozen family splits. Thirty-two scenarios / eight template families only.
+  - [ ] ML-3 broader independently checked application configurations and independently reviewed real-application labels; useful distinguishable training coverage is not yet available.
+  - [x] ML-4 experiment infrastructure: eight-unit PyTorch LSTM, same-input logistic comparator, validation-only checkpoint/calibration/two thresholds, exclusive frozen-test evaluation, per-category metrics/intervals/gates and numeric browser parity.
+  - [ ] ML-4 representative independently reviewed candidate/evaluation and category approval. Current controlled cohort failed training eligibility; published failure and open gates are in `docs/ML_EVALUATION.md`.
+  - [x] ML-5 versioned evidence-based templates, conservative aggregation, high/critical visibility, affected counts and compact contextual section.
+  - [x] ML-6 automatic scan-scoped React worker, cancellation, compatibility/qualification checks and evidence-summary fallback; browser regression passed. Separate built-worker stress also passed within the scan-size limit.
+  - [x] ML-7 local immutable finalisation, original/combined hashes, ownership, idempotency, JSON/PDF retrieval after reload, tampering rejection, model archive lookup and cascade deletion; 1 MiB explicit limit.
+  - [ ] ML-7 apply/live-verify Supabase 005 with two owners; deployment is not assumed. Keep historical decision/catalog implementations when introducing future versions.
+  - [x] Retain legacy logistic/LSTM parsers and synthetic parity fixtures for developer regression. Synthetic HTTP export retired; synthetic results cannot classify real findings as harmless.
 - [ ] Ongoing — Browser performance measurements, extended privacy/regression coverage and literature/report alignment.
 
 ## Deferred deployment work — outside the current development milestones

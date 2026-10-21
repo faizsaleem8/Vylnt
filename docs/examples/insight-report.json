@@ -1,0 +1,169 @@
+{
+  "id": "34a29115c442d482b08bc2e46966099103453e992b3e8660b5dc38361c98c253",
+  "hash": "34a29115c442d482b08bc2e46966099103453e992b3e8660b5dc38361c98c253",
+  "createdAt": "2026-10-21T00:00:00Z",
+  "content": {
+    "version": "vynlt-frozen-insights-v1",
+    "originalScan": {
+      "scanId": "00000000-0000-4000-8000-000000000002",
+      "rulesetVersion": "0.2.0",
+      "observation": {
+        "url": "https://example.test/repeated",
+        "scannedAt": "2026-10-21T00:00:00Z",
+        "headers": {
+          "strict-transport-security": "max-age=300",
+          "content-security-policy": "script-src 'self'; frame-ancestors 'none'"
+        },
+        "cookies": [],
+        "resources": [],
+        "scripts": [
+          {
+            "url": "https://cdn.example.test/script-0.js",
+            "integrity": false
+          },
+          {
+            "url": "https://cdn.example.test/script-1.js",
+            "integrity": false
+          }
+        ],
+        "domCollected": true
+      },
+      "findings": [
+        {
+          "id": "JS-002:https://cdn.example.test/script-0.js:",
+          "ruleId": "JS-002",
+          "title": "Third-party script has no integrity attribute",
+          "severity": "info",
+          "confidence": "high",
+          "url": "https://cdn.example.test/script-0.js",
+          "description": "An external script has no SRI attribute. This is an inventory observation; other controls may be sufficient.",
+          "evidence": {
+            "integrityAttributePresent": false
+          },
+          "recommendation": "For static third-party scripts, consider a pinned version and Subresource Integrity. Review CSP and vendor trust.",
+          "detectedAt": "2026-10-21T00:00:00Z"
+        },
+        {
+          "id": "JS-002:https://cdn.example.test/script-1.js:",
+          "ruleId": "JS-002",
+          "title": "Third-party script has no integrity attribute",
+          "severity": "info",
+          "confidence": "high",
+          "url": "https://cdn.example.test/script-1.js",
+          "description": "An external script has no SRI attribute. This is an inventory observation; other controls may be sufficient.",
+          "evidence": {
+            "integrityAttributePresent": false
+          },
+          "recommendation": "For static third-party scripts, consider a pinned version and Subresource Integrity. Review CSP and vendor trust.",
+          "detectedAt": "2026-10-21T00:00:00Z"
+        }
+      ],
+      "score": 100
+    },
+    "originalScanHash": "16d7338fdff0f5f4a7c96afb4424229061570218434f7b3fb11d7fa2394ff718",
+    "analysis": {
+      "schemaVersion": "vynlt-insights-v1",
+      "inputSchema": "vynlt-evidence-v2",
+      "decisionPolicy": "vynlt-conservative-v1",
+      "remediationCatalog": "vynlt-remediation-v1",
+      "scanId": "00000000-0000-4000-8000-000000000002",
+      "model": {
+        "name": "No qualified evidence-v2 model release",
+        "hash": null,
+        "status": "unavailable",
+        "approvedCategories": []
+      },
+      "mode": "evidence-summary",
+      "limitations": [
+        "No independently reviewed model category is approved. Synthetic model outputs do not determine relevance.",
+        "Structural snapshot order is not runtime execution order. Configuration observations are not proof of exploitation.",
+        "Only the existing eight checks are in scope; missing collection may hide additional issues."
+      ],
+      "summary": "2 observations form 1 issues; 0 warrant configuration changes and 1 need review; 0 contextual groups.",
+      "issues": [
+        {
+          "category": "JS-002",
+          "title": "Third-party script has no integrity attribute",
+          "findingIds": [
+            "JS-002:https://cdn.example.test/script-0.js:",
+            "JS-002:https://cdn.example.test/script-1.js:"
+          ],
+          "variants": [
+            "[[1,-1,-1,-1,-1,1,1,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,0,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1],[-1,-1,1,-1,-1,-1,-1,-1,-1,1,1,-1,-1,-1,-1,-1,-1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,1,1,1,1,-1,1,1,-1,-1,-1,-1,-1,-1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,0,1,0,0,-1,-1,-1,-1,-1,-1,-1,1]]"
+          ],
+          "evidenceContexts": [
+            {
+              "variant": "[[1,-1,-1,-1,-1,1,1,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,0,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1],[-1,-1,1,-1,-1,-1,-1,-1,-1,1,1,-1,-1,-1,-1,-1,-1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,1,1,1,1,-1,1,1,-1,-1,-1,-1,-1,-1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,0,1,0,0,-1,-1,-1,-1,-1,-1,-1,1]]",
+              "findingIds": [
+                "JS-002:https://cdn.example.test/script-0.js:",
+                "JS-002:https://cdn.example.test/script-1.js:"
+              ],
+              "facts": {
+                "https": true,
+                "external": true,
+                "hstsPositive": true,
+                "hstsPresent": true,
+                "cspPresent": true,
+                "scriptDirective": true,
+                "broadScriptSource": false,
+                "frameAncestors": true,
+                "xFrameRestrictive": false,
+                "integrity": false,
+                "module": "unknown",
+                "async": "unknown",
+                "defer": "unknown",
+                "headersCollected": true,
+                "domCollected": true,
+                "cookiesCollected": true,
+                "matchingUnknown": false
+              },
+              "missingContext": [
+                "Application intent and impact have not been independently verified.",
+                "Vendor trust, static content stability and integrity compatibility are unknown.",
+                "Some script attributes were not collected by this scan version."
+              ]
+            }
+          ],
+          "observedFacts": [
+            {
+              "https": true,
+              "external": true,
+              "hstsPositive": true,
+              "hstsPresent": true,
+              "cspPresent": true,
+              "scriptDirective": true,
+              "broadScriptSource": false,
+              "frameAncestors": true,
+              "xFrameRestrictive": false,
+              "integrity": false,
+              "module": "unknown",
+              "async": "unknown",
+              "defer": "unknown",
+              "headersCollected": true,
+              "domCollected": true,
+              "cookiesCollected": true,
+              "matchingUnknown": false
+            }
+          ],
+          "missingContext": [
+            "Application intent and impact have not been independently verified.",
+            "Vendor trust, static content stability and integrity compatibility are unknown.",
+            "Some script attributes were not collected by this scan version."
+          ],
+          "assessment": "needs-review",
+          "reviewPriority": "normal",
+          "originalSeverity": "info",
+          "explanation": "The rule observed a configuration or inventory condition. Available metadata does not establish application impact or justify treating this observation as harmless.",
+          "recommendedChange": "For stable third-party scripts, consider pinned versions and Subresource Integrity; otherwise review CSP and supplier controls.",
+          "compatibility": "Changing scripts can invalidate integrity hashes. Check CORS and dynamic delivery before adding SRI.",
+          "verification": "Compare integrity metadata with independently obtained content, test loading/CORS and exercise the application.",
+          "remediationReferences": [
+            "vynlt-remediation-v1/JS-002",
+            "https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity"
+          ]
+        }
+      ],
+      "contextual": []
+    }
+  }
+}

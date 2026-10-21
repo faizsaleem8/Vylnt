@@ -94,7 +94,9 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       if (!scan || scan.documentId !== sender.documentId || !await allowed(sender.url ?? '')) return { ok: false };
       const o = scan.report.observation;
       // Explicit allowlists keep arbitrary page data out of storage.
-      o.scripts = (Array.isArray(message.scripts) ? message.scripts : []).slice(0, 150).map((s: ScriptMetadata) => ({ url: safeUrl(String(s.url)), integrity: s.integrity === true }));
+      o.scripts = (Array.isArray(message.scripts) ? message.scripts : []).slice(0, 150).map((s: ScriptMetadata) => ({ url: safeUrl(String(s.url)), integrity: s.integrity === true,
+        ...(['classic', 'module', 'other'].includes(s.scriptType ?? '') ? { scriptType: s.scriptType } : {}),
+        ...(typeof s.async === 'boolean' ? { async: s.async } : {}), ...(typeof s.defer === 'boolean' ? { defer: s.defer } : {}) }));
       const domResources: Resource[] = (Array.isArray(message.resources) ? message.resources : []).slice(0, 300).map((r: Resource) => ({ url: safeUrl(String(r.url)), type: String(r.type).slice(0, 30), outcome: 'referenced' }));
       o.resources = [...o.resources.filter(r => r.outcome !== 'referenced'), ...domResources].slice(0, 600);
       o.domCollected = true;

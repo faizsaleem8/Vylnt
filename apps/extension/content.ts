@@ -8,7 +8,7 @@
   };
   function collect() {
     const scripts = [...document.scripts].filter(s => s.src).slice(0, 150)
-      .map(s => ({ url: clean(s.src), integrity: Boolean(s.integrity.trim()) })).filter(s => s.url);
+      .map(s => ({ url: clean(s.src), integrity: Boolean(s.integrity.trim()), scriptType: s.type === 'module' ? 'module' : !s.type || /^(?:text|application)\/javascript$/i.test(s.type) ? 'classic' : 'other', async: s.hasAttribute('async'), defer: s.hasAttribute('defer') })).filter(s => s.url);
     const resources = [...document.querySelectorAll('script[src],img[src],iframe[src],link[rel="stylesheet"][href],audio[src],video[src]')]
       .slice(0, 300).map(el => ({ url: clean(el.getAttribute('src') ?? el.getAttribute('href') ?? ''),
         type: el.tagName === 'IMG' ? 'image' : el.tagName.toLowerCase(), outcome: 'referenced' })).filter(r => r.url);
@@ -23,7 +23,7 @@
     if (++updates >= 100) observer.disconnect();
     timer = setTimeout(collect, 750);
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'href', 'integrity'] });
+  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'href', 'integrity', 'type', 'async', 'defer'] });
   chrome.runtime.onMessage.addListener((message, sender) => {
     if (sender.id === chrome.runtime.id && message.type === 'COLLECT') collect();
   });

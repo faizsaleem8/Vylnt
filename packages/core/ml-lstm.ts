@@ -25,11 +25,12 @@ export function parseLstmModel(value: unknown): LstmModel {
 }
 const sigmoid = (x: number) => x >= 0 ? 1 / (1 + Math.exp(-x)) : Math.exp(x) / (1 + Math.exp(x));
 /** PyTorch LSTM gate layout: input, forget, candidate, output. State resets per target. */
-export function predictSequence(model: LstmModel, sequence: number[][]): number {
+export function predictSequence(model: Pick<LstmModel, 'weightInput' | 'weightHidden' | 'biasInput' | 'biasHidden' | 'outputWeight' | 'outputBias'> & { featureNames: readonly string[] }, sequence: number[][]): number {
   if (sequence.length < 2 || sequence.length > sequenceLimit) throw new Error('Invalid sequence length');
   let hidden = Array<number>(8).fill(0), cell = Array<number>(8).fill(0);
   for (const input of sequence) {
-    if (input.length !== sequenceFeatureNames.length || input.some(x => !Number.isFinite(x) || x < 0 || x > 1)) throw new Error('Invalid sequence feature');
+    const minimum = model.featureNames === sequenceFeatureNames || model.featureNames.length === sequenceFeatureNames.length ? 0 : -1;
+    if (input.length !== model.featureNames.length || input.some(x => !Number.isFinite(x) || x < minimum || x > 1)) throw new Error('Invalid sequence feature');
     const gates = model.weightInput.map((weights, k) => weights.reduce((sum, w, j) => sum + w * input[j], model.biasInput[k] + model.biasHidden[k]) + model.weightHidden[k].reduce((sum, w, j) => sum + w * hidden[j], 0));
     cell = cell.map((value, j) => sigmoid(gates[8 + j]) * value + sigmoid(gates[j]) * Math.tanh(gates[16 + j]));
     hidden = cell.map((value, j) => sigmoid(gates[24 + j]) * Math.tanh(value));

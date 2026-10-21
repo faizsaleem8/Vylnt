@@ -241,10 +241,10 @@ try {
   await dashboard.screenshot({ path: 'test-results/dashboard-report.png', fullPage: true });
   // VYNLT runs ML without any model upload, training or Run controls.
   const ml = dashboard.locator('.ml-analysis');
-  await ml.getByRole('heading', { name: 'Synthetic ML preview', exact: true }).waitFor();
-  await ml.getByText('VYNLT synthetic LSTM', { exact: true }).waitFor();
-  assert.equal(await ml.getByText('Recommended change from rule guidance:', { exact: true }).count(), await dashboard.locator('.finding').count());
-  assert.equal(await ml.getByText('LSTM input uses bounded snapshot metadata', { exact: false }).count(), 1);
+  await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
+  await ml.getByText('A qualified LSTM release is not available', { exact: false }).waitFor();
+  assert.equal(await ml.getByText('Recommended change:', { exact: true }).count(), await dashboard.locator('.finding').count());
+  assert.equal(await ml.getByText('Structural snapshot order is not runtime execution order.', { exact: false }).count(), 1);
   const originalScore = await dashboard.locator('.large-score').textContent();
   const findingCount = await dashboard.locator('.finding').count();
   assert.equal(await ml.locator('.ml-results li').count(), findingCount);
@@ -252,8 +252,8 @@ try {
   assert.equal(await ml.locator('input').count(), 0);
   assert.equal(await dashboard.locator('.ml-training').count(), 0);
   assert.equal(await dashboard.getByText('Prepare ML training data', { exact: true }).count(), 0);
-  assert.equal(await ml.getByText('Synthetic demo only.', { exact: false }).count(), 1);
-  await dashboard.route('**/api/reports/*/insights/pdf', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Insights fixture busy. Retry shortly.' }) }), { times: 1 });
+  assert.equal(await ml.getByText('No independently reviewed model category is approved.', { exact: false }).count(), 1);
+  await dashboard.route('**/api/insight-reports/*.pdf', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Insights fixture busy. Retry shortly.' }) }), { times: 1 });
   await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).click();
   await dashboard.getByText('Insights fixture busy.', { exact: false }).waitFor();
   assert.equal(await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).isEnabled(), true);
@@ -263,6 +263,23 @@ try {
   assert.match(insightsFile.suggestedFilename(), /-insights\.pdf$/);
   await insightsFile.saveAs('test-results/dashboard-insights.pdf');
   assert.equal((await readFile('test-results/dashboard-insights.pdf')).subarray(0, 5).toString(), '%PDF-');
+  // Frozen JSON retrieved after reload must retain the original assessment/version.
+  const frozenBefore = await (await fetch(`${apiOrigin}/api/scans/${insecure.scanId}/insight-reports`, { headers: authHeaders })).json();
+  assert.equal(frozenBefore.length, 1);
+  await dashboard.reload();
+  await dashboard.getByLabel('Local API token from your .env file').fill(token);
+  await dashboard.getByRole('button', { name: 'Connect workspace' }).click();
+  await dashboard.getByText('Workspace connected', { exact: false }).waitFor();
+  await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
+  await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await ml.getByRole('button', { name: 'JSON', exact: true }).waitFor();
+  const frozenDownload = dashboard.waitForEvent('download');
+  await ml.getByRole('button', { name: 'JSON', exact: true }).click();
+  await (await frozenDownload).saveAs('test-results/dashboard-frozen-insights.json');
+  const frozenAfter = JSON.parse(await readFile('test-results/dashboard-frozen-insights.json', 'utf8'));
+  assert.equal(frozenAfter.id, frozenBefore[0].id);
+  assert.equal(frozenAfter.hash, frozenBefore[0].hash);
+  assert.equal(frozenAfter.content.analysis.mode, 'evidence-summary');
   await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await ml.screenshot({ path: 'test-results/dashboard-ml-mobile.png', style: '.topbar { visibility: hidden !important; }' });
@@ -272,27 +289,28 @@ try {
   await dashboard.emulateMedia({ media: 'print' }); assert.equal(await ml.isVisible(), false);
   await dashboard.emulateMedia({ media: 'screen' }); await dashboard.setViewportSize({ width: 1440, height: 1000 });
   assert.equal(await dashboard.locator('.large-score').textContent(), originalScore);
-  // Delayed hashing cannot restore an analysis after leaving details.
+  // Delayed worker messages cannot restore an analysis after leaving details.
   await dashboard.evaluate(() => {
-    window.originalMlDigest = crypto.subtle.digest.bind(crypto.subtle);
-    crypto.subtle.digest = (...args) => new Promise(resolveDigest => {
-      window.releaseMlDigest = async () => resolveDigest(await window.originalMlDigest(...args));
-    });
+    window.originalWorker = window.Worker;
+    window.Worker = class extends window.originalWorker {
+      postMessage(value) { this.pending = setTimeout(() => super.postMessage(value), 2000); }
+      terminate() { clearTimeout(this.pending); super.terminate(); }
+    };
   });
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
   await ml.getByText('Analysing scan…', { exact: true }).waitFor();
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
-  await dashboard.evaluate(async () => { await window.releaseMlDigest(); crypto.subtle.digest = window.originalMlDigest; delete window.releaseMlDigest; delete window.originalMlDigest; });
+  await dashboard.evaluate(() => { window.Worker = window.originalWorker; delete window.originalWorker; });
   assert.equal(await ml.count(), 0);
   // After the lazy code loads, automatic inference requires no prediction network request.
   const scanRequests = [];
-  const recordScanRequest = request => scanRequests.push(new URL(request.url()).pathname);
+  const recordScanRequest = request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) scanRequests.push(path); };
   dashboard.on('request', recordScanRequest);
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
-  await ml.getByRole('heading', { name: 'Synthetic ML preview', exact: true }).waitFor();
+  await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   dashboard.off('request', recordScanRequest);
-  assert.equal(scanRequests.length, 1, 'only the saved-scan API read is needed for automatic analysis');
+  assert.equal(scanRequests.length, 2, 'saved scan and frozen-version history only; no prediction API');
   assert.match(scanRequests[0], /^\/api\/scans\/[0-9a-f-]+$/);
   assert.equal(await ml.locator('.ml-results li').count(), findingCount);
   // Compatibility and empty-scan states do not require users to configure models.
@@ -304,28 +322,28 @@ try {
   });
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
-  await ml.getByText('ML analysis unavailable.', { exact: false }).waitFor();
-  assert.equal(await ml.locator('.ml-results').count(), 0);
+  await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
+  await ml.locator('.ml-warning').filter({ hasText: 'Ruleset is unsupported' }).waitFor();
   assert.equal(await dashboard.locator('.finding').count(), findingCount);
   analysisVariant = 'empty';
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
-  await ml.getByText('No observed findings to classify.', { exact: false }).waitFor();
-  assert.equal(await ml.locator('.ml-results').count(), 0);
+  await ml.getByText('0 observations form 0 issues', { exact: false }).waitFor();
+  assert.equal(await ml.locator('.ml-results li').count(), 0);
   analysisVariant = 'repeated';
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
-  await ml.getByRole('heading', { name: 'Synthetic ML preview', exact: true }).waitFor();
+  await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   await ml.getByText('71 affected observations', { exact: false }).waitFor();
   assert.equal(await ml.locator('.ml-results > li').count(), 1, '71 script observations render one issue');
-  assert.equal(await ml.getByText('Recommended change from rule guidance:', { exact: true }).count(), 1);
+  assert.equal(await ml.getByText('Recommended change:', { exact: true }).count(), 1);
   assert.equal(await dashboard.locator('.finding').count(), 71, 'Original evidence remains available');
   assert.equal(await ml.getByText('Demo classification:', { exact: false }).count(), 0);
   const { default: AxeBuilder } = await import('@axe-core/playwright');
   assert.deepEqual((await new AxeBuilder({ page: dashboard }).include('.ml-analysis').analyze()).violations, []);
-  const affected = ml.getByText('Affected items and model details (71)', { exact: true });
+  const affected = ml.getByText('Affected items and evidence (71)', { exact: true });
   await affected.click();
-  await ml.getByText('https://cdn.example.test/script-0.js', { exact: true }).waitFor();
+  await ml.getByText('Full evidence references are preserved in the frozen JSON.', { exact: false }).waitFor();
   assert.deepEqual((await new AxeBuilder({ page: dashboard }).include('.ml-analysis').analyze()).violations, []);
   await affected.focus(); await dashboard.keyboard.press('Space');
   assert.equal(await ml.locator('.ml-results details').evaluate(node => node.open), false);
@@ -336,7 +354,7 @@ try {
   await dashboard.unroute('**/api/scans/*');
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
-  await ml.getByRole('heading', { name: 'Synthetic ML preview', exact: true }).waitFor();
+  await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile page must not overflow horizontally');
   await dashboard.screenshot({ path: 'test-results/dashboard-mobile.png', fullPage: true });

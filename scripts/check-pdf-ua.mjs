@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 const jar = process.env.VYNLT_VERAPDF_JAR;
 assert.ok(jar, 'Set VYNLT_VERAPDF_JAR to the installed veraPDF CLI jar; Java is required.');
 const files = process.argv.slice(2);
-if (!files.length) files.push('test-results/pdf/empty.pdf', 'test-results/pdf/multipage.pdf', 'test-results/pdf/concise.pdf');
+if (!files.length) files.push('test-results/pdf/empty.pdf', 'test-results/pdf/multipage.pdf', 'test-results/pdf/concise.pdf', 'test-results/pdf/frozen.pdf');
 const child = spawn('java', ['-jar', resolve(jar), '--flavour', 'ua1', '--format', 'xml', ...files], { stdio: ['ignore', 'pipe', 'pipe'] });
 let xml = '', warnings = '';
 child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');

@@ -41,3 +41,15 @@ with pdfplumber.open(root / 'concise.pdf') as document:
     assert 'Recommended change' in text
     assert 'FINDING 71' not in text
     print(f'PASS: 74 findings / 4 grouped issues on {len(document.pages)} concise pages')
+with pdfplumber.open(root / 'frozen.pdf') as document:
+    assert len(document.pages) <= 6, len(document.pages)
+    text = ' '.join(page.extract_text() or '' for page in document.pages)
+    for expected in ['74 observations form 4 issues', '71 observations', 'Recommended change', 'Unknown context', 'Compatibility', 'Verify:', 'Original scan SHA-256', 'Combined JSON SHA-256', 'No groups qualified']:
+        assert expected in text, expected
+    assert 'Experimental per-observation outputs' not in text
+    for page in document.pages:
+        assert page.chars
+        for char in page.chars:
+            assert 45 <= char['x0'] <= char['x1'] <= page.width - 45, char
+            assert 40 <= char['top'] <= char['bottom'] <= page.height - 10, char
+    print(f'PASS: frozen evidence summary, all references retained in JSON, bounded layout on {len(document.pages)} pages')

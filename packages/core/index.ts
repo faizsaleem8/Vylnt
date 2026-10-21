@@ -4,7 +4,7 @@ export interface CookieMetadata {
   sameSite: 'no_restriction' | 'lax' | 'strict' | 'unspecified'; session: boolean;
 }
 export interface Resource { url: string; type: string; outcome: 'referenced' | 'requested' | 'completed' | 'failed' }
-export interface ScriptMetadata { url: string; integrity: boolean }
+export interface ScriptMetadata { url: string; integrity: boolean; scriptType?: 'classic' | 'module' | 'other'; async?: boolean; defer?: boolean }
 export interface Observation {
   url: string; scannedAt: string;
   headers?: Record<string, string>;

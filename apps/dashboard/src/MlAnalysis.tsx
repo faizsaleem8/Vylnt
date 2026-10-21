@@ -1,39 +1,65 @@
 import React, { useEffect, useState } from 'react';
 import type { Report } from '../../../packages/core';
-import { analyseScan } from '../../../packages/ml/automatic-analysis';
-import { groupMlInsights } from '../../../packages/ml/grouped-insights';
+import type { InsightAnalysis } from '../../../packages/core/insight-contracts';
+import { analyseEvidenceReport } from '../../../packages/ml/evidence-release';
 
-type Analysis = Awaited<ReturnType<typeof analyseScan>>;
-type State = { report: Report; analysis?: Analysis; error?: string };
-export function MlAnalysis({ report, onDownloadInsights }: { report: Report; onDownloadInsights: (analysis: Analysis) => Promise<void> }) {
+type Version = { id: string; hash: string; createdAt: string };
+type State = { report: Report; analysis?: InsightAnalysis; error?: string };
+export function MlAnalysis({ report, onDownloadInsights, onListReports, onDownloadSaved }: {
+  report: Report; onDownloadInsights: (analysis: InsightAnalysis, format?: 'json' | 'pdf') => Promise<void>;
+  onListReports: () => Promise<Version[]>; onDownloadSaved: (id: string, format: 'json' | 'pdf') => Promise<void>;
+}) {
   const [state, setState] = useState<State>();
   const [downloading, setDownloading] = useState(false);
+  const [versions, setVersions] = useState<Version[]>([]);
+  const [versionsError, setVersionsError] = useState('');
   useEffect(() => {
-    let cancelled = false;
-    void analyseScan(report).then(analysis => {
-      if (!cancelled) setState({ report, analysis });
-    }).catch(error => {
-      if (!cancelled) setState({ report, error: error instanceof Error && error.message.includes('ruleset versions differ') ? 'This scan uses a ruleset that the current VYNLT model does not support.' : 'VYNLT could not analyse this scan with its current model release.' });
-    });
-    return () => { cancelled = true; };
+    let cancelled = false, worker: Worker | undefined;
+    const fallback = async () => {
+      if (cancelled) return;
+      try { const analysis = await analyseEvidenceReport(report); if (!cancelled) setState({ report, analysis }); }
+      catch { setState({ report, error: 'Evidence analysis unavailable. Full findings remain accessible.' }); }
+    };
+    try {
+      worker = new Worker(new URL('./insight-worker.ts', import.meta.url), { type: 'module' });
+      worker.onmessage = event => { if (!cancelled) setState({ report, ...event.data }); };
+      worker.onerror = () => { worker?.terminate(); void fallback(); };
+      worker.postMessage(report);
+    } catch { void fallback(); }
+    setVersions([]); setVersionsError('');
+    void onListReports().then(rows => { if (!cancelled) setVersions(rows); }).catch(() => { if (!cancelled) setVersionsError('Saved report history is unavailable. Check API configuration and migration 005.'); });
+    return () => { cancelled = true; worker?.terminate(); };
   }, [report]);
-  // Never render the previous scan's results while a new analysis is pending.
   const current = state?.report === report ? state : undefined;
   const analysis = current?.analysis;
-  const groups = analysis ? groupMlInsights(report, analysis.values) : [];
+  async function save(format: 'json' | 'pdf') {
+    if (!analysis || downloading) return;
+    setDownloading(true);
+    try { await onDownloadInsights(analysis, format); setVersions(await onListReports()); }
+    catch { setVersionsError('Could not refresh saved report history. Retry the export or reopen this scan.'); }
+    finally { setDownloading(false); }
+  }
   return <section className="panel ml-analysis" aria-label="Automatic ML analysis"><div className="ml-body">
-    <h2>ML analysis <span className="muted">/ Experimental</span></h2>
-    <p>VYNLT analyses this scan automatically in your browser using its bundled model.</p>
-    <button disabled={!analysis || downloading} onClick={() => { if (!analysis || downloading) return; setDownloading(true); void onDownloadInsights(analysis).finally(() => setDownloading(false)); }}>{downloading ? 'Preparing insights PDF…' : 'Download insights PDF'}</button>
-    <p role="status" className="ml-status">{current?.error ? 'ML analysis unavailable. Rule findings are still available below.' : !analysis ? 'Analysing scan…' : !analysis.values.length ? 'No observed findings to classify. This does not establish that the site is safe.' : `${analysis.values.length} observations grouped into ${groups.length} ${groups.length === 1 ? 'issue' : 'issues'}. Matching explanations and fixes appear once.`}</p>
-    {current?.error && <p className="ml-warning">{current.error} VYNLT needs a compatible model release; no setup is required from you.</p>}
+    <h2>Report insights <span className="muted">/ {analysis?.mode === 'qualified-model' ? 'Qualified category model' : 'Evidence summary'}</span></h2>
+    <p>VYNLT assesses saved scan metadata automatically. {analysis?.mode === 'qualified-model' ? `Model: ${analysis.model.name}. Qualification applies only to approved categories within the documented scope.` : 'A qualified LSTM release is not available; synthetic scores do not decide which real findings matter.'}</p>
+    <button disabled={!analysis || downloading} onClick={() => void save('pdf')}>{downloading ? 'Preparing insights PDF…' : 'Download insights PDF'}</button>{' '}
+    <button disabled={!analysis || downloading} onClick={() => void save('json')}>Download insights JSON</button>
+    <p role="status" className="ml-status">{current?.error ?? analysis?.summary ?? 'Analysing scan…'}</p>
     {analysis && <>
-      <div className="ml-model"><strong>{analysis.modelName}</strong><p>{analysis.provenance === 'synthetic' ? 'Synthetic demo only. A validated security model is not available yet. These results demonstrate the automatic pipeline and must not guide security decisions.' : 'Experimental model. Predictions have not been approved for production security decisions.'}</p><p className="small muted">Original findings and severity remain unchanged. Scores are uncalibrated triage signals, not exploit probabilities.</p>{analysis.kind === 'experimental-lstm' && <p className="small muted">LSTM input uses bounded snapshot metadata in a fixed group order. It is not a JavaScript execution trace and does not detect weaknesses beyond the supported rule findings.</p>}<details><summary>Model details</summary><p className="small muted">{analysis.kind === 'experimental-lstm' ? 'LSTM / Snapshot sequence v1' : 'Logistic baseline'} / Ruleset {analysis.rulesetVersion} / Threshold {analysis.threshold}</p><code>{analysis.modelHash}</code></details></div>
-      {analysis.values.length > 0 && <section aria-label="ML prediction results"><h3>{analysis.provenance === 'synthetic' ? 'Synthetic ML preview' : 'Experimental ML insights'}</h3><p className="small muted">Grouped by matching rule context and fix; ordered by rule severity. Grouping is not an LSTM verdict. A contextual prediction does not mean harmless.</p><ul className="ml-results">{groups.map(group => {
-        const finding = group.finding;
-        return <li key={group.findingIds[0]}><strong>{finding.title}</strong><span className="small muted">{finding.ruleId} / {finding.severity} severity / {group.count} affected observations</span><p>{finding.description}</p>{analysis.provenance !== 'synthetic' && <p>Per-observation predictions: {group.actionable} actionable, {group.contextual} contextual, {group.abstained} unavailable. Verify against the evidence.</p>}<p><strong>Recommended change from rule guidance:</strong> {finding.recommendation}</p><details><summary>Affected items and model details ({group.count})</summary><p className="small muted">{analysis.provenance === 'synthetic' ? 'Demo predictions only; these cannot establish real issue relevance.' : 'Experimental predictions, not proof of impact.'} {group.actionable} actionable / {group.contextual} contextual / {group.abstained} unavailable. Showing up to 3 evidence samples; full evidence remains in the findings below.</p>{group.samples.map((sample, index) => <div key={index}><p className="small url">{sample.url}</p><p className="small muted">{sample.evidence}{sample.evidence.length === 240 ? '… [preview limited]' : ''}</p></div>)}</details></li>;
-      })}</ul><p className="small muted">Recommendations come from ruleset {report.rulesetVersion}. Review the original evidence and rescan after changes. The current model has not established which issues are real or harmless.</p></section>}
-      <p className="small muted">No findings are hidden or marked fixed. Print / PDF contains full scan findings without recommendations or ML. The separate insights PDF includes grouped recommendations and experimental model results. ML results are not persisted or included in the original scan hash.</p>
+      <p className="ml-warning">{analysis.limitations.join(' ')}</p>
+      <section aria-label="ML prediction results"><h3>Prioritised issues</h3><ul className="ml-results">{analysis.issues.map(issue => <li key={issue.category}>
+        <strong>{issue.title}</strong><span className="small muted">{issue.category} / {issue.originalSeverity} rule severity / {issue.findingIds.length} affected observations</span>
+        <p><strong>{issue.assessment === 'change-warranted' ? 'Change warranted' : 'Needs review'}</strong> — {issue.explanation}</p>
+        <p><strong>Recommended change:</strong> {issue.recommendedChange}</p>
+        <p><strong>Compatibility:</strong> {issue.compatibility}</p><p><strong>Verify:</strong> {issue.verification}</p>
+        <details><summary>Affected items and evidence ({issue.findingIds.length})</summary><p>{issue.missingContext.join(' ')}</p><p>{issue.variants.length} distinct evidence contexts. Full evidence references are preserved in the frozen JSON.</p>
+          {issue.observedFacts.slice(0, 3).map((facts, index) => <pre className="small" key={index}>{JSON.stringify(facts, null, 2)}</pre>)}
+        </details>
+      </li>)}</ul></section>
+      <h3>Contextual observations</h3>{analysis.contextual.length ? <ul>{analysis.contextual.map(issue => <li key={issue.category}><strong>{issue.title}</strong> / {issue.findingIds.length} observations / {issue.originalSeverity} rule severity<details><summary>Evidence references</summary><p>{issue.explanation}</p><p>{issue.findingIds.map(id => report.findings.findIndex(f => f.id === id) + 1).join(', ')}</p></details></li>)}</ul> : <p>No groups qualified for contextual de-emphasis.</p>}
+      <p className="small muted">Print / PDF retains every finding, severity and full evidence without generated actions or ML. Insights exports freeze a separate immutable report. No findings are silently removed.</p>
     </>}
+    <h3>Saved insights versions</h3>{versionsError && <p role="status">{versionsError}</p>}
+    {versions.length ? <ul>{versions.map(version => <li key={version.id}><span className="small">{new Date(version.createdAt).toLocaleString()} / {version.hash.slice(0, 12)}</span>{' '}<button onClick={() => void onDownloadSaved(version.id, 'pdf')}>PDF</button>{' '}<button onClick={() => void onDownloadSaved(version.id, 'json')}>JSON</button></li>)}</ul> : <p className="small muted">An export saves a version that can be retrieved after reload.</p>}
   </div></section>;
 }

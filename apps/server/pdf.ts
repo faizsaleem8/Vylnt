@@ -7,6 +7,8 @@ import { finalizeReportPdf } from './pdf-accessibility';
 import { summarizeReport } from '../../packages/core/report-insights';
 import type { ScanAnalysis } from '../../packages/ml/automatic-analysis';
 import { groupMlInsights } from '../../packages/ml/grouped-insights';
+import type { StoredInsightReport } from '../../packages/core/insight-contracts';
+import { insightHtml } from './insight-html';
 
 const escape = (value: unknown) => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 export class PdfUnavailableError extends Error {}
@@ -42,7 +44,7 @@ export function reportHtml(row: StoredScan, font: string, generatedAt = new Date
 
 // One isolated renderer per process; reject overload rather than queue unbounded browser jobs.
 let rendering = false;
-export async function generatePdf(row: StoredScan, mode: 'summary' | 'full' | 'insights' = 'full', analysis?: ScanAnalysis): Promise<Buffer> {
+export async function generatePdf(row: StoredScan, mode: 'summary' | 'full' | 'insights' = 'full', analysis?: ScanAnalysis, frozen?: StoredInsightReport): Promise<Buffer> {
   if (rendering) throw new PdfUnavailableError('PDF generation is busy. Retry shortly.');
   rendering = true;
   let browser: Browser | undefined, timer: ReturnType<typeof setTimeout> | undefined;
@@ -58,7 +60,7 @@ export async function generatePdf(row: StoredScan, mode: 'summary' | 'full' | 'i
       await context.route('**/*', route => route.abort());
       const page = await context.newPage();
       const font = await readFile(resolve('dist/server/plex-sans.ttf'));
-      await page.setContent(reportHtml(row, font.toString('base64'), undefined, mode, analysis), { waitUntil: 'load', timeout: 10000 });
+      await page.setContent(frozen ? insightHtml(frozen, font.toString('base64')) : reportHtml(row, font.toString('base64'), undefined, mode, analysis), { waitUntil: 'load', timeout: 10000 });
       await page.evaluate(() => document.fonts.ready);
       const pdf = await page.pdf({ format: 'A4', printBackground: true, tagged: true, outline: true,
         margin: { top: '18mm', bottom: '20mm', left: '18mm', right: '18mm' } });

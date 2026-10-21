@@ -27,28 +27,18 @@ it('authorizes PDF export before invoking the renderer and returns a private att
   expect(response.headers['cache-control']).toBe('no-store'); expect(renderPdf).toHaveBeenCalledOnce();
   expect((await store.get(identity, scan.report.scanId))?.hash).toBe(scan.hash);
 });
-it('exports insights separately, verifies React results, and rejects stale or modified analysis', async () => {
+it('retires on-demand synthetic exports while retaining legacy development parsing', async () => {
   const { store, scan } = await fixture(), analysis = await analyseScan(scan.report);
   const renderPdf = vi.fn(async () => Buffer.from('%PDF-insights'));
   const app = createApp({ store, auth, renderPdf }), path = `/api/reports/${scan.report.scanId}/insights/pdf`;
-  const body = { modelHash: analysis.modelHash, values: analysis.values };
-  expect((await request(app).post(path).send(body)).status).toBe(401);
-  expect((await request(app).post(path).auth('other', { type: 'bearer' }).send(body)).status).toBe(404);
-  expect((await request(app).post(path).auth('owner', { type: 'bearer' }).send({ ...body, modelHash: '0'.repeat(64) })).status).toBe(409);
-  expect((await request(app).post(path).auth('owner', { type: 'bearer' }).send({ ...body, values: [] })).status).toBe(409);
-  const modified = analysis.values.map((value, index) => index === 0 && 'score' in value ? { ...value, score: value.score > .5 ? value.score - .1 : value.score + .1 } : value);
-  expect((await request(app).post(path).auth('owner', { type: 'bearer' }).send({ ...body, values: modified })).status).toBe(409);
-  expect((await request(app).post(path).auth('owner', { type: 'bearer' }).send({ ...body, arbitraryText: 'untrusted' })).status).toBe(400);
+  expect((await request(app).post(path)).status).toBe(401);
+  expect((await request(app).post(path).auth('other', { type: 'bearer' })).status).toBe(404);
+  expect((await request(app).post(path).auth('owner', { type: 'bearer' }).send({ modelHash: analysis.modelHash, values: analysis.values })).status).toBe(410);
   expect(renderPdf).not.toHaveBeenCalled();
-  const response = await request(app).post(path).auth('owner', { type: 'bearer' }).send(body);
-  expect(response.status).toBe(200); expect(response.headers['content-disposition']).toContain('-insights.pdf');
-  expect(renderPdf).toHaveBeenCalledWith(scan, 'insights', analysis);
-  expect((await store.get(identity, scan.report.scanId))?.hash).toBe(scan.hash);
   const raw = reportHtml(scan, '');
-  expect(raw).not.toContain('Recommended change'); expect(raw).not.toContain('<h3>Recommendation'); expect(raw).not.toContain('Experimental ML results');
-  const insights = reportHtml(scan, '', undefined, 'insights', analysis);
-  expect(insights).toContain('Recommended change'); expect(insights).toContain('Experimental ML results'); expect(insights).toContain(analysis.modelHash);
-  expect(() => reportHtml(scan, '', undefined, 'insights')).toThrow('analysis is required');
+  expect(raw).not.toContain('Recommended change'); expect(raw).not.toContain('Experimental ML results');
+  const legacy = reportHtml(scan, '', undefined, 'insights', analysis);
+  expect(legacy).toContain('Synthetic demo only.');
 });
 it('returns actionable renderer failures with retry guidance', async () => {
   const { store, scan } = await fixture();

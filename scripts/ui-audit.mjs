@@ -22,6 +22,7 @@ const server = createServer(async (req, res) => {
       await new Promise(r => setTimeout(r, delay));
       res.setHeader('Content-Type', 'application/json');
       const data = path === '/api/config' ? { mode: 'local' } :
+        path.endsWith('/insight-reports') ? [] :
         path === '/api/scans' ? { scans: emptyWorkspace ? [] : [summary], total: emptyWorkspace ? 0 : 1, page: 1, limit: 30 } :
         path === '/api/sites' ? { sites: emptyWorkspace ? [] : [{ origin: new URL(summary.url).origin, scanCount: 1, latest: summary }], total: emptyWorkspace ? 0 : 1, page: 1, limit: 30, overview: { latestHigh: emptyWorkspace ? 0 : summary.highCount, averageScore: emptyWorkspace ? null : summary.score } } :
         { report, hash: 'a'.repeat(64), receivedAt: new Date().toISOString(), feedback: [] };
@@ -172,7 +173,7 @@ try {
   results.dashboard.mobile = await dashboard.evaluate(metrics);
   await dashboard.screenshot({ path: resolve(out, 'dashboard-mobile.png'), fullPage: true });
   const ml = dashboard.locator('.ml-analysis');
-  await ml.getByRole('heading', { name: 'Synthetic ML preview', exact: true }).waitFor();
+  await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   assert.equal(await ml.locator('.ml-results li').count(), report.findings.length);
   assert.equal(await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).count(), 1);
   assert.equal(await ml.locator('input').count(), 0);

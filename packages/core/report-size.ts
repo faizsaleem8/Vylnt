@@ -8,7 +8,7 @@ export const submissionSizeMessage = 'The scan upload exceeds the 512 KiB reques
  * Reports contain strings, booleans and integer scores, so key ordering does not affect byte length.
  * Count separators structurally: punctuation inside evidence strings is not whitespace overhead.
  */
-export function reportStorageBytes(report: Report): number {
+export function reportStorageBytes(report: unknown): number {
   function spaces(value: unknown): number {
     if (Array.isArray(value)) return Math.max(0, value.length - 1) + value.reduce((sum, item) => sum + spaces(item), 0);
     if (value && typeof value === 'object') {

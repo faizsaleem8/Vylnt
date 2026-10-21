@@ -9,3 +9,4 @@ reports/
 test-results/
 ml/data/
 ml/artifacts/
+__pycache__/

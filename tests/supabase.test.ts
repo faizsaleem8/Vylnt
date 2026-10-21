@@ -2,8 +2,25 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { MigrationRequiredError, SupabaseStore } from '../apps/server/store';
 import { supabaseAuth } from '../apps/server/auth';
 import { parseSubmission } from '../packages/core/validation';
+import { freezeInsights, contentHash } from '../packages/ml/frozen-insights';
 const identity = { ownerId: '00000000-0000-4000-8000-000000000001', token: 'user-jwt' };
 afterEach(() => vi.unstubAllGlobals());
+it('persists frozen insights through the user JWT and identifies missing migration 005', async () => {
+  const report = parseSubmission({ scanId: identity.ownerId, observation: { url: 'https://example.test/', scannedAt: '2026-10-21T00:00:00Z', resources: [], scripts: [], domCollected: true } });
+  const content = await freezeInsights(report), hash = await contentHash(content);
+  const row = { report_id: hash, content, created_at: '2026-10-21T00:00:01Z' };
+  const mock = vi.fn().mockResolvedValueOnce(new Response('true')).mockResolvedValueOnce(new Response(JSON.stringify([row])))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ code: 'PGRST202' }), { status: 404 }));
+  vi.stubGlobal('fetch', mock);
+  const store = new SupabaseStore('https://project.supabase.co', 'anon-key');
+  const result = await store.putInsight(identity, content);
+  expect(result).toEqual({ created: true, report: { id: hash, hash, content, createdAt: row.created_at } });
+  expect(mock.mock.calls[0][0]).toContain('/rpc/finalize_insight_report');
+  expect(JSON.parse(mock.mock.calls[0][1].body)).toEqual({ p_content: content, p_hash: hash });
+  expect(mock.mock.calls[0][1].headers.Authorization).toBe('Bearer user-jwt');
+  expect(mock.mock.calls[1][0]).toContain(`report_id=eq.${hash}`);
+  await expect(store.putInsight(identity, content)).rejects.toThrow('005_insight_reports.sql');
+});
 it('forwards comparison paging without an owner parameter and reports missing migration 003', async () => {
   const result = { scans: [], total: 0, page: 2, limit: 10 };
   const mock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(result))).mockResolvedValueOnce(new Response('null'))

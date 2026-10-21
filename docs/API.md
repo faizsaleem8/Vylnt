@@ -146,3 +146,14 @@ The runner defaults to loopback targets and blocks non-loopback network resource
 
 `.github/workflows/ci.yml` runs type checks, tests, builds, real Chromium regression checks and saves artifacts. It tests that the controlled insecure HTTPS fixture fails the configured gate while the hardened fixture passes. The workflow is present locally; it has not been run on GitHub. Require its check in branch protection if you want failed checks to block merges.
 
+# Saved insights reports
+
+- `POST /api/scans/:id/insight-reports` with `{ "analysisHash": "<SHA-256 of canonical browser analysis>" }`: authenticated finalisation. The API independently rebuilds all assessments/templates from the saved scan. Returns 201 for new content, 200 for an existing version, 409 for stale analysis and 413 above 1 MiB.
+- `GET /api/scans/:id/insight-reports`: owner-scoped saved-version identities and creation times.
+- `GET /api/insight-reports/:sha256.json` (or no extension): retrieves and verifies the frozen envelope/content.
+- `GET /api/insight-reports/:sha256.pdf`: renders that frozen version. Model/policy mismatch or tampering returns 409; a renderer failure returns 503 and Retry-After.
+- `GET /api/reports/:id/pdf` is unchanged: complete findings/severity/evidence without generated actions or ML.
+- Legacy `POST /api/reports/:id/insights/pdf` returns 410 for the owner, with update guidance. Synthetic fixture parsing remains available only in developer code/tests.
+
+Supabase requires migration `005_insight_reports.sql`. Reports are immutable and deleted alongside their source scan. The user JWT enforces ownership; no service-role key is used. RPC storage alone is not an attestation of API origin: retrieval checks canonical integrity and trusted derivation as well. Combined and original scan hashes are separate; neither is an on-chain anchor.
+

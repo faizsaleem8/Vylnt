@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RawPrint } from './RawPrint';
-import type { ScanAnalysis } from '../../../packages/ml/automatic-analysis';
+import type { InsightAnalysis, StoredInsightReport } from '../../../packages/core/insight-contracts';
+import { contentHash } from '../../../packages/core/integrity';
 import type { Finding, Report, Severity } from '../../../packages/core';
 import type { StoredScan } from '../../server/store';
 import type { ScanSummary as Summary, SiteSummary as Site, ScanPage, SitePage } from '../../../packages/core/summary';
@@ -85,17 +86,33 @@ function App() {
     setWebsiteRows(data.sites); setSitePage(data.page); setSiteTotal(data.total); setOverview(data.overview);
   }
   async function action(work: () => Promise<void>) { setBusy(true); setError(''); setNotice(''); try { await work(); } catch (e) { setError(e instanceof Error ? e.message : 'Something went wrong'); } finally { setBusy(false); } }
-  async function downloadInsights(report: Report, analysis: ScanAnalysis) {
+  async function downloadInsights(report: Report, analysis: InsightAnalysis, format: 'json' | 'pdf' = 'pdf') {
     const generation = workspaceGeneration.current, sequence = requestSequence.current;
     await action(async () => {
       try {
-        const blob = await api<Blob>(`/reports/${report.scanId}/insights/pdf`, { method: 'POST', body: JSON.stringify({ modelHash: analysis.modelHash, values: analysis.values }), signal: AbortSignal.timeout(45000) }, token, true);
+        const saved = await api<StoredInsightReport>(`/scans/${report.scanId}/insight-reports`, { method: 'POST', body: JSON.stringify({ analysisHash: await contentHash(analysis) }) });
+        if (generation !== workspaceGeneration.current || sequence !== requestSequence.current) return;
+        if (format === 'json') { download(`vynlt-insights-${saved.id}.json`, saved); return; }
+        const blob = await api<Blob>(`/insight-reports/${saved.id}.pdf`, { signal: AbortSignal.timeout(45000) }, token, true);
         if (generation !== workspaceGeneration.current || sequence !== requestSequence.current) return;
         const url = URL.createObjectURL(blob), link = document.createElement('a');
         link.href = url; link.download = `vynlt-${report.scanId}-insights.pdf`; link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        setNotice('Insights PDF downloaded. Experimental model results are separate from the full scan data.');
+        setNotice('Saved insights PDF downloaded. Its combined JSON hash is separate from the original scan hash.');
       } catch (error) { if (generation === workspaceGeneration.current && sequence === requestSequence.current) throw error; }
+    });
+  }
+  async function downloadSavedInsight(id: string, format: 'json' | 'pdf') {
+    const generation = workspaceGeneration.current, sequence = requestSequence.current;
+    await action(async () => {
+      if (format === 'json') {
+        const saved = await api<StoredInsightReport>(`/insight-reports/${id}.json`);
+        if (generation === workspaceGeneration.current && sequence === requestSequence.current) download(`vynlt-insights-${id}.json`, saved);
+      } else {
+        const blob = await api<Blob>(`/insight-reports/${id}.pdf`, { signal: AbortSignal.timeout(45000) }, token, true);
+        if (generation !== workspaceGeneration.current || sequence !== requestSequence.current) return;
+        const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = `vynlt-insights-${id}.pdf`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
     });
   }
   async function openScan(id: string) {
@@ -168,7 +185,7 @@ function App() {
       {view === 'Scan details' && selected && <><section className="panel scan-summary"><div className="large-score">{selected.report.score}<small>/100</small><span className="score-caption">Heuristic configuration score</span></div><div><h2 className="url">{selected.report.observation.url}</h2><p className="muted">{formatTime(selected.report.observation.scannedAt)} / Ruleset {selected.report.rulesetVersion}</p><div className="coverage">{[['Headers', selected.report.observation.headers !== undefined], ['DOM', selected.report.observation.domCollected], ['Cookies', selected.report.observation.cookies !== undefined]].map(([label, observed]) => <CoverageCell key={String(label)} label={String(label)} observed={Boolean(observed)} />)}</div></div><div className="export-actions"><button onClick={() => download(`vynlt-${selected.report.scanId}.json`, selected.report)}>Export JSON <Icon name="download" /></button><button onClick={() => window.print()}>Print / PDF</button></div></section>
         <RawPrint report={selected.report} />
         <div className="scan-tools"><label>Filter findings <select value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All severities</option>{['critical','high','medium','low','info'].map(s => <option key={s}>{s}</option>)}</select></label></div>
-        <React.Suspense fallback={<section className="panel ml-loading" role="status">Loading ML tools…</section>}><MlAnalysis report={selected.report} onDownloadInsights={analysis => downloadInsights(selected.report, analysis)} /></React.Suspense>
+        <React.Suspense fallback={<section className="panel ml-loading" role="status">Loading ML tools…</section>}><MlAnalysis report={selected.report} onDownloadInsights={(analysis, format) => downloadInsights(selected.report, analysis, format)} onListReports={() => api(`/scans/${selected.report.scanId}/insight-reports`)} onDownloadSaved={downloadSavedInsight} /></React.Suspense>
         <ComparisonPicker key={selected.report.scanId} report={selected.report} api={api} onChoose={setPrevious} />
         {compare && <section className="panel comparison-result" aria-label="Comparison result"><h3>Compared with {formatTime(previous!.observation.scannedAt)}</h3><p>{compare.added.length} newly observed · {compare.removed.length} no longer observed · {compare.changed.length} changed. Score change: {compare.scoreChange > 0 ? '+' : ''}{compare.scoreChange}.</p><p className="muted">{comparisonCaveat(compare)}</p>{[["Newly observed", compare.added], ["No longer observed", compare.removed]].map(([label, items]) => (items as Finding[]).length > 0 && <details key={String(label)}><summary>{String(label)} ({(items as Finding[]).length})</summary><ul>{(items as Finding[]).map(f => <li key={f.id}>{f.title} / {f.severity} / {f.url}</li>)}</ul></details>)}{compare.changed.length > 0 && <details><summary>Changed evidence or assessment ({compare.changed.length})</summary>{compare.changed.map(({ before, after }) => <div key={after.id}><h4>{after.title}</h4><p>Baseline: {before.severity}, {before.confidence} confidence</p><pre>{JSON.stringify(before.evidence, null, 2)}</pre><p>Selected: {after.severity}, {after.confidence} confidence</p><pre>{JSON.stringify(after.evidence, null, 2)}</pre></div>)}</details>}</section>}
         <div className="section-heading"><h2>Findings <span className="muted">/ {selected.report.findings.length}</span></h2><span className="small muted">Confidence and context matter.</span></div>

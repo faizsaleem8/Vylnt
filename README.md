@@ -1,6 +1,10 @@
 # VYNLT
 
-Current milestone status (2026-10-22): **experimental M6 is closed by user approval**. [Model qualification](docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Next product work is blockchain M5, then remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](docs/ML_BUILD_PLAN.md).
+Dashboard: contextual Back, scan/website deletion and a compact report with one Downloads menu and expandable ML/blockchain details. Automatic report saving/anchoring remains enabled by the existing configuration. See [dashboard cleanup](docs/DASHBOARD_CLEANUP.md) for behavior, acceptance and deletion boundaries.
+
+Local blockchain reporting (M5): frozen insights automatically queue their canonical SHA-256 when `VYNLT_BLOCKCHAIN=local`. Saved versions in React and the extension expose separate proof/status/live verification controls. Raw PDFs and immutable insights content retain their existing hashes. See [setup, commands and disposable-chain limits](docs/M5_ACCEPTANCE.md). No public deployment, wallet or SQL migration is required.
+
+Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](docs/ML_BUILD_PLAN.md).
 
 A browser-based web security configuration observer with a Chrome extension, shared TypeScript rule engine, authenticated Express API, React dashboard, and Playwright command-line scanner.
 

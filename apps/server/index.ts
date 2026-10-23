@@ -4,6 +4,7 @@ import { FileStore, SupabaseStore } from './store';
 import { readSupabaseConfig, readDeploymentConfig } from './config';
 import { readRateLimits } from './rate-limits';
 import { openRateBackend, readRateBackendConfig } from './shared-rate-limits';
+import { AnchorService } from './anchor';
 const port = Number(process.env.PORT ?? 4318);
 const mode = process.env.VYNLT_STORAGE ?? 'local';
 const host = process.env.HOST ?? '127.0.0.1';
@@ -15,7 +16,13 @@ const store = supabase ? new SupabaseStore(supabase.url, supabase.publishableKey
 const deployment = readDeploymentConfig(process.env, port);
 const rateLimits = readRateLimits(process.env);
 const shared = await openRateBackend(readRateBackendConfig(process.env), rateLimits.windowMs);
-const app = createApp({ auth, store, mode, supabase, rateLimits, rateBackend: shared.backend, ...deployment, dashboardDir: 'dist/dashboard' });
+if (process.env.VYNLT_BLOCKCHAIN && !['off', 'local'].includes(process.env.VYNLT_BLOCKCHAIN)) throw new Error('VYNLT_BLOCKCHAIN must be off or local');
+let anchors: AnchorService | undefined, anchorWarning: string | undefined;
+if (process.env.VYNLT_BLOCKCHAIN === 'local') {
+  try { anchors = await AnchorService.open(); }
+  catch { anchorWarning = 'Local blockchain setup is unavailable. Run chain:compile and chain:deploy, then restart the API.'; console.error(anchorWarning); }
+}
+const app = createApp({ auth, store, mode, supabase, rateLimits, anchors, anchorWarning, rateBackend: shared.backend, ...deployment, dashboardDir: 'dist/dashboard' });
 const server = app.listen(port, host, () => console.log(`VYNLT dashboard and API: http://${host}:${port} (${mode} storage)`));
-server.on('error', () => { shared.close(); });
-for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => server.close(() => { shared.close(); process.exit(0); }));
+server.on('error', () => { shared.close(); void anchors?.close(); });
+for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => server.close(async () => { shared.close(); await anchors?.close(); process.exit(0); }));

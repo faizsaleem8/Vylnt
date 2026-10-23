@@ -16,7 +16,7 @@ The expanded v3 candidate remains developer-only and is not bundled. The existin
 
 Validation: 206 TypeScript tests in 37 suites, 26 Python tests, type checking and production builds passed. Concurrent browser/training/test workloads initially caused timeouts; the clean serial suite passed with unchanged assertions and timeouts. The final corpus test file separately passed all seven tests. No new hosted Supabase, installed Edge/Narrator, accessibility or rendered-PDF certification is claimed for this increment.
 
-See `docs/ML_QUALIFICATION_PLAN.md` for the separate open quality track and `docs/ML_CORPUS_EXPANSION.md` for provenance/exclusions. Next product milestone: M5 blockchain anchoring of the frozen report hash, then remaining M4 GitHub Actions acceptance. Docker and deployment remain excluded. Users need not prepare datasets, recruit reviewers or provide more credentials/SQL for this closure.
+See `docs/ML_QUALIFICATION_PLAN.md` for the separate open quality track and `docs/ML_CORPUS_EXPANSION.md` for provenance/exclusions. M5 local blockchain anchoring is now complete; next product milestone is remaining M4 GitHub Actions acceptance. Docker and deployment remain excluded. Users need not prepare datasets, recruit reviewers or provide more credentials/SQL for this closure.
 
 ## Milestones
 
@@ -66,7 +66,7 @@ See `docs/ML_CONTRACTS.md`, `docs/ML_DEVELOPER_WORKFLOW.md`, `docs/ML_EVALUATION
 
 ## Next steps
 
-Proceed to M5 blockchain anchoring, then M4 GitHub Actions. Separately, ML-Q should broaden independently checked controlled configurations and held-out families, adding distinguishable evidence where available while retaining abstention for unobservable intent. Freeze a new candidate before its evaluation and meet the existing category quality gates before relevance decisions or de-emphasis. Current candidate failures remain published; do not tune against its consumed test. No human-review prerequisite applies to this phase. Preserve archived releases/policies/catalogs. Docker/deployment remain excluded.
+M5 local blockchain acceptance is complete; proceed to remaining M4 GitHub Actions. Separately, ML-Q should broaden independently checked controlled configurations and held-out families, adding distinguishable evidence where available while retaining abstention for unobservable intent. Freeze a new candidate before its evaluation and meet the existing category quality gates before relevance decisions or de-emphasis. Current candidate failures remain published; do not tune against its consumed test. No human-review prerequisite applies to this phase. Preserve archived releases/policies/catalogs. Docker/deployment remain excluded.
 
 ## Continuation readiness summary
 

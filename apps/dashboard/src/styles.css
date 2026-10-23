@@ -301,6 +301,96 @@ footer { display: flex; justify-content: space-between; gap: 1.25rem; margin-top
 }
 
 .raw-print { display: none; }
+.back-button { padding: .25rem 0; margin-bottom: .75rem; color: var(--muted); font-size: .8125rem; }
+.site-card { padding: 0; overflow: hidden; }
+.site-open { display: block; width: 100%; text-align: left; padding: 1.5rem; background: transparent; border: 0; border-radius: 0; color: inherit; }
+.site-card-footer { padding: .5rem 1.25rem; border-top: 1px solid var(--line); }
+.site-card-footer button { font-size: .8125rem; }
+.report-overview { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
+.report-overview > div { min-width: 0; }
+.insights-download { flex-shrink: 0; }
+.insights-actions { display: flex; flex-direction: column; flex-shrink: 0; gap: .625rem; max-width: 100%; }
+.prioritised-issues > h3 { margin: 1.25rem 0 .75rem; }
+.ledger { padding: 1.5rem; }
+.verify-report { padding: clamp(1rem, 3vw, 2rem); }
+.verify-report form { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; margin: 1.5rem 0; }
+.verify-report input { max-width: 100%; min-width: 0; }
+.verify-report code { overflow-wrap: anywhere; }
+.verify-report dd { margin: .5rem 0 1rem; }
+.verification-result { border: 1px solid var(--line); border-left: 3px solid var(--muted); border-radius: .5rem; padding: 1rem; margin-block: 1.5rem; }
+.verification-result[data-result="matching"] { border-left-color: var(--accent); }
+.verification-result[data-result="content-mismatch"] { border-left-color: #cf4463; }
+.ledger .section-heading { padding: 0; }
+.ledger dl { display: grid; grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); gap: .5rem 1rem; }
+.ledger dd { margin: 0; min-width: 0; }
+.ledger dt { color: var(--muted); font-size: .8125rem; }
+.ledger code { overflow-wrap: anywhere; font-size: .8125rem; }
+.ledger-entries { list-style: none; padding: 0; }
+.ledger-entries > li { border-top: 1px solid var(--line); padding: 1.25rem 0; }
+.ledger-entry-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.ledger-entry-heading h3 { margin: 0; }
+.ledger summary { cursor: pointer; }
+@media (max-width: 600px) {
+  .ledger { padding: 1rem; }
+  .ledger dl { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
+  .ledger dd { margin-bottom: .75rem; }
+}
+.report-overview h2 { margin: .35rem 0; }
+.report-overview .ml-status { margin: .75rem 0 .35rem; max-width: 65ch; }
+.downloads-menu { flex: 0 0 auto; position: relative; }
+.downloads-menu > summary { padding: .65rem 1rem; cursor: pointer; border: 1px solid var(--control-line); border-radius: .5rem; font-size: .875rem; font-weight: 500; }
+.download-options { position: absolute; top: calc(100% + .5rem); right: 0; z-index: 20; width: 18rem; max-width: calc(100vw - 4rem); padding: .5rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 .5rem 2rem #0002; }
+.download-options button { display: block; width: 100%; text-align: left; border-color: transparent; }
+.download-options p { padding: .5rem; margin: 0; }
+.report-save-status { display: flex; align-items: baseline; flex-wrap: wrap; gap: .25rem 1rem; color: var(--muted); font-size: .75rem; padding: .75rem 0; border-bottom: 1px solid var(--line); }
+.report-save-status p { margin: 0; }
+.report-save-status details { min-width: 0; }
+.report-save-status code { display: block; max-width: 100%; overflow-wrap: anywhere; margin: .5rem 0; }
+.report-save-status summary { cursor: pointer; }
+.ml-results { margin: .5rem 0 1rem; }
+.ml-results li { padding: 0; }
+.issue-details > summary { display: grid; grid-template-columns: minmax(0, 1fr) 6rem 1rem; align-items: center; gap: 1rem; padding: 1rem 0; cursor: pointer; }
+.issue-details > summary > .badge { justify-self: end; }
+.issue-details > summary > span:first-child { min-width: 0; }
+.issue-details > summary strong { display: block; font-size: .875rem; font-weight: 500; }
+.issue-details > summary .small { display: block; margin-top: .35rem; }
+.issue-details > summary::after { content: '+'; color: var(--muted); text-align: center; }
+.issue-details[open] > summary::after { content: '−'; }
+.issue-details .disclosure-content { padding: 0 0 1.25rem; }
+.report-disclosure { min-width: 0; margin-block: .75rem; }
+.report-disclosure > summary { cursor: pointer; display: flex; align-items: center; gap: .75rem; padding: 1rem 0; font-weight: 500; font-size: .875rem; }
+.report-disclosure > summary::after { content: '+'; margin-left: auto; color: var(--muted); }
+.report-disclosure[open] > summary::after { content: '−'; }
+.report-disclosure > summary::-webkit-details-marker { display: none; }
+.model-details, .blockchain-details, .saved-versions { border-top: 1px solid var(--line); }
+.status-label { color: var(--muted); font-size: .75rem; font-weight: 400; }
+.blockchain-status { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: 1rem; }
+.blockchain-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.blockchain-heading h3 { margin: 0; }
+.blockchain-heading .status-label { padding: .25rem .5rem; background: var(--surface-secondary); border-radius: .35rem; }
+.disclosure-content { min-width: 0; padding-bottom: 1rem; font-size: .875rem; line-height: 1.65; overflow-wrap: anywhere; }
+.report-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-block: .75rem; }
+.report-actions button { font-size: .8125rem; }
+.proof-metadata { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: .5rem 1rem; font-size: .75rem; }
+.proof-metadata dd { margin: 0; overflow-wrap: anywhere; }
+.saved-versions ul { padding: 0; list-style: none; }
+.saved-versions li { padding-block: .75rem; border-top: 1px solid var(--line); font-size: .8125rem; }
+.raw-findings > summary, .scan-integrity > summary { padding: 1.25rem; }
+.raw-findings > .disclosure-content { padding: 0 1.25rem 1.25rem; }
+.raw-findings .section-heading { padding-inline: 0; }
+.scan-integrity .integrity { border: 0; margin: 0; box-shadow: none; }
+.delete-dialog { width: min(30rem, calc(100vw - 2rem)); max-height: calc(100vh - 3rem); overflow: auto; padding: 1.75rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface); color: var(--text); box-shadow: 0 1.5rem 5rem #0004; }
+.delete-dialog::backdrop { background: #15112480; }
+.delete-dialog h2 { margin: .5rem 0; }
+.delete-dialog p { line-height: 1.6; font-size: .875rem; }
+.delete-target { font-weight: 500; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.5rem; }
+@media (max-width: 55em) {
+  .report-overview { flex-direction: column; gap: .5rem; }
+  .download-options { left: 0; right: auto; }
+  .raw-findings > .disclosure-content { padding-inline: .75rem; }
+  .issue-details > summary { grid-template-columns: minmax(0, 1fr) auto 1rem; gap: .5rem; }
+}
 @media print {
   .raw-print { display: block; overflow-wrap: anywhere; }
   .raw-print-finding { margin-block: 1.25rem; }
@@ -308,6 +398,7 @@ footer { display: flex; justify-content: space-between; gap: 1.25rem; margin-top
   .raw-print pre { white-space: pre-wrap; overflow-wrap: anywhere; }
   .finding, .comparison-result, .section-heading, .empty, .skip-link { display: none !important; }
   .ml-analysis { display: none !important; }
+  .raw-findings, .scan-integrity, .back-button, .delete-dialog { display: none !important; }
   :root { color-scheme: light; color: #111; background: #fff; --text: #111; --muted: #444; --surface: #fff; --line: #bbb; --accent: #174c80; }
   .sidebar, .topbar, .page-heading, .scan-tools, .comparison-picker, .heading-actions, .export-actions, .feedback, .integrity button, .status-region, .alert, footer { display: none !important; }
   .main-shell { width: 100%; margin: 0; }

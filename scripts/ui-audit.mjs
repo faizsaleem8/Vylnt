@@ -22,7 +22,8 @@ const server = createServer(async (req, res) => {
       await new Promise(r => setTimeout(r, delay));
       res.setHeader('Content-Type', 'application/json');
       const data = path === '/api/config' ? { mode: 'local' } :
-        path.endsWith('/insight-reports') ? [] :
+        path.endsWith('/insight-reports') ? (req.method === 'POST' ? { id: 'a'.repeat(64), hash: 'a'.repeat(64), createdAt: new Date().toISOString() } : []) :
+        path.endsWith('/anchor') ? { enabled: false, warning: 'Local anchoring is disabled.' } :
         path === '/api/scans' ? { scans: emptyWorkspace ? [] : [summary], total: emptyWorkspace ? 0 : 1, page: 1, limit: 30 } :
         path === '/api/sites' ? { sites: emptyWorkspace ? [] : [{ origin: new URL(summary.url).origin, scanCount: 1, latest: summary }], total: emptyWorkspace ? 0 : 1, page: 1, limit: 30, overview: { latestHigh: emptyWorkspace ? 0 : summary.highCount, averageScore: emptyWorkspace ? null : summary.score } } :
         { report, hash: 'a'.repeat(64), receivedAt: new Date().toISOString(), feedback: [] };
@@ -146,7 +147,9 @@ try {
   }
   await dashboard.getByRole('button', { name: summary.url, exact: true }).click();
   await until(() => dashboard.evaluate(() => document.activeElement?.tagName === 'H1'), 'report heading focus');
+  await dashboard.locator('.raw-findings > summary').click();
   await dashboard.getByLabel('Filter findings').selectOption('critical');
+  await dashboard.getByRole('heading', { name: 'No matching findings', exact: true }).waitFor();
   results.dashboard.emptyFilter = { cards: await dashboard.locator('.finding').count(), emptyMessage: await dashboard.getByRole('heading', { name: /no findings match|no (matching|critical) findings/i }).count() };
   assert.equal(results.dashboard.emptyFilter.cards, 0);
   assert.equal(results.dashboard.emptyFilter.emptyMessage, 1, 'Filtered empty state explains the result');
@@ -175,7 +178,19 @@ try {
   const ml = dashboard.locator('.ml-analysis');
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   assert.equal(await ml.locator('.ml-results li').count(), report.findings.length);
+  assert.equal(await dashboard.locator('.scan-summary').getByRole('button', { name: 'Print / Save PDF', exact: true }).isVisible(), true);
+  assert.equal(await dashboard.locator('.scan-summary').getByRole('button', { name: 'Export JSON', exact: false }).isVisible(), true);
   assert.equal(await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).count(), 1);
+  assert.equal(await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).isVisible(), true);
+  const pdfAction = await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).boundingBox();
+  const jsonAction = await ml.getByRole('button', { name: 'Download insights JSON', exact: true }).boundingBox();
+  assert.ok(jsonAction && pdfAction && jsonAction.y >= pdfAction.y + pdfAction.height, 'JSON download sits below PDF');
+  assert.ok(Math.abs(jsonAction.x - pdfAction.x) <= 1 && Math.abs(jsonAction.width - pdfAction.width) <= 1, 'Insight download buttons share alignment');
+  const badgeEdges = await ml.locator('.issue-details > summary > .badge').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().right));
+  assert.ok(Math.max(...badgeEdges) - Math.min(...badgeEdges) <= 1, 'Prioritised issue severity badges align');
+  await dashboard.setViewportSize({ width: 1440, height: 1000 });
+  await ml.screenshot({ path: resolve(out, 'dashboard-insights-desktop.png'), style: '.topbar { visibility: hidden !important; }' });
+  await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.equal(await ml.locator('input').count(), 0);
   assert.equal(await dashboard.locator('.ml-training').count(), 0);
   // Move the audited skip-link focus to its destination before component capture.

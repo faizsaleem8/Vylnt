@@ -22,6 +22,12 @@ async function until(work, label, timeout = 15000) {
   while (Date.now() - start < timeout) { try { const value = await work(); if (value) return value; } catch (error) { last = error; } await new Promise(r => setTimeout(r, 150)); }
   throw new Error(`Timed out: ${label}${last ? ` (${last.message})` : ''}`);
 }
+async function expandReportTools(page) {
+  await page.locator('.ml-analysis').waitFor();
+  await page.locator('.raw-findings').evaluateAll(nodes => nodes.forEach(node => { node.open = true; }));
+  await until(() => page.locator('.model-details').count(), 'model disclosure');
+  await page.locator('.model-details, .issue-details').evaluateAll(nodes => nodes.forEach(node => { node.open = true; }));
+}
 const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 try {
   servers = await startLabs(); assert.equal(servers.length, 2, 'Run npm run lab:tls first');
@@ -235,17 +241,19 @@ try {
   await dashboard.screenshot({ path: 'test-results/dashboard-overview.png', fullPage: true });
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await expandReportTools(dashboard);
   await dashboard.locator('.finding').first().locator('summary').click();
   await dashboard.locator('.finding').first().getByLabel('Review decision').selectOption('accepted_risk');
   await dashboard.locator('.finding').first().getByLabel('Review notes').fill('Controlled local lab; reviewed during automated test.');
   await dashboard.getByRole('button', { name: 'Save decision' }).first().click();
   await dashboard.getByText('Review decision saved.', { exact: false }).waitFor();
-  await dashboard.getByRole('button', { name: 'Verify hash', exact: true }).click(); await dashboard.getByText('Stored report matches', { exact: false }).waitFor();
+  assert.equal(await dashboard.locator('.scan-integrity').count(), 0, 'redundant original scan integrity UI is removed');
   const downloadPromise = dashboard.waitForEvent('download'); await dashboard.getByRole('button', { name: 'Export JSON', exact: false }).click(); assert.match((await downloadPromise).suggestedFilename(), /^vynlt-.*\.json$/);
   await dashboard.screenshot({ path: 'test-results/dashboard-report.png', fullPage: true });
   // VYNLT runs ML without any model upload, training or Run controls.
   const ml = dashboard.locator('.ml-analysis');
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
+  await expandReportTools(dashboard);
   await ml.getByText('Controlled-data scores supplement the evidence', { exact: false }).waitFor();
   assert.equal(await ml.getByText('Recommended change:', { exact: true }).count(), await dashboard.locator('.finding').count());
   assert.equal(await ml.getByText('Structural snapshot order is not runtime execution order.', { exact: false }).count(), 1);
@@ -276,9 +284,10 @@ try {
   await dashboard.getByText('Workspace connected', { exact: false }).waitFor();
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
-  await ml.getByRole('button', { name: 'JSON', exact: true }).waitFor();
+  await expandReportTools(dashboard);
+  await ml.getByRole('button', { name: 'Download insights JSON', exact: true }).waitFor();
   const frozenDownload = dashboard.waitForEvent('download');
-  await ml.getByRole('button', { name: 'JSON', exact: true }).click();
+  await ml.getByRole('button', { name: 'Download insights JSON', exact: true }).click();
   await (await frozenDownload).saveAs('test-results/dashboard-frozen-insights.json');
   const frozenAfter = JSON.parse(await readFile('test-results/dashboard-frozen-insights.json', 'utf8'));
   assert.equal(frozenAfter.id, frozenBefore[0].id);
@@ -314,10 +323,16 @@ try {
   const recordScanRequest = request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) scanRequests.push(path); };
   dashboard.on('request', recordScanRequest);
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await expandReportTools(dashboard);
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
+  await ml.getByLabel('Automatic report saving').getByText('Report saved.', { exact: false }).waitFor();
+  await ml.getByRole('region', { name: 'Blockchain report verification', exact: true }).waitFor();
+  await ml.getByText('Local blockchain anchoring is disabled.', { exact: true }).waitFor();
   dashboard.off('request', recordScanRequest);
-  assert.equal(scanRequests.length, 2, 'saved scan and frozen-version history only; no prediction API');
+  assert.equal(scanRequests.length, 4, 'saved scan, version history, automatic finalisation and anchor status only; no prediction API');
   assert.match(scanRequests[0], /^\/api\/scans\/[0-9a-f-]+$/);
+  assert.equal(scanRequests.filter(path => /^\/api\/scans\/[0-9a-f-]+\/insight-reports$/.test(path)).length, 2);
+  assert.equal(scanRequests.filter(path => /^\/api\/insight-reports\/[0-9a-f]{64}\/anchor$/.test(path)).length, 1);
   assert.equal(await ml.locator('.ml-results li').count(), findingCount);
   // Compatibility and empty-scan states do not require users to configure models.
   let analysisVariant = 'mismatch';
@@ -328,17 +343,20 @@ try {
   });
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await expandReportTools(dashboard);
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   await ml.locator('.ml-warning').filter({ hasText: 'Ruleset is unsupported' }).waitFor();
   assert.equal(await dashboard.locator('.finding').count(), findingCount);
   analysisVariant = 'empty';
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await expandReportTools(dashboard);
   await ml.getByText('0 observations form 0 issues', { exact: false }).waitFor();
   assert.equal(await ml.locator('.ml-results li').count(), 0);
   analysisVariant = 'repeated';
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await expandReportTools(dashboard);
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   await ml.getByText('71 affected observations', { exact: false }).waitFor();
   assert.equal(await ml.locator('.ml-results > li').count(), 1, '71 script observations render one issue');
@@ -352,7 +370,7 @@ try {
   await ml.getByText('Full evidence references are preserved in the frozen JSON.', { exact: false }).waitFor();
   assert.deepEqual((await new AxeBuilder({ page: dashboard }).include('.ml-analysis').analyze()).violations, []);
   await affected.focus(); await dashboard.keyboard.press('Space');
-  assert.equal(await ml.locator('.ml-results details').evaluate(node => node.open), false);
+  assert.equal(await ml.locator('.ml-results details details').evaluate(node => node.open), false);
   await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await ml.screenshot({ path: 'test-results/dashboard-ml-grouped-71.png', style: '.topbar { visibility: hidden !important; }' });
@@ -360,13 +378,16 @@ try {
   await dashboard.unroute('**/api/scans/*');
   await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.getByRole('button', { name: 'https://127.0.0.1:5443/insecure', exact: true }).click();
+  await expandReportTools(dashboard);
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile page must not overflow horizontally');
   await dashboard.screenshot({ path: 'test-results/dashboard-mobile.png', fullPage: true });
   await dashboard.setViewportSize({ width: 1440, height: 1000 });
+  await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
   await dashboard.locator('.heading-actions input[type=file]').setInputFiles('test-results/insecure.json');
   await dashboard.getByText('Report imported.', { exact: false }).waitFor();
+  await expandReportTools(dashboard);
   const dashboardBaselines = [];
   for (let n = 0; n < 12; n++) {
     const scanId = randomUUID(); dashboardBaselines.push(scanId);
@@ -400,8 +421,9 @@ try {
   const printed = await dashboard.locator('.raw-print').textContent();
   assert.ok(!printed.includes('Recommended change') && !printed.includes('Experimental ML'));
   await dashboard.emulateMedia({ media: 'screen' });
-  await dashboard.getByRole('button', { name: 'Settings', exact: false }).click();
-  dashboard.once('dialog', dialog => dialog.accept()); await dashboard.getByRole('button', { name: 'Delete', exact: true }).first().click();
+  await dashboard.getByRole('button', { name: 'History', exact: false }).first().click();
+  await dashboard.getByRole('button', { name: 'Delete', exact: false }).first().click();
+  await dashboard.getByRole('dialog').getByRole('button', { name: 'Delete scan', exact: true }).click();
   await until(async () => (await (await fetch(`${apiOrigin}/api/scans`, { headers: authHeaders })).json()).total === 2, 'dashboard deletion');
   assert.deepEqual(errors, []); console.log('PASS dashboard: auth, history/detail, feedback, integrity, JSON download/import, comparison, severity filter, deletion, mobile layout, no JS errors');
   console.log('Browser acceptance passed. Screenshots and CLI reports: test-results/');

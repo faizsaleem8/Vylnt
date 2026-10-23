@@ -9,6 +9,7 @@ import { findingReview } from './review';
 import { comparisonPanel } from './comparison';
 import { trendsPanel } from './trends';
 import { reportSizeMessage, submissionSizeMessage } from '../../packages/core/report-size';
+import { savedAnchors } from './anchors';
 
 let selected: Report | undefined;
 let currentScan: Report | undefined;
@@ -43,7 +44,7 @@ async function api<T>(path: string, init: RequestInit = {}, pdf = false): Promis
   const version = epoch;
   let response: Response;
   try {
-    response = await fetch(authOrigin + '/api' + path, { ...init, signal: AbortSignal.any([requests.signal, AbortSignal.timeout(pdf ? 45000 : 15000)]), headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' } });
+    response = await fetch(authOrigin + '/api' + path, { ...init, signal: AbortSignal.any([requests.signal, ...(init.signal ? [init.signal] : []), AbortSignal.timeout(pdf ? 45000 : 15000)]), headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' } });
   } catch (error) {
     if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
     throw new SyncFailure('Cannot reach the workspace API. Keep npm run dev running and check the API base URL.');
@@ -264,7 +265,7 @@ function show(report?: Report, feedback: Feedback[] = []) {
   const nodes = sameScan ? renderedReport! : (renderedReport = createReportNodes(identity));
   const session = epoch;
   const isCurrent = () => epoch === session && view === 'saved' && renderedReport === nodes && selected?.scanId === report.scanId;
-  if (!sameScan && view === 'saved') nodes.heading.before(trendsPanel(report, api, isCurrent), comparisonPanel(report, api, isCurrent));
+  if (!sameScan && view === 'saved') nodes.heading.before(trendsPanel(report, api, isCurrent), comparisonPanel(report, api, isCurrent), savedAnchors(report.scanId, api, isCurrent));
   const o = report.observation;
   text(nodes.score, String(report.score)); text(nodes.title, o.url);
   text(nodes.metadata, new Date(o.scannedAt).toLocaleString() + ' / Ruleset ' + report.rulesetVersion);

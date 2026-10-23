@@ -1,6 +1,6 @@
 # VYNLT scan-to-blockchain pipeline
 
-Current milestone status (2026-10-22): **experimental M6 is closed by user approval**. [Model qualification](ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Next product work is blockchain M5, then remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](ML_BUILD_PLAN.md).
+Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](ML_BUILD_PLAN.md).
 
 ```mermaid
 flowchart LR
@@ -9,7 +9,7 @@ flowchart LR
   C --> D[React analysis Worker]
   D --> E[API verifies and freezes insights]
   E --> F[Immutable JSON / PDF and combined SHA-256]
-  F --> G[Blockchain anchor - planned]
+  F --> G[Local blockchain digest anchor]
 ```
 
 The extension sends bounded metadata to the API, which validates it and recomputes pure shared rules. Supabase stores the immutable original scan. React retrieves saved scans through authenticated owner-scoped APIs; the extension does not communicate directly with a running React page.
@@ -43,9 +43,9 @@ The PDF is a rendering of frozen JSON. Its displayed hash identifies the JSON co
 | Controlled dataset / trained experimental LSTM / frozen evaluation | Implemented; 60 rows / four families, display-only signals and published failed qualification |
 | Useful LSTM category qualification | Open; no category approved, test coverage and quality gates unmet |
 | Frozen local/Supabase reports, JSON/PDF and combined SHA-256 | Implemented; migration 005 passed live two-account acceptance (14 checks, no skips/failure/cleanup failures) |
-| Blockchain anchoring / on-chain verification | Planned; no anchor is claimed |
+| Blockchain anchoring / on-chain verification | Local Hardhat contract, automatic durable submission and live verification implemented; disposable demonstration, not public attestation |
 | Remaining GitHub Actions hosted acceptance | Follows blockchain |
 
 See [ML build plan](ML_BUILD_PLAN.md), [developer workflow](ML_DEVELOPER_WORKFLOW.md) and [evaluation/readiness record](ML_EVALUATION.md). Docker and deployment remain excluded.
 
-For the later blockchain milestone, anchor only the combined digest. Keep chain ID, contract address, transaction hash and confirmation status separate from immutable content. Recompute the exported content hash before comparing against a confirmed on-chain value. A matching anchor establishes content identity, not scan truth or model accuracy. Scan data and credentials stay off-chain.
+M5 anchors only the combined digest. Chain ID, contract instance/address, transaction hash and confirmation status remain separate from immutable content. Live verification recomputes exported content and validates the receipt/event/canonical block and contract lookup. A matching local anchor establishes content identity within that local instance, not scan truth, ML accuracy or independent public attestation. Scan data and user credentials stay off-chain. See [local blockchain setup and acceptance](M5_ACCEPTANCE.md); no Supabase migration or Docker is required.

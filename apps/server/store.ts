@@ -14,6 +14,8 @@ import { summarizeScan, type PageRequest, type ScanPage, type SitePage, type Sit
 export interface Identity { ownerId: string; token: string }
 export interface StoredScan { report: Report; hash: string; receivedAt: string; feedback: Feedback[] }
 export interface Store {
+  siteScanIds(identity: Identity, origin: string): Promise<string[]>;
+  removeScans(identity: Identity, ids: string[]): Promise<number>;
   putInsight(identity: Identity, content: InsightReport): Promise<{ report: StoredInsightReport; created: boolean }>;
   getInsight(identity: Identity, id: string): Promise<StoredInsightReport | undefined>;
   listInsights(identity: Identity, scanId: string): Promise<StoredInsightReport[]>;
@@ -124,6 +126,18 @@ export class FileStore implements Store {
       return rows.length !== data.owners[identity.ownerId].length;
     }, true);
   }
+  siteScanIds(identity: Identity, origin: string) {
+    return this.transaction(data => (data.owners[identity.ownerId] ?? []).filter(s => new URL(s.report.observation.url).origin === origin).map(s => s.report.scanId));
+  }
+  removeScans(identity: Identity, ids: string[]) {
+    const selected = new Set(ids);
+    return this.transaction(data => {
+      const rows = data.owners[identity.ownerId] ?? [];
+      data.owners[identity.ownerId] = rows.filter(s => !selected.has(s.report.scanId));
+      if (data.insights?.[identity.ownerId]) data.insights[identity.ownerId] = data.insights[identity.ownerId].filter(r => !selected.has(r.content.originalScan.scanId));
+      return rows.length - data.owners[identity.ownerId].length;
+    }, true);
+  }
 }
 
 // Forward the verified user's JWT so PostgreSQL RLS is enforced; never use a service-role key.
@@ -194,5 +208,19 @@ export class SupabaseStore implements Store {
   }
   async remove(identity: Identity, id: string) {
     const rows = await this.request(identity, `scans?scan_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } }); return rows.length > 0;
+  }
+  async siteScanIds(identity: Identity, origin: string) {
+    const ids: string[] = []; let after = '';
+    for (;;) {
+      const rows: { scan_id: string }[] = await this.request(identity, `scans?origin=eq.${encodeURIComponent(origin)}&select=scan_id&order=scan_id.asc&limit=500${after ? '&scan_id=gt.' + encodeURIComponent(after) : ''}`);
+      ids.push(...rows.map(row => row.scan_id));
+      if (rows.length < 500) return ids;
+      after = rows[rows.length - 1].scan_id;
+    }
+  }
+  async removeScans(identity: Identity, ids: string[]) {
+    if (!ids.length) return 0;
+    const rows = await this.request(identity, `scans?scan_id=in.(${ids.map(id => encodeURIComponent(id)).join(',')})&select=scan_id`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+    return rows.length;
   }
 }

@@ -1,6 +1,6 @@
 # VYNLT experimental ML
 
-Current milestone status (2026-10-22): **experimental M6 is closed by user approval**. [Model qualification](../docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Next product work is blockchain M5, then remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](../docs/ML_BUILD_PLAN.md).
+Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](../docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](../docs/ML_BUILD_PLAN.md).
 
 ## Current evidence-v2 workflow
 

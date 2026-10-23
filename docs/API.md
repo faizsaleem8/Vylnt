@@ -1,5 +1,11 @@
 # VYNLT API and deployment setup
 
+Authenticated `POST /api/reports/verify-upload` checks an uploaded raw scan or frozen insights JSON against owner-scoped saved content. Insights verification additionally checks its live anchor using server-owned proof metadata. Uploads are transient, capped at 4 MiB including formatting; no write, import or anchoring occurs. Responses distinguish `matching` (live anchor), `database-matching` (raw scan only), `content-mismatch`, `not-found`, `not-anchored` and `verification-unavailable`. See [report verification](REPORT_VERIFICATION.md).
+
+`GET /demo-api/ledger?before=<inclusive block>` serves the separate `/ledger.html` local presentation without user login. It requires a loopback socket client and the existing origin policy; proxy headers do not grant access. It joins live contract events with deployment-scoped account pseudonyms from the local journal. It never returns journal owner IDs or report evidence. This intentionally presents all known accounts' anchor metadata on this computer; accounts without journal jobs cannot be enumerated. See [demo ledger](BLOCKCHAIN_LEDGER.md).
+
+The authenticated `GET /api/blockchain/ledger?before=<inclusive block>` returns actual contract events in a bounded 200-block range, live checked deployment identity, transaction hashes and block links. No journal owner identifiers or report contents are returned. Results distinguish `live`, `disabled` and `unavailable`; a live event is not a report-content verification. See [demo ledger](BLOCKCHAIN_LEDGER.md) for pagination, visibility and demo steps.
+
 ## Local development
 
 Run `npm run setup:local` once, then `npm run build` and `npm run dev`. Open the VYNLT extension side panel and load its workspace connection. The generated local-mode token is in the ignored `.env`; paste it into the panel's connection form. It is not printed to logs. Local mode binds to loopback and uses `.local/scans.json` with serialized atomic writes. Run only one API process against a local data file.
@@ -36,7 +42,7 @@ The extension handles 413 before generic JSON parsing, including HTML proxy erro
 
 Review verdicts are `open`, `fixed`, `accepted_risk`, and `false_positive`. A verdict records the user's assessment; it does not establish that remediation is complete and does not change the historical evidence, score or hash. Compare against a fresh scan to check changes.
 
-The local SHA-256 check establishes consistency with a stored hash, not third-party attestation. Anyone who can rewrite both the report and stored hash can defeat it. Blockchain anchoring is not implemented.
+The local SHA-256 check establishes consistency with a stored hash, not third-party attestation. Anyone who can rewrite both the report and stored hash can defeat it. The raw scan route is not an anchor. Optional local anchoring applies separately to frozen insights; see the M5 API section below.
 
 ### Pagination and complete totals
 
@@ -155,5 +161,28 @@ The runner defaults to loopback targets and blocks non-loopback network resource
 - `GET /api/reports/:id/pdf` is unchanged: complete findings/severity/evidence without generated actions or ML.
 - Legacy `POST /api/reports/:id/insights/pdf` returns 410 for the owner, with update guidance. Synthetic fixture parsing remains available only in developer code/tests.
 
-Supabase requires migration `005_insight_reports.sql`. Reports are immutable and deleted alongside their source scan. The user JWT enforces ownership; no service-role key is used. RPC storage alone is not an attestation of API origin: retrieval checks canonical integrity and trusted derivation as well. Combined and original scan hashes are separate; neither is an on-chain anchor.
+Supabase requires migration `005_insight_reports.sql`. Reports are immutable and deleted alongside their source scan. The user JWT enforces ownership; no service-role key is used. RPC storage alone is not an attestation of API origin: retrieval checks canonical integrity and trusted derivation as well. Combined and original scan hashes are separate. Optional local anchoring uses the combined digest only; hashes alone do not establish an anchor.
+
+## Local blockchain proof API (M5)
+
+With `VYNLT_BLOCKCHAIN=local` and local deployment configuration, successful finalisation automatically queues the saved version's digest. The frozen response shape stays unchanged. A journal failure returns the saved report with `X-VYNLT-Anchor-Warning`; repeated finalisation retries enqueue. The journal/chain are independent of local/Supabase content storage; no migration 006 or user tokens in the journal.
+
+React calls finalisation automatically when generated analysis completes; no download action is required. It displays the returned combined SHA-256, adds/reuses the frozen version and leaves blockchain confirmation to the separate status/verification controls. Analysis errors/incompatibility cannot bypass server validation; aborted navigation may leave a successfully committed immutable version but cannot update the new scan's UI. Reopening the same content is idempotent.
+
+| Method | Owner-scoped route | Result |
+|---|---|---|
+| GET | `/api/insight-reports/:id/anchor` | `{ enabled, proof?, warning? }`; recorded status is not live verification |
+| POST | `/api/insight-reports/:id/anchor/retry` | Empty JSON `{}` only; requeue a failed job or missing current-instance job; disabled returns 503 |
+| GET | `/api/insight-reports/:id/verify` | `{ result, message, proof? }`; matching, not-anchored or verification-unavailable |
+| GET | `/api/insight-reports/:id/anchor-proof.json` | Separate attachment containing recorded proof; 404 if no job exists |
+
+All four routes require a verified owner-scoped frozen report and valid original-scan linkage. Missing/cross-owner reports return 404; changed content/source returns 409 with `result: content-mismatch`. Arbitrary client digests are rejected. Proof v1 contains reportHash, chainId, contractAddress, instanceId, queued/submitted/confirmed/failed status, attempts, optional transactionHash/blockNumber/blockHash/error. No raw signed transaction, signer, owner identifier or scan contents are exposed. Verification always queries the live local chain and checks deployment/bytecode/writer, successful receipt, event, canonical block and registry lookup. Downloading a proof is not itself successful live verification. Original `/api/reports/:id/verify` remains a local raw-scan hash check with `anchored:false`.
+
+See [local setup and limits](M5_ACCEPTANCE.md). Frozen report JSON and PDF stay unchanged, including their historical hash explanations; the separate proof carries on-chain metadata. Public attestation, replica/cross-machine synchronization and permanent chain persistence are outside M5.
+
+## Delete a saved website group
+
+`DELETE /api/sites?origin=https%3A%2F%2Fexample.test` removes the authenticated owner's saved scans for an exact HTTP(S) origin and returns `{ "deletedScans": number }`. Origins with paths, credentials, query strings, fragments or extra query parameters are rejected (400). Other owners' rows are excluded by the local owner namespace or forwarded user-JWT RLS; anonymous requests return 401. Missing groups return zero, so retrying is safe.
+
+The API gathers owner-scoped scan IDs using keyset pagination and deletes the captured IDs in batches of 100, cancelling unsent anchor jobs first. Findings, notes and frozen insights cascade with each source scan. A failure may leave a partially removed group; the dashboard refreshes and explicitly offers retry. Concurrent newly uploaded scans can recreate the website. Already submitted blockchain transactions remain. Website lists derive from remaining scans; an empty Supabase `sites` bookkeeping row can remain under the existing RLS grants. No new migration/privileges or hosted verification is claimed. Individual scan deletion remains `DELETE /api/scans/:id`.
 

@@ -76,6 +76,9 @@ button, summary, input, select, textarea { scroll-margin-block: 6rem; }
   background: var(--surface-secondary); color: var(--muted); font-size: .75rem;
 }
 .coverage-cell strong { font-size: .8125rem; font-weight: 600; }
+.anchor-panel { min-width: 0; overflow-wrap: anywhere; margin-block: 1rem; }
+.anchor-panel [hidden] { display: none !important; }
+.anchor-panel button { margin-inline-end: .5rem; margin-block-end: .5rem; }
 .coverage-cell[data-observed="true"] { color: var(--positive); background: var(--positive-soft); border-color: var(--positive); }
 .coverage-cell[data-observed="false"] { border-style: dashed; }
 @media (prefers-reduced-motion: reduce) {

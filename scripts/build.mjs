@@ -22,5 +22,6 @@ for (const entry of ['server', 'cli']) {
     platform: 'node', format: 'esm', packages: 'external', target: 'node20', sourcemap: true });
 }
 console.log('Built API server and CLI');
+await build({ entryPoints: ['apps/server/anchor.ts'], bundle: true, outfile: 'dist/server/anchor.js', platform: 'node', format: 'esm', packages: 'external', target: 'node20' });
 await copyFile('packages/ui/fonts/plex-sans.ttf', 'dist/server/plex-sans.ttf');
 await copyFile('packages/ui/fonts/OFL.txt', 'dist/server/font-license.txt');

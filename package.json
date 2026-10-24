@@ -5,6 +5,10 @@
   "type": "module",
   "overrides": { "solc": { "tmp": "0.2.7" } },
   "scripts": {
+    "gate": "node dist/cli/gate.js",
+    "gate:install-hook": "node dist/cli/gate.js --install-hook",
+    "gate:uninstall-hook": "node dist/cli/gate.js --uninstall-hook",
+    "test:gate": "node scripts/gate-acceptance.mjs",
     "chain:node": "node scripts/blockchain.mjs node",
     "chain:compile": "node scripts/blockchain.mjs compile",
     "chain:deploy": "node scripts/blockchain.mjs deploy",

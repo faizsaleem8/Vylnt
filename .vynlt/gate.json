@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "directory": "examples/security-gate-demo",
+  "buildScript": "build",
+  "startScript": "start",
+  "protocol": "https",
+  "ignoreHTTPSErrors": true,
+  "port": 0,
+  "routes": ["/", "/account"]
+}

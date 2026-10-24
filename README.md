@@ -1,5 +1,7 @@
 # VYNLT
 
+Fresh-commit security gate (M4): build/scan committed npm applications before branch pushes and in GitHub Actions. High/critical findings at high confidence block; other findings warn, and experimental ML cannot waive them. See [gate setup and limits](docs/M4_SECURITY_GATE.md), [implementation/acceptance status](docs/M4_BUILD_PLAN.md) and [run commands](RUN_COMMANDS.md). Hosted branch protection must be verified separately; local hooks can be bypassed.
+
 Dashboard: contextual Back, scan/website deletion and a compact report with one Downloads menu and expandable ML/blockchain details. Automatic report saving/anchoring remains enabled by the existing configuration. See [dashboard cleanup](docs/DASHBOARD_CLEANUP.md) for behavior, acceptance and deletion boundaries.
 
 Local blockchain reporting (M5): frozen insights automatically queue their canonical SHA-256 when `VYNLT_BLOCKCHAIN=local`. Saved versions in React and the extension expose separate proof/status/live verification controls. Raw PDFs and immutable insights content retain their existing hashes. See [setup, commands and disposable-chain limits](docs/M5_ACCEPTANCE.md). No public deployment, wallet or SQL migration is required.

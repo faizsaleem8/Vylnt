@@ -1,5 +1,16 @@
 # VYNLT run commands
 
+## Fresh-commit security gate (M4)
+
+After building VYNLT and installing Chromium:
+
+```powershell
+npm.cmd run gate
+npm.cmd run gate:install-hook
+```
+
+`gate` checks committed HEAD. After installing the hook, ordinary branch pushes automatically check every distinct outgoing tip. High/critical findings at high confidence block; other findings warn. Commit fixes before retrying. Remove this installation with `npm.cmd run gate:uninstall-hook`. Existing hooks are preserved. GitHub required checks are still needed because local hooks can be bypassed. Run `npm.cmd run test:gate` for an isolated failed/fixed push demo; it does not modify the real remote. See [M4 instructions](docs/M4_SECURITY_GATE.md) for configuration, artifact paths and limits. No dashboard/API/blockchain needs to be running for the gate.
+
 Open two PowerShell terminals. These steps use the existing configured project; adjust the folder path for another checkout.
 
 ## Terminal 1 — start the blockchain

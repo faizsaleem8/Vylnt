@@ -5,7 +5,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,6 +17,8 @@ jobs:
       - run: npx playwright install-deps chromium
       - run: npm run setup:browser
       - run: npm run lab:tls
+      - name: Fresh-commit security gate and real pre-push regression
+        run: npm run test:gate
       - name: PDF rendering and overload regression
         run: npm run test:pdf
       - name: Dynamic-page collection budget regression

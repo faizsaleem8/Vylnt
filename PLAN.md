@@ -1,8 +1,12 @@
 # VYNLT implementation plan
 
-Last updated: 2026-10-24 (Asia/Calcutta)
+Last updated: 2026-10-25 (Asia/Calcutta)
 
 ## Current milestone
+
+2026-10-25 M4 implementation started: fresh exact-commit npm application scans, high/critical high-confidence rule gate, local pre-push hook and required GitHub check, no exceptions or ML-based suppression. Controlled HTTPS application first; CI/local reports stay independent of Supabase/blockchain. See docs/M4_BUILD_PLAN.md. GitHub repository read succeeds, but connector branch-protection read returns 403 (integration administration scope); hosted protection cannot yet be claimed. Implementation/acceptance pending; M4 remains open.
+
+M4 increment 1: added strict versioned configuration, pure policy, clean commit checkout/build/start/scanning runner, bounded process cleanup, shared collector cancellation, coverage-budget refusal and separate raw/CI-insights/manifests/summaries. Added explicit managed hook commands, HTTPS demo, dedicated Actions check, CODEOWNERS, reusable workflow template and run instructions. Five policy/config tests and initial type/build checks passed. Real browser acceptance has demonstrated secure pass, insecure blocked despite an uncommitted fix, actual local push rejection and explicit local bypass followed by failing rescan; remaining cases are running. Initial fixture startup deadline was too short and now uses the normal allowance with safe diagnostic details. GitHub main reports protected=false and no rulesets. No hosted enforcement claimed.
 
 2026-10-24 insights layout follow-up completed: insights JSON is now a visible button directly beneath PDF, with shared alignment, independent format-specific progress text and no JSON disclosure. Prioritised issue titles, severity badges and expand controls use consistent grid columns; the heading has spacing below save status. Export payloads/handlers, raw downloads, analysis and anchoring policy remain unchanged. Type checking/build, whitespace checks and the 14-state UI/accessibility audit passed, including explicit stacked-button geometry/equal-width and aligned-badge assertions. Desktop screenshot inspected. Browser export selectors now target the visible JSON button. No full unit/chain/hosted/native rerun is claimed for this presentation change. Remaining scope stays M4 hosted acceptance and ML-Q qualification.
 

@@ -1,6 +1,6 @@
 # M4 — Fresh security scans before push and merge
 
-Status: implementation in progress, 2026-10-25. M4 remains open until local gate, hosted failed/fixed runs and branch protection are demonstrated.
+Status: engineering and hosted scan acceptance complete, 2026-10-25; **M4 remains open** for owner-side PR/protection configuration and verified protected-merge behavior.
 
 ## Agreed behavior
 
@@ -8,12 +8,12 @@ Build and scan the exact proposed commit; block high/critical rule findings at h
 
 ## Increments
 
-- [x] Pure policy/configuration and clean exact-commit runner implemented, with bounded execution/collection and cleanup; expanded acceptance in progress.
+- [x] Pure policy/configuration and clean exact-commit runner, bounded execution/collection and cleanup verified in local and hosted regression runs.
 - [x] Controlled HTTPS npm demo, raw/insights/manifest artifacts and clear summaries.
 - [x] Hook install/uninstall, outgoing commit parsing, multi-ref and existing-hook handling implemented; actual push rejection/fixed success demonstrated locally.
 - [x] Dedicated GitHub workflow and reusable pinned-tool example, policy/config ownership files (enforcement not yet configured).
 - [x] Local failed/fixed/dirty-worktree/error/cleanup/privacy acceptance and regressions: 11 groups and 221 unit tests passed.
-- [ ] Publish hosted failing/fixed revisions and inspect actual Actions results.
+- [x] Publish hosted failing/fixed revisions and inspect actual Actions results and artifact upload steps.
 - [ ] Verify main protection, workflow ownership review and local-hook bypass resistance through GitHub.
 
 ## Initial findings
@@ -35,3 +35,20 @@ Published `codex/m4-security-gate` at c1d3ba308a6a85d964b27e270d8382d0b1ffc527. 
 Draft PR creation through the connector also returns 403 Resource not accessible by integration. Branch publication through existing Git authentication succeeds. No PR was created, no protection was changed, and M4 remains open pending verified branch protection/required checks and owner review setup.
 
 The deliberately insecure revision ca591172b2c49c75e0367e184a59a2e878093271 failed actual Linux [run 40141482946](https://github.com/faizsaleem8/Vylnt/actions/runs/40141482946) specifically at Fresh security scan, with NET-001 high/high findings, gate status blocked and exit 1. The artifact step succeeded (artifact 12579386137). The controlled application's source is now fixed back to secure and its follow-up hosted run is pending. This is code remediation, not a threshold change or exception.
+
+## Final implementation acceptance — 2026-10-25
+
+Historical pending states above are superseded by this evidence:
+
+| Revision / test | Actual result | Evidence |
+|---|---|---|
+| Initial implementation c1d3ba308a6a85d964b27e270d8382d0b1ffc527 | Security gate passed | [Run 40141350000](https://github.com/faizsaleem8/Vylnt/actions/runs/40141350000) |
+| Insecure demo ca591172b2c49c75e0367e184a59a2e878093271 | Fresh scan blocked, NET-001 high/high, exit 1; artifacts uploaded | [Run 40141482946](https://github.com/faizsaleem8/Vylnt/actions/runs/40141482946), artifact 12579386137 |
+| Committed fix 25a77cecb72eaaa1eb8f73107d0e0830edc46b2e | Fresh scan passed; artifacts uploaded | [Run 40141752705](https://github.com/faizsaleem8/Vylnt/actions/runs/40141752705), artifact 12578229465 |
+| Full Linux CI on implementation c1d3ba3 | All steps passed: check/build, gate regression, PDF, observer, extension/CLI/dashboard, accessibility, scanner stress, mocked Supabase auth | [Run 40141349966](https://github.com/faizsaleem8/Vylnt/actions/runs/40141349966) |
+| Local Windows unit suite | 221 tests / 40 suites passed | Vitest run, 2026-10-25 |
+| Local real Git/Chromium acceptance | All 11 groups passed, including dirty-worktree exclusion, rejected/fixed pushes, multi-ref, hook preservation, occupied-port safety, collection limits, actual build timeout and post-start cancellation/port reuse | ignored test-results/gate-acceptance.json |
+
+Type checking, production build and whitespace checks passed. CI runs on intermediate revisions are retained; only the implementation full CI and dedicated fail/fix runs above are claimed here. No new installed native Edge, live Supabase, blockchain or model-quality certification was performed.
+
+Remaining: create/review the implementation PR, configure required checks/code-owner review/no ordinary bypass on main, then show a failing demo PR cannot merge and its fixed revision becomes eligible. The connector denies those write operations with 403, and main was last observed unprotected. Owner instructions are in [M4_GITHUB_SETUP.md](M4_GITHUB_SETUP.md). No PR was created automatically and nothing was merged into main. Hook installation in the user's working repository remains an explicit opt-in command, not an unannounced Git configuration change.

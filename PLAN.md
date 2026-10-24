@@ -1,8 +1,18 @@
 # VYNLT implementation plan
 
-Last updated: 2026-10-24 (Asia/Calcutta)
+Last updated: 2026-10-25 (Asia/Calcutta)
 
 ## Current milestone
+
+2026-10-25 M4 engineering and hosted scan acceptance completed; milestone remains OPEN for owner-only protection/merge acceptance. The gate builds/scans exact committed npm applications, blocks high/critical high-confidence rule findings, warns on others, refuses stale/edited reports and ignores ML/review verdicts for enforcement. Local hooks/install/uninstall, demo, CI summaries/artifacts, pinned consumer template and CODEOWNERS implemented. All 221 unit tests / 40 suites, 11 local Git/Chromium acceptance groups, type/build/whitespace passed. Full Linux CI 40141349966 passed every regression step. Hosted insecure commit ca59117 failed fresh-scan run 40141482946 with exit 1 and artifacts; committed fix 25a77ce passed run 40141752705 with artifacts. Main was observed unprotected; connector PR creation/protection administration return 403. No PR or protected-merge demonstration, main merge or automatic local hook installation is claimed. Owner checklist: docs/M4_GITHUB_SETUP.md; evidence: docs/M4_BUILD_PLAN.md. User has been asked to perform those account-side steps. ML-Q remains open; no Docker/public deployment added.
+
+2026-10-25 M4 implementation started: fresh exact-commit npm application scans, high/critical high-confidence rule gate, local pre-push hook and required GitHub check, no exceptions or ML-based suppression. Controlled HTTPS application first; CI/local reports stay independent of Supabase/blockchain. See docs/M4_BUILD_PLAN.md. GitHub repository read succeeds, but connector branch-protection read returns 403 (integration administration scope); hosted protection cannot yet be claimed. Implementation/acceptance pending; M4 remains open.
+
+M4 increment 1: added strict versioned configuration, pure policy, clean commit checkout/build/start/scanning runner, bounded process cleanup, shared collector cancellation, coverage-budget refusal and separate raw/CI-insights/manifests/summaries. Added explicit managed hook commands, HTTPS demo, dedicated Actions check, CODEOWNERS, reusable workflow template and run instructions. Five policy/config tests and initial type/build checks passed. Real browser acceptance has demonstrated secure pass, insecure blocked despite an uncommitted fix, actual local push rejection and explicit local bypass followed by failing rescan; remaining cases are running. Initial fixture startup deadline was too short and now uses the normal allowance with safe diagnostic details. GitHub main reports protected=false and no rulesets. No hosted enforcement claimed.
+
+M4 increment 2: all 11 expanded local Git/Chromium groups passed, including multi-ref rejection, preserved hooks, occupied-port safety, strict collection budgets, actual hanging-build timeout and cancellation after startup with port cleanup. Full suite passed 221 tests/40 suites; type/build passed. Published implementation branch c1d3ba3; actual Linux security run 40141350000 passed. A controlled insecure demo commit is being published next, followed by its fix, solely on that branch. Connector PR creation and protection administration return 403, so no PR or required-merge protection exists yet. Reusable workflow now pins the tested implementation SHA. M4 remains open.
+
+M4 increment 3: actual insecure revision ca59117 failed Linux run 40141482946 at the fresh scan, with NET-001 high/high blockers and exit 1; artifacts still uploaded successfully. Restored the demo's committed source configuration to secure for the follow-up passing run. Prepared exact manual GitHub protection/PR instructions because connector write scopes deny those operations. No main-branch or protection changes made; closure remains pending hosted fix and protected-merge acceptance.
 
 2026-10-24 insights layout follow-up completed: insights JSON is now a visible button directly beneath PDF, with shared alignment, independent format-specific progress text and no JSON disclosure. Prioritised issue titles, severity badges and expand controls use consistent grid columns; the heading has spacing below save status. Export payloads/handlers, raw downloads, analysis and anchoring policy remain unchanged. Type checking/build, whitespace checks and the 14-state UI/accessibility audit passed, including explicit stacked-button geometry/equal-width and aligned-badge assertions. Desktop screenshot inspected. Browser export selectors now target the visible JSON button. No full unit/chain/hosted/native rerun is claimed for this presentation change. Remaining scope stays M4 hosted acceptance and ML-Q qualification.
 
@@ -159,7 +169,9 @@ User-confirmed target pipeline: extension metadata → shared rules → authenti
   - [x] Playwright CLI using shared rules, JSON artifacts, confidence/severity gate and documented exit codes.
   - [x] Real secure/insecure fixture regression: secure passes, insecure fails; CLI/extension rule IDs agree.
   - [x] GitHub Actions workflow with test artifacts, minimum permissions and Node setup.
-  - [ ] Run workflow in a GitHub repository; configure required checks/branch protection and documented risk exceptions.
+  - [x] Fresh exact-commit npm-site runner and explicit pre-push hook; all 11 Windows/local Git/Chromium groups and full Linux CI passed.
+  - [x] Actual hosted failing insecure revision followed by passing committed fix, with summaries/artifacts. No risk exceptions in this release.
+  - [ ] Configure required checks/branch protection/code-owner review and demonstrate protected merge rejection/eligibility. Connector administration/PR creation denied (403); owner setup required.
 - [x] M5 — Tamper-evident reports (local blockchain scope; accepted 2026-10-23)
   - [x] Canonical JSON and SHA-256 consistency check with API/UI and tamper unit tests.
   - [x] Versioned final-report contract, frozen evidence/model/policy identity, authenticated local persistence and JSON/PDF export; local PostgreSQL/Supabase implementation and hosted migration-005 verification passed.

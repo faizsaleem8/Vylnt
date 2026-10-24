@@ -1,0 +1,9 @@
+# Require code-owner review for these files in branch protection.
+/.github/ @faizsaleem8
+/.vynlt/ @faizsaleem8
+/apps/cli/ @faizsaleem8
+/packages/core/ @faizsaleem8
+/packages/ml/ @faizsaleem8
+/scripts/build.mjs @faizsaleem8
+/package.json @faizsaleem8
+/package-lock.json @faizsaleem8

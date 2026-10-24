@@ -1,6 +1,6 @@
 # Reusing the VYNLT gate in another npm repository
 
-Use the following workflow after committing your `.vynlt/gate.json`. Replace `REVIEWED_VYNLT_COMMIT_SHA` with the full 40-character commit SHA of the reviewed, tested M4 tool release. Do not use a moving branch for the tooling checkout. This is a template, not an executable workflow until that pin is replaced.
+Use the following workflow after committing your `.vynlt/gate.json`. The VYNLT tooling is pinned to implementation commit `c1d3ba308a6a85d964b27e270d8382d0b1ffc527`, whose dedicated security workflow passed on GitHub. Review that revision before adopting it; update to a newer reviewed full commit SHA when needed, never a moving branch.
 
 ```yaml
 name: VYNLT website security
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: faizsaleem8/Vylnt
-          ref: REVIEWED_VYNLT_COMMIT_SHA
+          ref: c1d3ba308a6a85d964b27e270d8382d0b1ffc527
           path: vynlt-tool
           persist-credentials: false
       - uses: actions/setup-node@v4

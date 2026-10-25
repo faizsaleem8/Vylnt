@@ -1,0 +1,37 @@
+// Developer-only promotion. Python verifies the consumed evaluation; staged acceptance precedes bundling.
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { randomUUID, createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { parseArgs } from 'node:util';
+import { build } from 'esbuild';
+import { build as buildVite } from 'vite';
+import { acceptCategoryRelease } from './ml-category-acceptance.mjs';
+const names = ['dataset', 'exposure', 'candidate', 'source-lock', 'provenance', 'evaluation', 'output'];
+const { values } = parseArgs({ options: { ...Object.fromEntries(names.map(n => [n, { type: 'string' }])), bundle: { type: 'boolean', default: false } } });
+if (names.some(n => !values[n])) throw new Error(`Required: ${names.map(n => `--${n} <path>`).join(' ')} [--bundle]`);
+const checked = spawnSync('python', ['-B', 'ml/holdout.py', 'release', ...names.flatMap(n => [`--${n}`, values[n]])], { stdio: 'inherit', windowsHide: true });
+if (checked.status !== 0) throw new Error('Frozen evaluation/release verification failed; nothing bundled');
+const release = JSON.parse(await readFile(values.output, 'utf8'));
+const stage = resolve('.local', `category-acceptance-${randomUUID()}`);
+await mkdir(stage, { recursive: true });
+const oldPath = resolve(stage, 'previous.mjs');
+await build({ entryPoints: ['packages/ml/bundled-evidence.ts'], bundle: true, outfile: oldPath, platform: 'node', format: 'esm' });
+const { currentEvidenceRelease, archivedEvidenceReleases } = await import(pathToFileURL(oldPath).href);
+const archive = [...archivedEvidenceReleases];
+if (currentEvidenceRelease && !archive.some(r => JSON.stringify(r) === JSON.stringify(currentEvidenceRelease)) && JSON.stringify(currentEvidenceRelease) !== JSON.stringify(release)) archive.push(currentEvidenceRelease);
+const stagedSource = `export const currentEvidenceRelease = ${JSON.stringify(release)};\nexport const archivedEvidenceReleases = ${JSON.stringify(archive)};\n`;
+const virtualId = '\0vylnt-staged-category';
+const vitePlugin = () => ({ name: 'vylnt-staged-category', enforce: 'pre', resolveId(id) { if (/(^|\/)bundled-evidence(\.ts)?$/.test(id)) return virtualId; }, load(id) { if (id === virtualId) return stagedSource; } });
+const esPlugin = { name: 'vylnt-staged-category', setup(b) {
+  b.onResolve({ filter: /bundled-evidence(\.ts)?$/ }, () => ({ path: 'release', namespace: 'staged' }));
+  b.onLoad({ filter: /.*/, namespace: 'staged' }, () => ({ contents: stagedSource, loader: 'js' }));
+} };
+const modulePath = resolve(stage, 'runtime.mjs'), dashboardDir = resolve(stage, 'dashboard');
+await build({ stdin: { contents: "export {createReport} from './packages/core'; export {FileStore,reportHash} from './apps/server/store'; export {createApp} from './apps/server/app'; export {generatePdf} from './apps/server/pdf'; export {insightHtml} from './apps/server/insight-html'; export {freezeInsights,contentHash,verifyFrozenInsights} from './packages/ml/frozen-insights'; export {analyseEvidenceReport} from './packages/ml/evidence-release'; export {evaluateGate} from './packages/core/gate';", resolveDir: process.cwd() }, plugins: [esPlugin], bundle: true, outfile: modulePath, platform: 'node', format: 'esm', packages: 'external' });
+await buildVite({ configFile: resolve('apps/dashboard/vite.config.ts'), plugins: [vitePlugin()], worker: { plugins: () => [vitePlugin()] }, build: { outDir: dashboardDir, emptyOutDir: true } });
+const acceptance = await acceptCategoryRelease({ modulePath, dashboardDir, release, previous: currentEvidenceRelease, stage });
+await writeFile(resolve(stage, 'acceptance.json'), JSON.stringify({ ...acceptance, releaseHash: createHash('sha256').update(await readFile(values.output)).digest('hex') }, null, 2), { flag: 'wx' });
+if (values.bundle) await writeFile('packages/ml/bundled-evidence.ts', `import type {EvidenceRelease} from './evidence-release';\n${stagedSource.replace('currentEvidenceRelease =', 'currentEvidenceRelease: EvidenceRelease | null =').replace('archivedEvidenceReleases =', 'archivedEvidenceReleases: EvidenceRelease[] =')}`);
+console.log(`Controlled JS-002 acceptance passed. ${values.bundle ? 'Bundled; previous release archived unchanged.' : 'Staged only.'} Evidence: ${stage}`);

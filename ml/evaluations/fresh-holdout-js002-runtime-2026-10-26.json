@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "modelHash": "6fa227ae6f0e5c7259d3636066be05b0da5c661726c6acf77b3771178f105a1f",
+  "checks": [
+    "React automatic save",
+    "Worker/API equality",
+    "71 observations / one issue / one variant",
+    "file-store reload",
+    "idempotent save",
+    "new and archived versions",
+    "JSON and PDF downloads",
+    "raw PDF",
+    "missing evidence and high severity",
+    "altered-model fallback",
+    "unchanged raw/gate decisions",
+    "automated accessibility",
+    "narrow layout"
+  ],
+  "reportHash": "a8844bc14185e987d2e005ff51db4c02e9a784fab22c7925fb6c3ea74317f0e0",
+  "archivedHash": "8a5d1835753fdf16191e2d0bcf277a263a93e7182a17d1fdcf97a1213ec5f79c",
+  "releaseHash": "f50551e7e2bbbd7c23b4e36d523e6be636a7aaa90246c72d855dcb1c2a08629d"
+}

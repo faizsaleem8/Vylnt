@@ -83,3 +83,62 @@ Hardhat needs Node 24. On this machine, blockchain scripts automatically select 
 - Keep the node running throughout the demo, from report generation through verification.
 
 No Docker, browser wallet or public blockchain is needed. More details: [ledger demo](docs/BLOCKCHAIN_LEDGER.md) and [report verification](docs/REPORT_VERIFICATION.md).
+
+## Developer-only ML validation
+
+ML-Q1's fresh JS-002 holdout passed; [measured scope and results](ml/evaluations/fresh-holdout-js002-2026-10-26.md). The seven other categories remain unqualified. The historical validation commands below inspect older candidates and retain their original failures.
+
+For the new category-balanced candidate, collection/extension, frozen registration, training and parity commands are in [ML category candidate](docs/ML_CATEGORY_CANDIDATE.md#developer-commands). They are developer experiments; they do not change the dashboard's active model. Qualification still requires a fresh adequate holdout.
+
+The dashboard already runs inference automatically. These are offline validation commands, not application startup requirements:
+
+```powershell
+npm.cmd run test:ml
+npm.cmd run ml:validate -- --dataset .local/ml-expansion/cohort-2026-10-22/dataset.json --candidate .local/ml-expansion/cohort-2026-10-22/candidate-v1 --reproduce --output .local/ml-validation-new-run
+```
+
+Use a new output directory each time. The dataset/candidate paths refer to this development machine's existing private corpus; they are not shipped to users. Exit `1` with `qualification-blocked` means the audit ran successfully but the model still fails quality gates. Exit `2` is an invalid-input/execution failure. No model is automatically promoted. See [ML validation](docs/ML_VALIDATION.md).
+
+### Fresh holdout and controlled category release
+
+These are developer commands, not dashboard startup steps. The 2026-10-26 holdout has already been consumed exactly once. **Do not rerun its evaluation, delete consumption markers, or use a new folder to obtain another score.** Future qualification requires a separately registered experiment and untouched data. The following shows the protocol; paths are private local examples, not shipped datasets.
+
+```powershell
+npm.cmd run setup:browser
+npm.cmd run lab:tls
+npm.cmd run ml:holdout -- registry --root .local --output .local/ml-q1/exposure-NEW.json
+npm.cmd run ml:applications:fetch -- --source-lock ml/applications/fresh-holdout.sources.lock.json
+npm.cmd run ml:holdout:collect -- --source-lock ml/applications/fresh-holdout.sources.lock.json --output .local/ml-q1/collection-NEW
+```
+
+Before collection, developers pin independent MIT sources and record repository IDs, fork/template checks, licences and exclusions in a private source audit. Preparation requires that audit and the original family key; missing/failed scenarios or changed source/oracle files cannot qualify.
+
+```powershell
+$holdoutRuns = (Get-Content .local/ml-q1/collection-NEW/collection.json | ConvertFrom-Json).runs -join ','
+npm.cmd run ml:holdout:prepare -- --source-lock ml/applications/fresh-holdout.sources.lock.json --runs $holdoutRuns --exposure .local/ml-q1/exposure-NEW.json --history-manifest .local/ml-category/cohort-2026-10-26/manifest.json --history-dataset .local/ml-category/cohort-2026-10-26/dataset.json --source-audit .local/ml-q1/source-audit.json --output .local/ml-q1/frozen-NEW
+npm.cmd run ml:holdout -- preflight --dataset .local/ml-q1/frozen-NEW/dataset.json --exposure .local/ml-q1/exposure-NEW.json --output .local/ml-q1/preflight-NEW.json
+```
+
+Preflight reports exact freshness/count/conflict deficits without prediction. Once eligible, registration and evaluation take the same bound inputs. Example argument array for a **new, unconsumed** experiment:
+
+```powershell
+$holdoutArgs = @('--dataset','.local/ml-q1/frozen-NEW/dataset.json','--exposure','.local/ml-q1/exposure-NEW.json','--candidate','<new-frozen-candidate-directory>','--source-lock','<new-pinned-source-lock>','--provenance','.local/ml-q1/frozen-NEW/provenance.json','--output','.local/ml-q1/evaluation-NEW')
+npm.cmd run ml:holdout -- register @holdoutArgs
+npm.cmd run ml:holdout -- evaluate @holdoutArgs
+```
+
+An eligible evaluation writes exclusive candidate and dataset consumption records **before** inference. Failures/interruption remain recorded. Exit 1 means blocked qualification, not permission to retest. No fitting or threshold search occurs here.
+
+For the completed passing experiment, release packaging may be repeated into a new output file without repeating predictions. The command below verifies the frozen evaluation receipt, stages the real React Worker/API and exports, and bundles only after acceptance passes. It archives the old release unchanged. Keep all private qualification inputs available.
+
+```powershell
+npm.cmd run ml:release:category -- --dataset .local/ml-q1/frozen-01/dataset.json --exposure .local/ml-q1/exposure.json --candidate .local/ml-category/cohort-2026-10-26/candidate-v4 --source-lock ml/applications/fresh-holdout.sources.lock.json --provenance .local/ml-q1/frozen-01/provenance.json --evaluation .local/ml-q1/evaluation-01 --output .local/ml-q1/release-NEW.json --bundle
+npm.cmd run typecheck
+npm.cmd run test:ml
+npm.cmd test -- --maxWorkers=1
+npm.cmd run build
+npm.cmd run test:ml-worker
+npm.cmd run test:browser
+```
+
+Omit `--bundle` to run staged acceptance only. Changed model, policy, evaluator, dataset, source/provenance, parity or evaluation bindings cause rejection. An incomplete/failed evaluation cannot be promoted. No Supabase credentials, local blockchain, user training or public deployment is needed for these checks.

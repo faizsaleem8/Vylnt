@@ -6,7 +6,7 @@ import { verifyFrozenInsights } from '../packages/ml/frozen-insights';
 import type { StoredInsightReport } from '../packages/core/insight-contracts';
 import { insightHtml } from '../apps/server/insight-html';
 import frozen from '../docs/examples/insight-report.json';
-import { currentEvidenceRelease } from '../packages/ml/bundled-evidence';
+import { currentEvidenceRelease, archivedEvidenceReleases } from '../packages/ml/bundled-evidence';
 
 describe('VYLNT branding compatibility', () => {
   it('accepts existing deployment and rate settings, preferring corrected names', () => {
@@ -24,7 +24,9 @@ describe('VYLNT branding compatibility', () => {
     const original = JSON.stringify(frozen);
     expect(await verifyFrozenInsights(frozen as StoredInsightReport)).toBe(true);
     const rendered = structuredClone(frozen) as StoredInsightReport;
-    rendered.content.analysis.model.name = currentEvidenceRelease!.name;
+    const historical = [currentEvidenceRelease, ...archivedEvidenceReleases].find(r => r?.qualificationPolicy === 'vynlt-controlled-signal-v1');
+    expect(historical).toBeDefined();
+    rendered.content.analysis.model.name = historical!.name;
     const html = insightHtml(rendered, '');
     expect(html).toContain('VYLNT controlled LSTM');
     expect(html).not.toContain('VYNLT controlled LSTM');

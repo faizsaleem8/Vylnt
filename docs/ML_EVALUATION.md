@@ -1,5 +1,17 @@
 # VYLNT evidence-v2 evaluation record
 
+## Latest: fresh evidence-v3 JS-002 qualification
+
+The separate [ML-Q1 holdout](ML_FRESH_HOLDOUT_PLAN.md) passed on 2026-10-26: eleven eligible fresh families, 159 distinct numeric contexts, 80 change-required and 79 contextual. Model-only/safeguarded precision, recall and coverage were 100% on this controlled suite. [Published comparisons, intervals, provenance and limitations](../ml/evaluations/fresh-holdout-js002-2026-10-26.md). The frozen candidate was evaluated once without fitting or threshold changes. Only JS-002 qualifies; seven categories remain open. Runtime/export release acceptance is recorded in PLAN.md. Earlier results below retain their original outcomes and were not re-evaluated.
+
+## 2026-10-26 category-policy v4 development
+
+A new controlled candidate has been fitted; [results](../ml/evaluations/category-v4-2026-10-26.md) distinguish its selected validation scores from held-out accuracy. All 140 additional browser scenarios passed; 300 combined rows retain the original 190. JS-002 is the only supported development category, with explicit abstention elsewhere. Four numeric and 84 decision parity cases passed. The fresh-holdout/count guard refused evaluation before test inference, so there are no new test metrics and no qualification or release change. The earlier experiments below remain historical evidence.
+
+## 2026-10-26 engineering validation
+
+The read-only [qualification audit](../ml/evaluations/validation-2026-10-26.md) checks the existing expanded v3 result without rerunning its test predictions. Exact seed-42/60-epoch training reproduction and 18-case Python/JavaScript parity passed. All 223 TypeScript and 40 Python tests, type/build and Chromium worker/report checks passed. Seven categories lack one eligible development class; test-family and per-class counts remain insufficient. No candidate was promoted, no accuracy gate was waived and no fresh held-out measurement is claimed. See [numeric records](../ml/evaluations/validation-2026-10-26.json) and [commands](ML_VALIDATION.md).
+
 ## Current expanded result and milestone scope
 
 Experimental M6 is closed by user decision on 2026-10-22. Qualification remains open as [ML-Q](ML_QUALIFICATION_PLAN.md), with all original numerical/safety gates unchanged. Expanded controlled v3 has 190 rows / 11 families overall, but only 32 rows / two held-out families. No category is approved; HttpOnly recall is zero and offline contextual mistakes are unsafe. The developer-only candidate is not bundled. See [exact numeric results](../ml/evaluations/README.md) and [preregistered expansion](ML_CORPUS_EXPANSION.md). Earlier data/review requirements below describe historical tracks; independent human review is not a prerequisite for the current controlled phase.

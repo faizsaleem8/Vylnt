@@ -10,7 +10,7 @@ const sourceSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/), familyId: z.string().min(1).max(200), repository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
   revision: z.string().regex(/^[0-9a-f]{40}$/), license: z.literal('MIT'), licenseFile: relativePath,
   root: z.union([z.literal('.'), relativePath]), entry: relativePath,
-  smoke: z.enum(['jake-tetris', 'canvas-tetris', 'impress', 'chess', 'dropzone', 'fluid', 'froggy']).optional(),
+  smoke: z.enum(['jake-tetris', 'canvas-tetris', 'impress', 'chess', 'dropzone', 'fluid', 'froggy', 'q1-mines', 'q1-isocity', 'q1-vim', 'q1-tower', 'q1-kontext', 'q1-sketch', 'q1-matter', 'q1-codemirror', 'q1-spectrum', 'q1-qr', 'q1-dragula', 'q1-autosize', 'q1-sortable', 'q1-viewer', 'q1-particles', 'q1-awesomplete']).optional(),
   files: z.array(z.object({ path: relativePath, sha256: z.string().regex(/^[0-9a-f]{64}$/), bytes: z.number().int().min(1).max(2 * 1024 * 1024) }).strict()).min(2).max(100),
 }).strict();
 export type ApplicationSource = z.infer<typeof sourceSchema>;
@@ -62,14 +62,30 @@ export const applicationProfiles = [
   { id: 'unpinned-script', rule: 'JS-002', label: 'change-warranted' },
   { id: 'readable-preference', rule: 'CK-002', label: 'contextual' },
   { id: 'unspecified-cookie-purpose', rule: 'CK-002', label: 'needs-review' },
+  { id: 'session-readable-preference', rule: 'CK-002', label: 'contextual' },
+  { id: 'persistent-server-cookie', rule: 'CK-002', label: 'change-warranted' },
   { id: 'script-permitted-defer', rule: 'JS-002', label: 'change-warranted' },
   { id: 'script-excluded-defer', rule: 'JS-002', label: 'contextual' },
   { id: 'script-permitted-async', rule: 'JS-002', label: 'change-warranted' },
   { id: 'script-excluded-async', rule: 'JS-002', label: 'contextual' },
   { id: 'script-permitted-module', rule: 'JS-002', label: 'change-warranted' },
   { id: 'script-excluded-module', rule: 'JS-002', label: 'contextual' },
+  { id: 'script-permitted-blocking', rule: 'JS-002', label: 'change-warranted' },
+  { id: 'script-excluded-blocking', rule: 'JS-002', label: 'contextual' },
+  { id: 'script-permitted-async-defer', rule: 'JS-002', label: 'change-warranted' },
+  { id: 'script-excluded-async-defer', rule: 'JS-002', label: 'contextual' },
+  { id: 'script-permitted-module-async', rule: 'JS-002', label: 'change-warranted' },
+  { id: 'script-excluded-module-async', rule: 'JS-002', label: 'contextual' },
+  { id: 'script-permitted-module-defer', rule: 'JS-002', label: 'change-warranted' },
+  { id: 'script-excluded-module-defer', rule: 'JS-002', label: 'contextual' },
+  { id: 'script-permitted-module-async-defer', rule: 'JS-002', label: 'change-warranted' },
+  { id: 'script-excluded-module-async-defer', rule: 'JS-002', label: 'contextual' },
 ] as const;
 export type ApplicationProfile = typeof applicationProfiles[number];
+export const readablePreference = (profile: ApplicationProfile) => ['readable-preference', 'session-readable-preference'].includes(profile.id);
+export const persistentCookie = (profile: ApplicationProfile) => ['readable-preference', 'persistent-server-cookie'].includes(profile.id);
+export const readableCookie = (profile: ApplicationProfile) => readablePreference(profile) || ['cookie-no-httponly', 'unspecified-cookie-purpose', 'persistent-server-cookie'].includes(profile.id);
+export const scriptAttributes = (profile: ApplicationProfile) => ({ module: profile.id.includes('-module'), async: profile.id.includes('-async'), defer: profile.id.includes('-defer') });
 
 /** Labels belong to the controlled fixture, never unrelated upstream findings. */
 export function controlledTargetIndexes(report: Report, profile: ApplicationProfile): number[] {
@@ -97,7 +113,8 @@ export function applicationRequirement(profile: ApplicationProfile): string {
     'NET-001': 'This controlled deployment requires every resource reference to use HTTPS.',
     'JS-002': 'This controlled deployment requires integrity for its known immutable VYLNT fixture script.',
   };
-  if (profile.id === 'readable-preference') return 'The inert preference fixture intentionally requires JavaScript access; the browser must verify readability. It is not an authentication cookie.';
+  if (readablePreference(profile)) return 'The inert preference fixture intentionally requires JavaScript access; the browser must verify readability. It grants no server authorization, regardless of its expiry.';
+  if (profile.id === 'persistent-server-cookie') return 'The inert persistent fixture grants access to a controlled server endpoint; its server-only specification requires HttpOnly. Persistence must not imply preference purpose.';
   if (profile.id === 'unspecified-cookie-purpose') return 'The fixture cookie purpose is deliberately unspecified; do not infer authentication or a safe configuration from its name.';
   return profile.rule ? requirements[profile.rule] : 'Compatible restricted policies, no fixture cookies or injected resources; zero baseline findings expected.';
 }
@@ -108,8 +125,13 @@ export function controlledResponse(originalHtml: string, profile: ApplicationPro
   let html = originalHtml;
   if (profile.id === 'mixed-image') html += `<img alt="" src="${insecureOrigin}/vylnt-fixture.gif">`;
   if (profile.id === 'unpinned-script') html += `<script src="${origin.replace('localhost', '127.0.0.1')}/vylnt-fixture.js"></script>`;
-  if (profile.id.startsWith('script-')) html += `<script ${profile.id.endsWith('-module') ? 'type="module"' : profile.id.endsWith('-async') ? 'async' : 'defer'} src="${origin.replace('localhost', '127.0.0.1')}/vylnt-fixture.js"></script>`;
-  if (profile.id === 'readable-preference') html += '<script>document.documentElement.dataset.vylntPreferenceReadable=String(document.cookie.split(";").some(c=>c.trim().startsWith("session_fixture=")));</script>';
+  if (profile.id.startsWith('script-')) {
+    const attributes = scriptAttributes(profile);
+    html += `<script ${attributes.module ? 'type="module" ' : ''}${attributes.async ? 'async ' : ''}${attributes.defer ? 'defer ' : ''}src="${origin.replace('localhost', '127.0.0.1')}/vylnt-fixture.js"></script>`;
+  }
+  // Both cookie-purpose cases expose the same bounded client metadata. Purpose
+  // is checked by a separate private oracle, never injected as a model feature.
+  if (readablePreference(profile) || profile.id === 'persistent-server-cookie' || profile.id === 'cookie-no-httponly') html += '<script>document.documentElement.dataset.vylntPreferenceReadable=String(document.cookie.split(";").some(c=>c.trim().startsWith("session_fixture=")));</script>';
   const hashes = [...html.matchAll(/<script\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script\s*>/gi)].map(m => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`);
   const handlerHashes = [...html.matchAll(/\son[a-z]+\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map(m => `'sha256-${createHash('sha256').update(m[1] ?? m[2]).digest('base64')}'`);
   const scriptSources = profile.id === 'broad-script-policy' ? "https: 'unsafe-inline'" : `'self' ${profile.id.startsWith('script-excluded-') ? '' : `https://127.0.0.1:${secure.port}`} ${hashes.join(' ')}`;
@@ -117,7 +139,7 @@ export function controlledResponse(originalHtml: string, profile: ApplicationPro
     'Content-Security-Policy': `script-src ${scriptSources}; ${handlerHashes.length ? `script-src-attr 'unsafe-hashes' ${[...new Set(handlerHashes)].join(' ')}; ` : ''}${profile.id === 'missing-frame-protection' ? '' : "frame-ancestors 'none';"}` };
   if (profile.id !== 'missing-hsts') headers['Strict-Transport-Security'] = 'max-age=300';
   if (profile.id !== 'missing-frame-protection') headers['X-Frame-Options'] = 'DENY';
-  if (profile.rule?.startsWith('CK-')) headers['Set-Cookie'] = `session_fixture=controlled-placeholder; Path=/; ${profile.id === 'cookie-no-secure' ? '' : 'Secure; '}${['cookie-no-httponly', 'readable-preference', 'unspecified-cookie-purpose'].includes(profile.id) ? '' : 'HttpOnly; '}SameSite=${profile.id === 'cookie-cross-site' ? 'None' : 'Lax'}${profile.id === 'readable-preference' ? '; Max-Age=3600' : ''}`;
+  if (profile.rule?.startsWith('CK-')) headers['Set-Cookie'] = `session_fixture=controlled-placeholder; Path=/; ${profile.id === 'cookie-no-secure' ? '' : 'Secure; '}${readableCookie(profile) ? '' : 'HttpOnly; '}SameSite=${profile.id === 'cookie-cross-site' ? 'None' : 'Lax'}${persistentCookie(profile) ? '; Max-Age=3600' : ''}`;
   return { html, headers };
 }
 
@@ -133,16 +155,21 @@ export function assertControlledResponse(profile: ApplicationProfile, headers: R
   if (profile.rule?.startsWith('CK-')) {
     const cookie = header('Set-Cookie') ?? '';
     require(/;\s*Secure(?:;|$)/i.test(cookie) === (profile.id !== 'cookie-no-secure'));
-    require(/;\s*HttpOnly(?:;|$)/i.test(cookie) === !['cookie-no-httponly', 'readable-preference', 'unspecified-cookie-purpose'].includes(profile.id));
+    require(/;\s*HttpOnly(?:;|$)/i.test(cookie) === !readableCookie(profile));
     require(cookie.includes('SameSite=None') === (profile.id === 'cookie-cross-site'));
-    require(cookie.includes('Max-Age=3600') === (profile.id === 'readable-preference'));
+    require(cookie.includes('Max-Age=3600') === persistentCookie(profile));
   }
   if (profile.id === 'mixed-image') require(/src="http:\/\/(?:localhost|127\.0\.0\.1):\d+\/vylnt-fixture.gif"/.test(html));
   if (profile.id === 'unpinned-script') require(/src="https:\/\/127\.0\.0\.1:\d+\/vylnt-fixture.js"/.test(html));
   if (profile.id.startsWith('script-')) {
     require(/src="https:\/\/127\.0\.0\.1:\d+\/vylnt-fixture.js"/.test(html));
     require(csp.includes('https://127.0.0.1:') === profile.id.startsWith('script-permitted-'));
-    require(html.includes(profile.id.endsWith('-module') ? 'type="module"' : profile.id.endsWith('-async') ? '<script async src=' : '<script defer src='));
+    const target = html.match(/<script\s+([^>]*?)src="https:\/\/127\.0\.0\.1:\d+\/vylnt-fixture.js"/);
+    require(Boolean(target));
+    const attributes = scriptAttributes(profile);
+    require(/type="module"/.test(target![1]) === attributes.module);
+    require(/\basync\b/.test(target![1]) === attributes.async);
+    require(/\bdefer\b/.test(target![1]) === attributes.defer);
   }
   return { version: 'upstream-local-oracle-v1', configurationPassed: true, labelScope: 'Controlled local deployment requirements only; no upstream vulnerability or independently reviewed application safety claim.' };
 }

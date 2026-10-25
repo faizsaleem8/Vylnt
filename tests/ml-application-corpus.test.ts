@@ -31,6 +31,15 @@ describe('pinned controlled application corpus', () => {
     expect(result.headers['Content-Security-Policy']).toContain("script-src-attr 'unsafe-hashes' 'sha256-");
     expect(result.headers['Content-Security-Policy']).not.toContain("'unsafe-inline'");
   });
+  it('does not encode cookie purpose in lifetime, names or client code', () => {
+    for (const [preference, server] of [['readable-preference', 'persistent-server-cookie'], ['session-readable-preference', 'cookie-no-httponly']]) {
+      const a = applicationProfiles.find(p => p.id === preference)!;
+      const b = applicationProfiles.find(p => p.id === server)!;
+      expect(a.label).toBe('contextual'); expect(b.label).toBe('change-warranted');
+      expect(controlledResponse('<html></html>', a, 'https://localhost:1234', 'http://127.0.0.1:1235'))
+        .toEqual(controlledResponse('<html></html>', b, 'https://localhost:1234', 'http://127.0.0.1:1235'));
+    }
+  });
   it('serves only allowlisted assets and rejects encoded traversal or checkout metadata', () => {
     const app = parseApplicationLock(sources)[1];
     expect(applicationAsset(app, '/')).toBe('examples/javascript-es6/dist/index.html');

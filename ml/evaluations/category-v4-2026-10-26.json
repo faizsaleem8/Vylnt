@@ -1,0 +1,571 @@
+{
+  "version": 1,
+  "date": "2026-10-26",
+  "scope": "Controlled category-policy v4 development experiment; NOT held-out quality or release approval.",
+  "collection": {
+    "version": 1,
+    "passed": 140,
+    "sourceFamilies": 10,
+    "annotations": 140,
+    "independentHumanReviews": 0,
+    "sourceLockHash": "5a1f8034c42774561cc70520e862515c2a36c6a6a5ff652873bf0383a744f768",
+    "harnessHash": "b047df152ee07c1ef707644fad6ae45d18d3ddb3ec66022774d963c2566643df",
+    "provenance": "controlled",
+    "limitations": [
+      "Counts are before input grouping and frozen splits.",
+      "Upstream browser source with VYLNT-controlled local deployment configurations, not reviewed real-application labels.",
+      "Only locked browser assets are served; omitted optional fonts/images can return 404."
+    ]
+  },
+  "lineage": {
+    "version": 1,
+    "baseDatasetHash": "7caabbc2143d7acc3708a2dd16668173af7edafdae4ea75e7d12d4cbf5409d94",
+    "datasetHash": "ce1c886f13d151e027bb9e2971cabb5dba4486e80f802dce7922cdd7628689a0",
+    "sourceLockHash": "5a1f8034c42774561cc70520e862515c2a36c6a6a5ff652873bf0383a744f768",
+    "runSummaryHash": "c19c2c80436459a968b38c22d5e902826b121bbb3aff824da67e86199e8e439e",
+    "addedOracleScenarios": 140,
+    "originalExamples": 190,
+    "combinedExamples": 300,
+    "originalExamplesPreserved": true,
+    "originalFamilyIdentitiesPreserved": true,
+    "limitation": "Additional configurations on existing families; not new independent applications or fresh held-out evaluation."
+  },
+  "cookieCounterexamples": {
+    "checkedPairs": 20,
+    "identicalInputsWithOppositeVerifiedPurposes": 20,
+    "allRetainedAsConflicts": true,
+    "implication": "Cookie lifetime/name/readability cannot establish application purpose; require review."
+  },
+  "grouping": {
+    "version": 2,
+    "independentReviewedTargets": 0,
+    "exactAgreement": null,
+    "disagreements": 0,
+    "repeatedContextLabelsRemoved": 33,
+    "familyCount": 11,
+    "limitations": "Review declarations are not attested identities. Same-target disagreements become one needs-review example. Different target contexts still undergo frozen input-conflict auditing."
+  },
+  "readiness": {
+    "datasetHash": "ce1c886f13d151e027bb9e2971cabb5dba4486e80f802dce7922cdd7628689a0",
+    "splitHash": "a347f42b24732026a911583cc14cb1c1d9da78b153d6077ef6143b2d3bcbc1a4",
+    "provenance": "controlled",
+    "requiredProvenance": "controlled",
+    "partitions": {
+      "train": {
+        "examples": 192,
+        "families": 7,
+        "eligibleBinaryExamples": 134,
+        "bothTrainingClasses": true
+      },
+      "validation": {
+        "examples": 54,
+        "families": 2,
+        "eligibleBinaryExamples": 44,
+        "bothTrainingClasses": true
+      },
+      "test": {
+        "examples": 54,
+        "families": 2,
+        "eligibleBinaryExamples": 52,
+        "bothTrainingClasses": true
+      }
+    },
+    "uniqueInputVariants": 253,
+    "conflictingVariants": 29,
+    "developmentConflictingVariants": 25,
+    "independentInputComponents": 10,
+    "fitReady": true,
+    "testFamilyDeficit": 8,
+    "categories": {
+      "HDR-001": {
+        "testCounts": {
+          "change-warranted": 2,
+          "contextual": 0,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 0
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 7,
+            "contextual": 0
+          },
+          "validation": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 28,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 30,
+            "classFamilies": 3
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "HDR-002": {
+        "testCounts": {
+          "change-warranted": 2,
+          "contextual": 0,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 0
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 5,
+            "contextual": 0
+          },
+          "validation": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 28,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 30,
+            "classFamilies": 3
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "HDR-003": {
+        "testCounts": {
+          "change-warranted": 2,
+          "contextual": 0,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 0
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 6,
+            "contextual": 0
+          },
+          "validation": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 28,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 30,
+            "classFamilies": 3
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "CK-001": {
+        "testCounts": {
+          "change-warranted": 2,
+          "contextual": 0,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 0
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 6,
+            "contextual": 0
+          },
+          "validation": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 28,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 30,
+            "classFamilies": 3
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "CK-002": {
+        "testCounts": {
+          "change-warranted": 4,
+          "contextual": 4,
+          "needs-review": 2
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 2
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 0,
+            "contextual": 1
+          },
+          "validation": {
+            "change-warranted": 0,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 26,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 26,
+            "classFamilies": 1
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "CK-003": {
+        "testCounts": {
+          "change-warranted": 2,
+          "contextual": 0,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 0
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 6,
+            "contextual": 0
+          },
+          "validation": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 28,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 30,
+            "classFamilies": 3
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "NET-001": {
+        "testCounts": {
+          "change-warranted": 2,
+          "contextual": 0,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 0
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 7,
+            "contextual": 0
+          },
+          "validation": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 28,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 30,
+            "classFamilies": 3
+          }
+        },
+        "gates": {
+          "trainingClasses": false,
+          "validationClasses": false,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      },
+      "JS-002": {
+        "testCounts": {
+          "change-warranted": 16,
+          "contextual": 16,
+          "needs-review": 0
+        },
+        "testClassFamilies": {
+          "change-warranted": 2,
+          "contextual": 2
+        },
+        "countAndFamilyGates": false,
+        "developmentClasses": {
+          "train": {
+            "change-warranted": 48,
+            "contextual": 48
+          },
+          "validation": {
+            "change-warranted": 16,
+            "contextual": 16
+          }
+        },
+        "testDeficits": {
+          "change-warranted": {
+            "examples": 14,
+            "classFamilies": 1
+          },
+          "contextual": {
+            "examples": 14,
+            "classFamilies": 1
+          }
+        },
+        "gates": {
+          "trainingClasses": true,
+          "validationClasses": true,
+          "tenTestFamilies": false,
+          "classCounts": false,
+          "classFamilies": false,
+          "provenance": true
+        },
+        "readyForQualificationTest": false
+      }
+    },
+    "readyCategories": [],
+    "candidatePolicy": "controlled-category-v4",
+    "supportedCategories": [
+      "JS-002"
+    ],
+    "previousDatasetHash": "7caabbc2143d7acc3708a2dd16668173af7edafdae4ea75e7d12d4cbf5409d94",
+    "previouslySeenTestFamilies": 2,
+    "previouslySeenTestVariants": 30,
+    "freshHoldout": false,
+    "testMayBeEvaluated": false
+  },
+  "training": {
+    "safetyPolicy": "controlled-category-v4",
+    "seed": 42,
+    "epochs": 60,
+    "selectedEpoch": 60,
+    "validationLoss": 0.024542082101106644,
+    "train": 96,
+    "validation": 32,
+    "supportedCategories": [
+      "JS-002"
+    ],
+    "conflictingVariants": 25,
+    "testEvaluated": false,
+    "torch": "2.7.1+cpu",
+    "numpy": "1.26.4",
+    "python": "3.12.6",
+    "sklearn": "1.5.2"
+  },
+  "development": {
+    "scope": "Eligible validation examples used for checkpoint/calibration selection; NOT held-out quality.",
+    "categories": {
+      "JS-002": {
+        "lstm": {
+          "precision": 1,
+          "recall": 1,
+          "coverage": 1,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": [
+            0.8063923194655637,
+            1
+          ],
+          "recall95": [
+            0.8063923194655637,
+            1
+          ],
+          "coverage95": [
+            0.8928208017449293,
+            1
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 32
+        },
+        "logistic": {
+          "precision": null,
+          "recall": 0,
+          "coverage": 0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.1936076805344365
+          ],
+          "coverage95": [
+            0,
+            0.1071791982550706
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 32
+        }
+      }
+    },
+    "testEvaluated": false
+  },
+  "categoryPolicy": {
+    "version": 1,
+    "safetyPolicy": "controlled-category-v4",
+    "categories": {
+      "HDR-001": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "HDR-002": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "HDR-003": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "CK-001": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "CK-002": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "CK-003": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "NET-001": {
+        "supported": false,
+        "reason": "missing-development-class"
+      },
+      "JS-002": {
+        "supported": true,
+        "calibration": {
+          "temperature": 0.25
+        },
+        "thresholds": {
+          "contextual": 0.4,
+          "change": 0.95
+        },
+        "logisticCalibration": {
+          "temperature": 4
+        },
+        "logisticThresholds": {
+          "contextual": 0,
+          "change": 1
+        },
+        "validationCount": 32
+      }
+    }
+  },
+  "parity": {
+    "version": 1,
+    "schemaVersion": "vynlt-evidence-v3",
+    "candidateHash": "f2ea93f213b51b2e1066f4fe910ed55052268e2533c5ce51d3ff833d38e7012e",
+    "modelHash": "6fa227ae6f0e5c7259d3636066be05b0da5c661726c6acf77b3771178f105a1f",
+    "modelBytes": 55101,
+    "datasetHash": "ce1c886f13d151e027bb9e2971cabb5dba4486e80f802dce7922cdd7628689a0",
+    "splitHash": "a347f42b24732026a911583cc14cb1c1d9da78b153d6077ef6143b2d3bcbc1a4",
+    "parity": {
+      "cases": 4,
+      "maximumError": 4.5293668371471085e-8,
+      "tolerance": 0.000001
+    },
+    "supportedDevelopmentCategories": [
+      "JS-002"
+    ],
+    "unsupportedAbstentionChecked": true,
+    "decisionParityCases": 84,
+    "qualification": "not-assessed",
+    "limitation": "Numeric artifact integrity/parity only. This check does not consume test data, approve categories, or promote the active model."
+  },
+  "evaluation": {
+    "status": "blocked-before-test",
+    "testConsumed": false
+  },
+  "approvedCategories": [],
+  "activeReleaseChanged": false,
+  "limitations": [
+    "The 140 scenarios add metadata contexts on ten existing repositories, not 140 independent applications.",
+    "Validation observations selected checkpoint/calibration; those metrics are not unbiased accuracy.",
+    "Only JS-002 has both development labels; all other categories abstain.",
+    "Two held-out families were seen previously; no new test inference or release is permitted.",
+    "All provenance is controlled; user-application security accuracy is not established."
+  ]
+}

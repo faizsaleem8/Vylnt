@@ -1,6 +1,14 @@
 # VYLNT ML report insights implementation
 
+**Latest, 2026-10-26:** [ML-Q1 fresh holdout](ML_FRESH_HOLDOUT_PLAN.md) passed all JS-002 gates on eleven eligible new families and 159 distinct contexts. [Measured results](../ml/evaluations/fresh-holdout-js002-2026-10-26.md) supersede the earlier count blocker for this category only. Controlled-category runtime/export acceptance and release status are recorded in PLAN.md. Other seven categories remain separately open. The dated sections below preserve the earlier experimental history, not current qualification status.
+
+ML-Q1 is now **closed and bundled** after actual React/Worker/API, saved report, archived verification, export, browser, accessibility and build acceptance. Only JS-002 uses the controlled qualified relevance decisions; raw findings/severity and GitHub policy are unchanged.
+
 The agreed scope is the existing eight configuration checks. No behavioural vulnerability detection, Docker, deployment, external AI provider or user-owned training workflow is included. Full-data Print / PDF remains separate from insights exports.
+
+2026-10-26 data/model increment: [category-policy v4](ML_CATEGORY_CANDIDATE.md) is implemented and trained. All 140 new controlled browser scenarios passed; the combined corpus preserves the original 190 rows and contains 300 distinct rows. Category-specific calibration and unsupported-category abstention passed numeric/decision parity. The candidate remains developer-only: the new holdout gate refused before testing because only two previously seen families and inadequate class counts remain. [Measured results](../ml/evaluations/category-v4-2026-10-26.md). ML-Q remains open; experimental M6 closure is unchanged.
+
+2026-10-26 follow-up: ML-Q engineering validation is implemented and passing, including exact training reproduction, artifact/parity/record checks, per-category dataset diagnostics and browser report/worker acceptance. [Measured audit](../ml/evaluations/validation-2026-10-26.md) remains **qualification-blocked**: missing development classes and insufficient held-out families/counts prevent approval. The active display-only model is unchanged. See [ML validation](ML_VALIDATION.md); experimental M6 closure below is unaffected.
 
 ## Experimental M6 closed — 2026-10-22
 

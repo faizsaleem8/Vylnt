@@ -8,6 +8,7 @@ import { buildInsightAnalysis } from './insight-analysis';
 import { categoryQualifies, type CategoryQualification } from './release-gates';
 import { currentEvidenceRelease } from './bundled-evidence';
 import { analyseExperimentalEvidence, type ExperimentalEvidenceRelease } from './experimental-evidence';
+import { analyseControlledCategory, type ControlledCategoryRelease } from './controlled-category-release';
 export { archivedEvidenceReleases } from './bundled-evidence';
 
 export interface ReviewedEvidenceRelease {
@@ -24,7 +25,7 @@ export interface ReviewedEvidenceRelease {
   reviewedScope: string;
   categories: Record<string, CategoryQualification>;
 }
-export type EvidenceRelease = ReviewedEvidenceRelease | ExperimentalEvidenceRelease;
+export type EvidenceRelease = ReviewedEvidenceRelease | ExperimentalEvidenceRelease | ControlledCategoryRelease;
 // Developer-owned release. No candidate may be silently promoted by an end user.
 export const bundledEvidenceRelease: EvidenceRelease | null = currentEvidenceRelease;
 const sha = async (text: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -33,6 +34,7 @@ export async function analyseEvidenceReport(report: Report, release: EvidenceRel
   if (!release) return fallback;
   try {
     if (release.qualificationPolicy === 'vynlt-controlled-signal-v1') return await analyseExperimentalEvidence(report, release);
+    if (release.qualificationPolicy === 'vylnt-controlled-category-release-v1') return await analyseControlledCategory(report, release);
     if (release.qualificationPolicy !== 'vynlt-reviewed-release-v2' || !/^[0-9a-f]{64}$/.test(release.candidateHash) || !/^[0-9a-f]{64}$/.test(release.evaluationHash)) throw new Error('Unsupported qualification policy');
     if (new TextEncoder().encode(release.modelJson).length > 128 * 1024 || !/^[0-9a-f]{64}$/.test(release.reviewRecordHash) || !release.reviewedScope || await sha(release.modelJson) !== release.modelHash) throw new Error('Unverified release identity');
     const model = parseEvidenceLstm(JSON.parse(release.modelJson));

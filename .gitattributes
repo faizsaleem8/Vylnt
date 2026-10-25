@@ -3,3 +3,16 @@ ml/evaluations/*.json text eol=lf
 # Preserve exact frozen Windows experiment bytes, including bound training hashes.
 ml/evaluations/expanded-v3-2026-10-22*.json -text
 ml/applications/sources.lock.json text eol=lf
+# ML-Q1's evaluated code/source identities are byte-bound across Windows/Linux checkouts.
+ml/applications/fresh-holdout.sources.lock.json text eol=lf
+ml/evaluations/fresh-holdout-js002-2026-10-26.json -text
+ml/holdout.py text eol=lf
+ml/insights.py text eol=lf
+ml/insights_v3.py text eol=lf
+ml/insights_v4.py text eol=lf
+ml/validation.py text eol=lf
+packages/ml/application-corpus.ts text eol=lf
+scripts/ml-application-corpus.mjs text eol=lf
+scripts/ml-holdout-smoke.mjs text eol=lf
+packages/core/evidence-v3.ts text eol=lf
+apps/cli/scanner.ts text eol=crlf

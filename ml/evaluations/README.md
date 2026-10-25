@@ -1,5 +1,17 @@
 # VYLNT controlled LSTM experiment — 2026-10-22
 
+## Fresh JS-002 holdout — 2026-10-26
+
+[Measured results](fresh-holdout-js002-2026-10-26.md), [immutable aggregate record](fresh-holdout-js002-2026-10-26.json): the frozen v4 candidate passed all gates on eleven fresh eligible families, 80 change-required and 79 contextual distinct inputs. Model-only/safeguarded precision, recall and coverage were 100% on this controlled suite. Published intervals and limitations apply; no universal or independently reviewed accuracy claim. Runtime release acceptance is tracked in PLAN.md. All other categories remain unqualified. Historical experiments below retain their original failed outcomes.
+
+## Category-policy v4 development — 2026-10-26
+
+[Results](category-v4-2026-10-26.md) and [aggregate record](category-v4-2026-10-26.json): 140 new browser scenarios passed on the existing ten applications; 300 combined rows preserve the original 190. Twenty opposite-purpose cookie pairs have identical numeric inputs and remain conflicts. The new category-balanced eight-unit LSTM fitted on 96 JS-002 examples, with 32 validation examples; unsupported categories abstain. The 55,101-byte candidate passed four numeric parity cases (max error 4.53e-8) and 84 decision cases. Its qualification attempt stopped before test inference because the holdout has only two previously seen families and insufficient class counts. Development scores are not unbiased accuracy. No category is qualified and no active release changed. [Protocol/commands](../../docs/ML_CATEGORY_CANDIDATE.md).
+
+## Validation audit — 2026-10-26
+
+[Readable audit](validation-2026-10-26.md) and [aggregate numeric record](validation-2026-10-26.json) verify frozen identities, summary/count/gate/uncertainty consistency, exact development training reproduction and 18-case Python/JavaScript parity. They do not rerun test predictions or turn historical metrics into a fresh evaluation. Both LSTM and logistic parameters/calibration/checkpoint selection reproduced exactly with seed 42 and 60 epochs. The current dataset has no eligible actionable CK-002 development examples and no contextual development examples for six other categories. Test coverage and quality gates still fail; no model is promoted. Commands and full validation scope: [ML validation](../../docs/ML_VALIDATION.md).
+
 ## Latest expanded v3 result
 
 Experimental M6 is closed by user decision; [ML-Q qualification](../../docs/ML_QUALIFICATION_PLAN.md) remains open. The new v3 candidate is not bundled. Exact [evaluation](expanded-v3-2026-10-22.json), [training](expanded-v3-2026-10-22-training.json), [parity](expanded-v3-2026-10-22-parity.json) and [readiness](expanded-v3-2026-10-22-readiness.json) records are published without private reports/annotations/source.

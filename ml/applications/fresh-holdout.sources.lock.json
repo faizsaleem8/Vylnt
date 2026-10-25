@@ -1,0 +1,736 @@
+{
+  "version": 1,
+  "applications": [
+    {
+      "id": "q1-isocity",
+      "familyId": "upstream:victorqribeiro/isocity",
+      "repository": "victorqribeiro/isocity",
+      "revision": "c5772412d3e423318f2cf479ebdd50a2b9029d84",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-isocity",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "20917b8e2cfb3574d262b4d663b1fd206a6bf6c8de7e7f71941b986cb98e02fe",
+          "bytes": 1071
+        },
+        {
+          "path": "css/main.css",
+          "sha256": "b4ccf735f9fe2ef21257639099a501bbcf4d6d7f455099e3fe0dae9f4a6dc216",
+          "bytes": 1372
+        },
+        {
+          "path": "favicon.png",
+          "sha256": "f23fb9d8d28a85a8a2951f641d184fd2d679f270036d40c914f52e3d32f69f87",
+          "bytes": 18614
+        },
+        {
+          "path": "index.html",
+          "sha256": "9989c8f35b98ad540419208fee8642d7b66b9513d599b51d3722d993f2d89dc5",
+          "bytes": 1125
+        },
+        {
+          "path": "js/main.js",
+          "sha256": "0b44bb7acd32d4154a0ef1ac5154164082a990b66f99a93a218d5fede9cabfa3",
+          "bytes": 4667
+        },
+        {
+          "path": "textures/01_130x66_130x230.png",
+          "sha256": "6ac7c0aeb65d5c6968a72f751898d0e6e74f9dafc9cef215366f6bb3bb355e20",
+          "bytes": 454017
+        }
+      ]
+    },
+    {
+      "id": "q1-vim",
+      "familyId": "upstream:renzorlive/vimmaster",
+      "repository": "renzorlive/vimmaster",
+      "revision": "4962d02a1f7dabef7d739f468c38d473f2b34fbd",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-vim",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "35aabf9cff184f4ad4df57e124976bcb0384c3a10124feefea1254cf187df0c6",
+          "bytes": 1060
+        },
+        {
+          "path": "css/main.css",
+          "sha256": "3d7943e262ea53dd6e0d28368cbc913452d49a89816311f4b9d0eceef3b99026",
+          "bytes": 25774
+        },
+        {
+          "path": "css/tailwind-input.css",
+          "sha256": "d301b06ea1313d93069fb5ae3032b8ba43cc74ab14abfb999418754157ffe3c1",
+          "bytes": 203
+        },
+        {
+          "path": "css/tailwind.css",
+          "sha256": "1ab4cd39319447bfcb2f111d2593caf8a40acb035ecabd095637115d8f84be3c",
+          "bytes": 32111
+        },
+        {
+          "path": "index.html",
+          "sha256": "9e0d693cadabca7d7e995f2c46e8dc4c952ac612d0d69c6df4c2b52cf93c35cb",
+          "bytes": 18596
+        },
+        {
+          "path": "js/challenges.js",
+          "sha256": "b9dfba5ad9e23d5835df15a8d86c520e0f8dfd50f809130637ec9f69905ae8f7",
+          "bytes": 8040
+        },
+        {
+          "path": "js/cheat-mode.js",
+          "sha256": "dc8b9b7e24bea89cbcacb1b36e8765b61d15aee8619488876778c4d4517c02fb",
+          "bytes": 16628
+        },
+        {
+          "path": "js/content-loader.js",
+          "sha256": "abebadb575d843e38e400e86d9b73975c7c008bccd84c65dc824b7334aa0b394",
+          "bytes": 1838
+        },
+        {
+          "path": "js/content-provider.js",
+          "sha256": "dc7a48546522a265ba1aaed18303c70a78bbf80927f9c4a76b500380b33f2dd8",
+          "bytes": 1175
+        },
+        {
+          "path": "js/event-handlers.js",
+          "sha256": "b5cc5d0babb4fbe6e5a3e515c869dd882983b30518e7fadd40a322929f48eeff",
+          "bytes": 20184
+        },
+        {
+          "path": "js/game-state.js",
+          "sha256": "e3efadd9df47b6dfbee701d355f0be83bce97d195e9d30e7836688a1cdac89d4",
+          "bytes": 10055
+        },
+        {
+          "path": "js/generated-content.js",
+          "sha256": "9bb1f7db030328d79272ff57cce2f0544da735612eaa6a753885327b43c0de8e",
+          "bytes": 43446
+        },
+        {
+          "path": "js/levels.js",
+          "sha256": "44621e72364a2ffe9fd63505059aff986bf06af10a7f7248aa56fac6a6885028",
+          "bytes": 6124
+        },
+        {
+          "path": "js/logger.js",
+          "sha256": "01b90fb1c095a761b0a0b6cf5500e45be3d05878eea0051b6f1897a2af431174",
+          "bytes": 8142
+        },
+        {
+          "path": "js/main.js",
+          "sha256": "6d032ab05f56fc1711ce099f093a1cbe84673d5bcb5e86b3660041fa6f534960",
+          "bytes": 21179
+        },
+        {
+          "path": "js/profile-page.js",
+          "sha256": "c6038218b7788a866680e218145de54286fde42b7559f1258913d9114fd88e62",
+          "bytes": 16054
+        },
+        {
+          "path": "js/progress-system.js",
+          "sha256": "d3a3e71052be6ac5d653ae1a8fc7ebc4b1ef3f428b43445624eb870865f89042",
+          "bytes": 15181
+        },
+        {
+          "path": "js/retention-state.js",
+          "sha256": "c30039b9161c5ab3a38696c9e32896174d65da7ea6ca228d094a0edd357f923d",
+          "bytes": 10516
+        },
+        {
+          "path": "js/sharing-system.js",
+          "sha256": "04bb4bb2eea0c1ff7e58f4e4480da7b02c58530fe71cd34e5709abe6cf91978e",
+          "bytes": 39114
+        },
+        {
+          "path": "js/ui-components.js",
+          "sha256": "18b976d8eb293d0007e9c8e0d608f0d9943a7ef365196897a068028105174468",
+          "bytes": 36161
+        },
+        {
+          "path": "js/utils/deep-freeze.js",
+          "sha256": "e8a07a8b9c35b9d53f0de97c75e99f6937e55c813f3513af1634e32d756942a2",
+          "bytes": 553
+        },
+        {
+          "path": "js/vim-commands.js",
+          "sha256": "a5ba6dff847c7f97d66b677034286ccf5532dd1bdd360f382706d2cb5f59b980",
+          "bytes": 23161
+        },
+        {
+          "path": "js/win-evaluator.js",
+          "sha256": "20a78ca2f778909171d6cff54e5c863c70d2e9d3b17c5df31f05ffd7b83deeb9",
+          "bytes": 4103
+        }
+      ]
+    },
+    {
+      "id": "q1-kontext",
+      "familyId": "upstream:hakimel/kontext",
+      "repository": "hakimel/kontext",
+      "revision": "ba86ef572a346e6da7fefcadd85cb07c6ff448d6",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-kontext",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "6b7a56222f4cf047bde0ca1eef09917bd51992cfa543cd75138352814958480d",
+          "bytes": 1075
+        },
+        {
+          "path": "css/demo.css",
+          "sha256": "4bc4e40196e9fcafa11139121ca54ba983bfe4ec9665bad090f136ba438bcae9",
+          "bytes": 1779
+        },
+        {
+          "path": "css/kontext.css",
+          "sha256": "91f51afcc5f89bdc6df7a0172b069e68b4fc3bc3dfc92d3167cf9d5e5fbd8649",
+          "bytes": 4846
+        },
+        {
+          "path": "index.html",
+          "sha256": "4f95abafd04919b5b861b8b632abf084dff30af5be45c8699745174547ee6b45",
+          "bytes": 3686
+        },
+        {
+          "path": "js/kontext.js",
+          "sha256": "6e2691a42600ddd8523f35fa149749cd3e67436e522f832482aa4ea6e9ba5940",
+          "bytes": 3709
+        }
+      ]
+    },
+    {
+      "id": "q1-sketch",
+      "familyId": "upstream:soulwire/sketch.js",
+      "repository": "soulwire/sketch.js",
+      "revision": "b89b95dc2bdaa590153b24f0c76734317bf8d9c4",
+      "license": "MIT",
+      "licenseFile": "LICENSE.md",
+      "root": ".",
+      "entry": "examples/drawing.html",
+      "smoke": "q1-sketch",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "10af6473e9e10efcbbb39ff22d9d143f9546c66b5c8e748ab94c02bd7740d972",
+          "bytes": 1097
+        },
+        {
+          "path": "examples/drawing.html",
+          "sha256": "9b675170cb5e61fafda500e783f3abbf2a600e1b8d16300bff24a2ea537602e9",
+          "bytes": 2499
+        },
+        {
+          "path": "js/sketch.js",
+          "sha256": "d89fa33b43b3bce04fe8141f80f22a06651a00e5cd98a6a761e9738e209f1da7",
+          "bytes": 12588
+        }
+      ]
+    },
+    {
+      "id": "q1-spectrum",
+      "familyId": "upstream:bgrins/spectrum",
+      "repository": "bgrins/spectrum",
+      "revision": "101b05c1d977fbc529ae4c3b6865b1f7ab70c6e0",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "example/index.html",
+      "smoke": "q1-spectrum",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "d6c217fc60dbb9d06192a768f2bda26ec8dd870dab6bcae1d661f880aed7084f",
+          "bytes": 1054
+        },
+        {
+          "path": "docs/bootstrap.css",
+          "sha256": "300040ff0171295d23c06bcfdd13c84989f6bffd35a40faaedcb8f600d85ec66",
+          "bytes": 127247
+        },
+        {
+          "path": "docs/docs.css",
+          "sha256": "6831d4050b9e0279a13d49ec30cb5633f655713798aa55db4aecbcfda2e443d4",
+          "bytes": 8984
+        },
+        {
+          "path": "docs/jquery-1.9.1.js",
+          "sha256": "9192aad4fbde80605633feca9af57bf4f894c535e0316a0c61f6ea6f7e7d78a5",
+          "bytes": 290323
+        },
+        {
+          "path": "docs/prettify.js",
+          "sha256": "e2e576e3bc607cd179ff511947010f645d3441a35313aec0dbd06c4437f83b77",
+          "bytes": 13632
+        },
+        {
+          "path": "example/example.js",
+          "sha256": "b43b73de659e0164c75b92d46087e2cbd1cb90ab73c9e51f6959d7bcf1a36961",
+          "bytes": 14697
+        },
+        {
+          "path": "example/index.html",
+          "sha256": "a0c94057238185662975e8f14b819b07033bd09a00e06a2023e178d73683a654",
+          "bytes": 5455
+        },
+        {
+          "path": "i18n/jquery.spectrum-fi.js",
+          "sha256": "5a6b173185fae40474cef6d0af5ac5a29950039072d10cf543a6e07c50e3820b",
+          "bytes": 302
+        },
+        {
+          "path": "spectrum.css",
+          "sha256": "f9f0e42fe86bcc0636754f04d492bd5c38416329f9aebdf2ce4f5b6d2fe03b85",
+          "bytes": 14921
+        },
+        {
+          "path": "spectrum.js",
+          "sha256": "9e09349dec7fa79f8b12806678875c3ce341716e8e2627735c6b39b7b8f5a158",
+          "bytes": 79843
+        }
+      ]
+    },
+    {
+      "id": "q1-qr",
+      "familyId": "upstream:davidshimjs/qrcodejs",
+      "repository": "davidshimjs/qrcodejs",
+      "revision": "04f46c6a0708418cb7b96fc563eacae0fbf77674",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-qr",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "aaa1f349028a59432eb00222b8ddfe4d2ccebdce04cf8348dcb8d41b7068107b",
+          "bytes": 1098
+        },
+        {
+          "path": "index.html",
+          "sha256": "828a34539ffd14f284b4f8e7535ebb45d72138579393d5b40a36116efbb17dea",
+          "bytes": 1204
+        },
+        {
+          "path": "jquery.min.js",
+          "sha256": "1f0a1183d9ed40fa1e0cf8a29a6b3eca8c288a6f5c36e16813550c4f8b938636",
+          "bytes": 93637
+        },
+        {
+          "path": "qrcode.js",
+          "sha256": "3ee72de9f69c668f9567363a9358df955960bae9000d9ebd66414670f88e8735",
+          "bytes": 33168
+        }
+      ]
+    },
+    {
+      "id": "q1-dragula",
+      "familyId": "upstream:bevacqua/dragula",
+      "repository": "bevacqua/dragula",
+      "revision": "09ab978dd550490f1f8e456551a1a39ed0d7f984",
+      "license": "MIT",
+      "licenseFile": "license",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-dragula",
+      "files": [
+        {
+          "path": "dist/dragula.css",
+          "sha256": "1184a6892cf675a017e57abe9bc9711857fea960015207423d4bd4e57d2fa48e",
+          "bytes": 548
+        },
+        {
+          "path": "dist/dragula.js",
+          "sha256": "90e41ce604594ddf9bbcf8efe3b384f3c2cd2c77afe6cc98c049b565d9b7993b",
+          "bytes": 86057
+        },
+        {
+          "path": "example/example.css",
+          "sha256": "b41c1264ce671469e36ce00bf8f059fe7f64e887ff08388409cf24636cd367a0",
+          "bytes": 3535
+        },
+        {
+          "path": "example/example.min.js",
+          "sha256": "ecd1796f2a6b4ea4edb3eb6d141871b252e7e206aeda1ddf885480dba72ce222",
+          "bytes": 16448
+        },
+        {
+          "path": "index.html",
+          "sha256": "ac94a69fbf7b7833bc0b4b13daef74eeb6695c474508b6fa24d0b2c0cfb86795",
+          "bytes": 11570
+        },
+        {
+          "path": "license",
+          "sha256": "13c2292db05054bffd25180c9e696cf798a033b0fcdc0806b7222aedfd3c2cf8",
+          "bytes": 1087
+        },
+        {
+          "path": "resources/demo.png",
+          "sha256": "69fb83cbadaa99117a8aedc1727a70712a0d3641021c2d2dbdb54acca7fa5eac",
+          "bytes": 511071
+        },
+        {
+          "path": "resources/eyes.png",
+          "sha256": "c7492c42db9d759d61cd98c705a41e3b9ce98e37e217940da23a6df86d80101d",
+          "bytes": 51877
+        },
+        {
+          "path": "resources/icon.png",
+          "sha256": "fcc8e20983e8b675451640c3b6be8f31ab0da0a2495ac0e4c68b650cfcf23262",
+          "bytes": 15566
+        },
+        {
+          "path": "resources/icon.svg",
+          "sha256": "eacc44902b2a72c727a1d7d5695eb04cdc5c79bffeeba8969054edaf3cc6c855",
+          "bytes": 2331
+        },
+        {
+          "path": "resources/logo.png",
+          "sha256": "056eee34eb45af2893cffd03cdbcf910948a8ac1e9f9b1b69ff73cf04b17e570",
+          "bytes": 25642
+        },
+        {
+          "path": "resources/logo.svg",
+          "sha256": "1a646cc7db6d4bd09937846a653a71994efbbcbf82ff60c89dc002f1752aa59a",
+          "bytes": 8564
+        },
+        {
+          "path": "resources/patreon.svg",
+          "sha256": "61b59f352e322509312b46b5e1dc8cf5ac1eb95f39eb1d0a06ea123ad215f472",
+          "bytes": 520
+        }
+      ]
+    },
+    {
+      "id": "q1-autosize",
+      "familyId": "upstream:jackmoore/autosize",
+      "repository": "jackmoore/autosize",
+      "revision": "1e0229b9bb9f51c2b6a2756d901a023b475fa950",
+      "license": "MIT",
+      "licenseFile": "LICENSE.md",
+      "root": ".",
+      "entry": "example/index.html",
+      "smoke": "q1-autosize",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "be6b635bdbeb3650d19c794f430913c6bef92265d48536d4008db1f058130394",
+          "bytes": 1076
+        },
+        {
+          "path": "dist/autosize.js",
+          "sha256": "ef10236538a6306ac8d2f5c420b468179d5cb3f2d258e716c0a9e4f2356b2ba9",
+          "bytes": 6761
+        },
+        {
+          "path": "example/index.html",
+          "sha256": "40362649a96a6aa13893f02fbd74e15421adba7ff3d32142110ba262adf2b697",
+          "bytes": 1594
+        }
+      ]
+    },
+    {
+      "id": "q1-sortable",
+      "familyId": "upstream:sortablejs/sortable",
+      "repository": "SortableJS/Sortable",
+      "revision": "48b626bbc61afbb0f179730c1dd3cca3dcc8b788",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-sortable",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "199071e94a4d6ba6f634acd6020842efc55161b9fb639a432c50da687781219d",
+          "bytes": 1085
+        },
+        {
+          "path": "Sortable.js",
+          "sha256": "168589423f079aed502e8a4a610ec1cd4803db296caa0f18f20eae306c392f19",
+          "bytes": 126176
+        },
+        {
+          "path": "Sortable.min.js",
+          "sha256": "bf4241bc73fef7f11c59a283a69fe8051cdd31c6d8ff5a2b9ba219e7831fcf76",
+          "bytes": 45478
+        },
+        {
+          "path": "index.html",
+          "sha256": "2a121c2bef2d6e36e553764560edddcaa2b8be38c2250a2cebac1bac6f88ee4c",
+          "bytes": 18484
+        },
+        {
+          "path": "modular/sortable.complete.esm.js",
+          "sha256": "121ec97f82d0863594ef16f4919c11e972d36957efef987b83aa9a7718daa61c",
+          "bytes": 119406
+        },
+        {
+          "path": "st/app.js",
+          "sha256": "252a7d662dc3fe0e8a4f5b6440dc5835fc0cee680da960a26ba44dde6d1e0848",
+          "bytes": 6278
+        },
+        {
+          "path": "st/prettify/prettify.css",
+          "sha256": "e3b0f209e58b0d412b1e37d9468ab6674dad3860077ad9a918a7462ca67d033d",
+          "bytes": 655
+        },
+        {
+          "path": "st/prettify/prettify.js",
+          "sha256": "6b4f67671fd72c3c65216bcd6a058328921d2a3723934cbcbbcf523cfb7724b5",
+          "bytes": 15655
+        },
+        {
+          "path": "st/prettify/run_prettify.js",
+          "sha256": "00f9dee64d11f5732f41ab532aa531356989eab772831e587e107caf8e052bec",
+          "bytes": 18428
+        },
+        {
+          "path": "st/theme.css",
+          "sha256": "0a441e5e1870ec10344ac7f7b69f788b21eaa21eee0db5cb76198afb722fd6bb",
+          "bytes": 4893
+        }
+      ]
+    },
+    {
+      "id": "q1-viewer",
+      "familyId": "upstream:fengyuanchen/viewerjs",
+      "repository": "fengyuanchen/viewerjs",
+      "revision": "b6ddf87b94b9e466409aa955e2991f99a84c5d7c",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "docs/examples/custom-title.html",
+      "smoke": "q1-viewer",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "eb917650781dcf06a60b97cba9b05bf583931ec2d311d8a5548a8dca90a57e0f",
+          "bytes": 1084
+        },
+        {
+          "path": "docs/css/viewer.css",
+          "sha256": "b34600d437f65b10c28ccfc23654839d49c6f1c17e9cf41d773264cca2d7eb2e",
+          "bytes": 18515
+        },
+        {
+          "path": "docs/examples/custom-title.html",
+          "sha256": "2c78aff1a2299b99df1f68f659fca0965dc032db6f44b6c9f137a1c782cc8517",
+          "bytes": 2903
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-1.jpg",
+          "sha256": "6abe93313280a1d8f6a1fc053cd4ab307d348c2cab57a7320b9158af233d3bb8",
+          "bytes": 31996
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-2.jpg",
+          "sha256": "9fbe17f666da772f2c7582126f8c2e3dead91fdc1e6284b22dcf32fac58bc077",
+          "bytes": 41290
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-3.jpg",
+          "sha256": "102a5e379ecf5220cb9a5741dccf1282249a83d50f759925ae960bb92c6f5865",
+          "bytes": 45795
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-4.jpg",
+          "sha256": "08fe35eebee483eb5ad8baf8c4524ac0357499ad1785e825d447752b9386a09f",
+          "bytes": 76620
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-5.jpg",
+          "sha256": "9d770875656b08ce2f5640c0bcbc58488a6903ed7858c9faf7c646e205377fdb",
+          "bytes": 67045
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-6.jpg",
+          "sha256": "29c47f6a8e0f96c0ab61aa74bcd36a24b4011659669c0b5068acc17e8a846631",
+          "bytes": 45415
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-7.jpg",
+          "sha256": "f9880dcbfc1528a003254bd528ed516944cc94cc98d873636028d6d4ca785eea",
+          "bytes": 68457
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-8.jpg",
+          "sha256": "0e7dca9bf8f9d225f10cef80da5c4ac6ef9f37ec7688bedfece5cb7604fc4b68",
+          "bytes": 43695
+        },
+        {
+          "path": "docs/images/thumbnails/tibet-9.jpg",
+          "sha256": "c6de70601d88546c5a4535acbc4921f92eed2bee14ab14faacfd5ce90c61527e",
+          "bytes": 27623
+        },
+        {
+          "path": "docs/images/tibet-1.jpg",
+          "sha256": "110c61e1f2e5f87d599646358c7d42275002fb3b5220c1768932a62d3d7a2c95",
+          "bytes": 115580
+        },
+        {
+          "path": "docs/images/tibet-2.jpg",
+          "sha256": "106faf6d40821d21f7f430770f1d15f1a661bd14775b1f22a6f04070e1e58b87",
+          "bytes": 240377
+        },
+        {
+          "path": "docs/images/tibet-3.jpg",
+          "sha256": "a1551491ebf7d1dffda68afc8333e759255b8e465146cb276b773fa21cd3d55d",
+          "bytes": 212059
+        },
+        {
+          "path": "docs/images/tibet-4.jpg",
+          "sha256": "e961bd9358c9b0869b9dbcaaf2aa61d98e2bca829b40c28c2ae9e4e5082628ba",
+          "bytes": 540064
+        },
+        {
+          "path": "docs/images/tibet-5.jpg",
+          "sha256": "1bd83f4c2b230c8b6a7ad885f3b0aa1a29d60277609d8c233f0c6ab0431046a5",
+          "bytes": 383055
+        },
+        {
+          "path": "docs/images/tibet-6.jpg",
+          "sha256": "7587a5929a4e706ec9cd656b9eafd0e65d7edb0a5a0b742f9dd69bf30e48454c",
+          "bytes": 163365
+        },
+        {
+          "path": "docs/images/tibet-7.jpg",
+          "sha256": "d3ca99e6a6048aa6e0d774315d67df4450409c4369cb148133a4dfcbcdb1e166",
+          "bytes": 305233
+        },
+        {
+          "path": "docs/images/tibet-8.jpg",
+          "sha256": "779125ef5458a96ac9697bd885f542785160aedb0be85a344152300e34f64807",
+          "bytes": 214124
+        },
+        {
+          "path": "docs/images/tibet-9.jpg",
+          "sha256": "a016400dab1e38b8fddf7a83b7c9b8fde69bcda2782e2b4327cd169409e16b86",
+          "bytes": 225060
+        },
+        {
+          "path": "docs/js/viewer.js",
+          "sha256": "2489b5945d2e7c97f844fcd24e6b5b2486d8bc95feaeaae5714290e55f0f2781",
+          "bytes": 134920
+        }
+      ]
+    },
+    {
+      "id": "q1-particles",
+      "familyId": "upstream:vincentgarreau/particles.js",
+      "repository": "VincentGarreau/particles.js",
+      "revision": "d01286d6dcd61f497d07cc62bd48e692f6508ad5",
+      "license": "MIT",
+      "licenseFile": "LICENSE.md",
+      "root": ".",
+      "entry": "demo/index.html",
+      "smoke": "q1-particles",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "24140fe37766cec891c268d521c7b1942bf72fcab059fafc04865ed4fd05773b",
+          "bytes": 1083
+        },
+        {
+          "path": "demo/css/style.css",
+          "sha256": "8481889b78591f37224a5124b19a2160c98ec3ee33ad248c93c818c09a04a487",
+          "bytes": 2585
+        },
+        {
+          "path": "demo/index.html",
+          "sha256": "10b5f07c90d1c5eef9ff475ab8541fd40df670cf82d089180c3aa27642590714",
+          "bytes": 1448
+        },
+        {
+          "path": "demo/js/app.js",
+          "sha256": "a5a25613d0c2d94b02571d30877b49a58b0606653f41e34fded8e29e1d47dd25",
+          "bytes": 2821
+        },
+        {
+          "path": "demo/js/lib/stats.js",
+          "sha256": "6d066e878f6b68c5b02ad9d1c8fc83bafd8df70f5c4f7894d5b3a201693fe796",
+          "bytes": 3560
+        },
+        {
+          "path": "demo/particles.json",
+          "sha256": "05275ca9d8a1d84da84af852a6bdf9c545ff112291cdbfd94972095538dc472b",
+          "bytes": 2137
+        },
+        {
+          "path": "particles.js",
+          "sha256": "89c8e085c3da89b31fd63bf88102068b931e58d1de9b64a2b29728ac28827d28",
+          "bytes": 43009
+        }
+      ]
+    },
+    {
+      "id": "q1-awesomplete-stable",
+      "familyId": "upstream:nudeui/awesomplete",
+      "repository": "nudeui/awesomplete",
+      "revision": "12c913ba7ffbcbe033f580694fd5a7c996f4d001",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "root": ".",
+      "entry": "index.html",
+      "smoke": "q1-awesomplete",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "3358ef750899fd62ec44637f2a23719a89bb7a8a0b4225d72488d2483359cf1d",
+          "bytes": 1077
+        },
+        {
+          "path": "awesomplete.css",
+          "sha256": "5ae718965f4c9f6144ebc9511eb4e9070cd60be45adc8784a24d2b7b84c19a07",
+          "bytes": 1925
+        },
+        {
+          "path": "awesomplete.css.map",
+          "sha256": "0b1894358e9c076ec8cc8d2cebde924ae8768ccc8dc5c0fb8e3f1ad4d0795970",
+          "bytes": 2751
+        },
+        {
+          "path": "awesomplete.js",
+          "sha256": "6fd92b0c223158fa8510b250ba7c091911693024039aa2fe74d78701716ffd8e",
+          "bytes": 13075
+        },
+        {
+          "path": "index.html",
+          "sha256": "67e0940a1f3e045811ce574d7a1cbcbd4fa84c05dcc0b2c5597db5ac74dddb6c",
+          "bytes": 22402
+        },
+        {
+          "path": "index.js",
+          "sha256": "0c59ae63dd5cfca97e95f921ab0d92b87562639166afaaccad685b7dc6bd6f3a",
+          "bytes": 377
+        },
+        {
+          "path": "prism/prism.css",
+          "sha256": "1dc43c4a681576bb6394b826c36e590cac1a74b47bbcdb682f4df814b4ba183f",
+          "bytes": 2362
+        },
+        {
+          "path": "prism/prism.js",
+          "sha256": "e78880092fe117c45ba62d6daf353be46060622059d7dee2ca7a53de232f76b7",
+          "bytes": 8963
+        },
+        {
+          "path": "style.css",
+          "sha256": "10379635491b330dbcddf4c108236027b29fd6680d698b8c120ed639cf2f7b20",
+          "bytes": 4647
+        }
+      ]
+    }
+  ]
+}

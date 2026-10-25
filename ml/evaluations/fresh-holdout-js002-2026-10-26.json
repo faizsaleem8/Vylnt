@@ -1,0 +1,394 @@
+{
+  "testFamilies": 11,
+  "testExamples": 175,
+  "metricExamples": 159,
+  "numericVariants": 159,
+  "categories": {
+    "JS-002": {
+      "modelOnly": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.9541818704644728,
+          0.9999999999999999
+        ],
+        "recall95": [
+          0.9541818704644728,
+          0.9999999999999999
+        ],
+        "coverage95": [
+          0.9764098230971759,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 159
+      },
+      "afterSafeguards": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.9541818704644728,
+          0.9999999999999999
+        ],
+        "recall95": [
+          0.9541818704644728,
+          0.9999999999999999
+        ],
+        "coverage95": [
+          0.9764098230971759,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 159
+      },
+      "logistic": {
+        "modelOnly": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.0458181295355271
+          ],
+          "coverage95": [
+            0,
+            0.023590176902824132
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 159
+        },
+        "afterSafeguards": {
+          "precision": null,
+          "recall": 0.0,
+          "coverage": 0.0,
+          "contextualMisclassification": 0,
+          "insufficientEvidenceContextual": 0,
+          "precision95": null,
+          "recall95": [
+            0,
+            0.0458181295355271
+          ],
+          "coverage95": [
+            0,
+            0.023590176902824132
+          ],
+          "uncertainExamples": 0,
+          "sampleCount": 159
+        }
+      },
+      "ruleOnly": {
+        "precision": 0.5031446540880503,
+        "recall": 1.0,
+        "coverage": 1.0,
+        "contextualMisclassification": 0,
+        "insufficientEvidenceContextual": 0,
+        "precision95": [
+          0.42627648407830593,
+          0.5798644582053241
+        ],
+        "recall95": [
+          0.9541818704644728,
+          0.9999999999999999
+        ],
+        "coverage95": [
+          0.9764098230971759,
+          1
+        ],
+        "uncertainExamples": 0,
+        "sampleCount": 159
+      },
+      "highCriticalContextual": 0,
+      "classCounts": {
+        "change-warranted": 80,
+        "contextual": 79
+      },
+      "classFamilies": {
+        "change-warranted": 11,
+        "contextual": 11
+      },
+      "gates": {
+        "freshFamilies": true,
+        "freshInputs": true,
+        "tenTestFamilies": true,
+        "classCounts": true,
+        "classFamilies": true,
+        "precision": true,
+        "recall": true,
+        "coverage": true,
+        "noHighCriticalContextual": true,
+        "noInsufficientEvidenceDeemphasis": true,
+        "ruleComparator": true
+      },
+      "approved": true,
+      "familyUncertainty": {
+        "modelOnly": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 11,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.5,
+                  0.5086705202312138
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.49132947976878616,
+                  0.5
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        },
+        "afterSafeguards": {
+          "method": "paired-application-family-percentile-v1",
+          "seed": 42,
+          "repetitions": 1000,
+          "families": 11,
+          "limitations": "Exploratory intervals for this application cohort. Few families and shared contexts limit effective independence; not universal accuracy.",
+          "metrics": {
+            "lstm": {
+              "precision": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.5,
+                  0.5086705202312138
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          },
+          "lstmMinusComparator": {
+            "logistic": {
+              "precision": {
+                "interval95": null,
+                "definedReplicates": 0
+              },
+              "recall": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  1.0,
+                  1.0
+                ],
+                "definedReplicates": 1000
+              }
+            },
+            "ruleOnly": {
+              "precision": {
+                "interval95": [
+                  0.49132947976878616,
+                  0.5
+                ],
+                "definedReplicates": 1000
+              },
+              "recall": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              },
+              "coverage": {
+                "interval95": [
+                  0.0,
+                  0.0
+                ],
+                "definedReplicates": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "version": 1,
+  "policy": "vylnt-external-holdout-v1",
+  "candidateHash": "f2ea93f213b51b2e1066f4fe910ed55052268e2533c5ce51d3ff833d38e7012e",
+  "modelHash": "6fa227ae6f0e5c7259d3636066be05b0da5c661726c6acf77b3771178f105a1f",
+  "categoryPolicyHash": "614ebd16b8c00fa2b391027b0d794793e5c98f8946574bec4980b74bf065c29d",
+  "datasetHash": "f46d72e1e9d8fe9e856bbc9dbca40e0696dcd4852cecbbff62ea78076734afd2",
+  "exposureHash": "6b37ee5036c7d2b13dd8a66444f952e11951a5126b431ac786958389d85ebe1d",
+  "sourceLockHash": "a4a5af2a99a36c1b3d99b7b811a2954b7ac725013690ccaca4926d12c12c558b",
+  "provenanceHash": "87925710348098f402ab66d3a63c025bae82849cce5174f12394a538d83444f3",
+  "browserParityHash": "cd289d69f92bdf527fc97f3416b4af09e82f33ca55a373adf97f5c3a3e81df75",
+  "evaluatorHash": "e3ceec3a3c55c61ce4652d1f80cc1254f61cf6802daf7ed0343ab1b28b07ad71",
+  "registrationHash": "41812cf424ec576867fb015e6fe3b0c632c9a17d862ea55ac78145da1785ae32",
+  "provenance": "controlled",
+  "scope": "Controlled local JS-002 configurations on pinned independent interactive applications/demos",
+  "testConsumed": true,
+  "approvedCategories": [
+    "JS-002"
+  ]
+}

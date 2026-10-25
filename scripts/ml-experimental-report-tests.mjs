@@ -18,10 +18,10 @@ assert.ok(external, 'Use a controlled unpinned-script scan');
 // Acceptance-only duplicated metadata; never training data or a second source family.
 const report = createReport(randomUUID(), { ...original, scripts: [...original.scripts.filter(s => s !== external), ...Array.from({ length: 71 }, (_, i) => ({ ...external, url: `${new URL(external.url).origin}/repeated-${i}.js` }))] });
 const content = await freezeInsights(report), hash = await contentHash(content), frozen = { id: hash, hash, createdAt: '2026-10-22T00:00:00Z', content };
-assert.equal(content.analysis.mode, 'experimental-model'); assert.equal(content.analysis.model.status, 'experimental');
-assert.deepEqual(content.analysis.model.approvedCategories, []); assert.equal(content.analysis.contextual.length, 0);
-const scripts = content.analysis.issues.find(i => i.category === 'JS-002');
-assert.equal(scripts.findingIds.length, 71); assert.equal(scripts.experimentalSignal.scoredVariants, 1);
+assert.equal(content.analysis.mode, 'qualified-model'); assert.equal(content.analysis.model.status, 'qualified');
+assert.deepEqual(content.analysis.model.approvedCategories, ['JS-002']);
+const scripts = [...content.analysis.issues, ...content.analysis.contextual].find(i => i.category === 'JS-002');
+assert.equal(scripts.findingIds.length, 71); assert.equal(scripts.variants.length, 1);
 assert.ok(await verifyFrozenInsights(frozen));
 await writeFile('test-results/pdf/experimental-insights.json', JSON.stringify(frozen, null, 2));
 const reloaded = JSON.parse(await readFile('test-results/pdf/experimental-insights.json', 'utf8'));
@@ -60,4 +60,4 @@ try {
   const restored = await page.evaluate(async id => (await fetch(`/api/insight-reports/${id}.json`, { headers: { Authorization: 'Bearer fixture' } })).json(), saved.body.id);
   assert.equal(restored.hash, hash); assert.ok(await verifyFrozenInsights(restored));
 } finally { await browser.close(); server.closeAllConnections(); await new Promise(done => server.close(done)); }
-console.log(`PASS actual experimental report: ${scripts.findingIds.length} repeated script observations -> one issue / one scored variant; frozen JSON survives reload, actual insights/raw PDFs generated. Model ${content.analysis.model.hash}`);
+console.log(`PASS active category report: ${scripts.findingIds.length} repeated script observations -> one issue / one variant; frozen JSON survives reload, actual insights/raw PDFs generated. Model ${content.analysis.model.hash}`);

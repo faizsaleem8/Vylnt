@@ -184,7 +184,7 @@ def collection_plan(data):
         for part in ['train', 'validation']:
             eligible = [r for r in rr if split['families'][r['family']] == part and not r['uncertain'] and r['variant'] not in known_conflicts]
             development[part] = {label: len([r for r in eligible if r['label'] == label]) for label in ['change-warranted', 'contextual']}
-        eligible_review = readiness['reviewedApplicationData']
+        eligible_review = readiness['provenance'] == REQUIRED_PROVENANCE
         categories[rule] = {'observedExamples': len(rr), 'unknownEvidenceExamples': sum(r['uncertain'] for r in rr),
                             'developmentClasses': development,
                             'testDeficits': {label: {'examples': max(0, 30 - (coverage['testCounts'][label] if eligible_review else 0)),
@@ -194,12 +194,14 @@ def collection_plan(data):
             'provenance': readiness['provenance'], 'fitReady': readiness['fitReady'],
             'independentInputComponents': len(components), 'components': components,
             'observedTestFamilies': readiness['partitions']['test']['families'],
-            'testFamilyDeficit': max(0, 10 - (readiness['partitions']['test']['families'] if readiness['reviewedApplicationData'] else 0)),
+            'testFamilyDeficit': max(0, 10 - (readiness['partitions']['test']['families'] if readiness['provenance'] == REQUIRED_PROVENANCE else 0)),
             'reviewedApplicationDataMissing': not readiness['reviewedApplicationData'],
+            'requiredProvenance': REQUIRED_PROVENANCE,
+            'requiredProvenanceMissing': readiness['provenance'] != REQUIRED_PROVENANCE,
             'categories': categories, 'unobservableConflicts': collisions,
             'instructions': ['Collect only authorised minimal scan metadata; keep application configuration evidence private.',
                              'One application/template is one family. Equivalent inputs connect families transitively; more pages need not produce more independent partitions.',
-                             'Obtain two independent review declarations per application target. Controlled fixtures remain controlled.',
+                             ('Obtain two independent review declarations per application target. Controlled fixtures remain controlled.' if REQUIRED_PROVENANCE == 'human-reviewed' else 'Verify controlled scenario specifications and observable outcomes. Human review is not required; controlled provenance remains controlled.'),
                              'Do not change family names, split seeds or labels to fill these deficits. Never choose model parameters from test diagnostics.',
                              'Deficits are count minima, not a promise that additional samples will qualify a model.']}
 

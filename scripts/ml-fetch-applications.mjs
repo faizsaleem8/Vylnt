@@ -3,11 +3,13 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
+import { parseArgs } from 'node:util';
+const { values } = parseArgs({ options: { 'source-lock': { type: 'string' } } });
 await mkdir('.local/ml-applications', { recursive: true });
 const modulePath = resolve('.local/ml-applications/source-verifier.mjs');
 await build({ entryPoints: ['packages/ml/application-corpus.ts'], bundle: true, outfile: modulePath, platform: 'node', format: 'esm', packages: 'external' });
 const { parseApplicationLock, sourceDigest, loadVerifiedApplication } = await import(pathToFileURL(modulePath).href);
-const applications = parseApplicationLock(JSON.parse(await readFile('ml/applications/sources.lock.json', 'utf8')));
+const applications = parseApplicationLock(JSON.parse(await readFile(values['source-lock'] ?? 'ml/applications/sources.lock.json', 'utf8')));
 const cache = resolve('.local/ml-applications/cache');
 let downloaded = 0;
 for (const app of applications) {

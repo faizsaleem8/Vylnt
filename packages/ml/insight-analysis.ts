@@ -1,6 +1,7 @@
 import { weights, RULESET_VERSION, type Report } from '../core';
 import { canonicalJson } from '../core/integrity';
 import { prepareEvidenceContexts, evidenceRules } from '../core/evidence-context';
+import { prepareEvidenceContexts3 } from '../core/evidence-v3';
 import { catalogVersion, decisionVersion, evidenceVersion, insightVersion, type AssessmentState, type InsightAnalysis, type InsightAssessment } from '../core/insight-contracts';
 
 /** Developer-reviewed conservative templates. They never infer application purpose from identifiers. */
@@ -25,12 +26,12 @@ const explanation = (category: string, assessment: AssessmentState) => assessmen
   : assessment === 'change-warranted' ? 'The qualified category model supports reviewing this configuration for change within its tested scope. Verify the original evidence and application assumptions before applying a fix.'
   : assessment === 'contextual' ? 'The qualified category model places this evidence context in the compact contextual section within its tested scope. This is not a claim that the website is harmless.'
   : evidenceRules.includes(category as typeof evidenceRules[number]) ? 'The rule observed a configuration or inventory condition. Available metadata does not establish application impact or justify treating this observation as harmless.' : 'This category has no supported assessment contract and requires review.';
-export function buildInsightAnalysis(report: Report, qualified?: { model: InsightAnalysis['model']; decisions: Map<string, AssessmentState> }): InsightAnalysis {
+export function buildInsightAnalysis(report: Report, qualified?: { model: InsightAnalysis['model']; decisions: Map<string, AssessmentState>; inputSchema?: 'vynlt-evidence-v3' }): InsightAnalysis {
   const grouped = new Map<string, InsightAssessment>();
-  const extract = prepareEvidenceContexts(report);
+  const extract = qualified?.inputSchema === 'vynlt-evidence-v3' ? prepareEvidenceContexts3(report) : prepareEvidenceContexts(report);
   for (const finding of report.findings) {
     const context = extract(finding);
-    // No qualified v2 release exists. Do not consume synthetic/v1 scores for relevance decisions.
+    // Only decisions from a verified release may alter relevance; raw severity is preserved.
     const proposed = qualified?.decisions.get(finding.id);
     const assessment: AssessmentState = report.rulesetVersion !== RULESET_VERSION || ['missing', 'ambiguous'].includes(context.matching) ? 'needs-review'
       : proposed ? aggregateAssessment([proposed], ['critical', 'high'].includes(finding.severity))
@@ -62,7 +63,7 @@ export function buildInsightAnalysis(report: Report, qualified?: { model: Insigh
   const all = [...grouped.values()].sort((a, b) => weights[b.originalSeverity] - weights[a.originalSeverity] || a.category.localeCompare(b.category));
   const issues = all.filter(i => i.assessment !== 'contextual'), contextual = all.filter(i => i.assessment === 'contextual');
   for (const issue of all) { issue.findingIds.sort(); issue.variants.sort(); issue.evidenceContexts.sort((a, b) => a.variant.localeCompare(b.variant)); issue.evidenceContexts.forEach(c => c.findingIds.sort()); issue.observedFacts.sort((a, b) => canonicalJson(a).localeCompare(canonicalJson(b))); }
-  return { schemaVersion: insightVersion, inputSchema: evidenceVersion, decisionPolicy: decisionVersion, remediationCatalog: catalogVersion, scanId: report.scanId,
+  return { schemaVersion: qualified?.inputSchema ? 'vylnt-insights-v2' : insightVersion, inputSchema: qualified?.inputSchema ?? evidenceVersion, decisionPolicy: qualified?.inputSchema ? 'vylnt-controlled-category-v1' : decisionVersion, remediationCatalog: catalogVersion, scanId: report.scanId,
     model: qualified?.model ?? { name: 'No qualified evidence-v2 model release', hash: null, status: 'unavailable', approvedCategories: [] }, mode: qualified ? 'qualified-model' : 'evidence-summary',
     limitations: [...(report.rulesetVersion !== RULESET_VERSION ? ['Ruleset is unsupported; all observations require review.'] : []), 'No independently reviewed model category is approved. Synthetic model outputs do not determine relevance.', 'Structural snapshot order is not runtime execution order. Configuration observations are not proof of exploitation.', 'Only the existing eight checks are in scope; missing collection may hide additional issues.'],
     summary: `${report.findings.length} observations form ${all.length} issues; ${issues.filter(i => i.assessment === 'change-warranted').length} warrant configuration changes and ${issues.filter(i => i.assessment === 'needs-review').length} need review; ${contextual.length} contextual groups.`, issues, contextual };

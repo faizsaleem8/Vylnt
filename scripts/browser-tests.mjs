@@ -264,7 +264,7 @@ try {
   assert.equal(await ml.locator('input').count(), 0);
   assert.equal(await dashboard.locator('.ml-training').count(), 0);
   assert.equal(await dashboard.getByText('Prepare ML training data', { exact: true }).count(), 0);
-  assert.equal(await ml.getByText('no category is qualified for de-emphasis.', { exact: false }).count(), 1);
+  assert.equal(await ml.locator('.report-overview').getByText('Script integrity qualified on controlled applications.', { exact: false }).count(), 1);
   await dashboard.route('**/api/insight-reports/*.pdf', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Insights fixture busy. Retry shortly.' }) }), { times: 1 });
   await ml.getByRole('button', { name: 'Download insights PDF', exact: true }).click();
   await dashboard.getByText('Insights fixture busy.', { exact: false }).waitFor();
@@ -292,9 +292,10 @@ try {
   const frozenAfter = JSON.parse(await readFile('test-results/dashboard-frozen-insights.json', 'utf8'));
   assert.equal(frozenAfter.id, frozenBefore[0].id);
   assert.equal(frozenAfter.hash, frozenBefore[0].hash);
-  assert.equal(frozenAfter.content.analysis.mode, 'experimental-model');
-  assert.equal(frozenAfter.content.analysis.model.status, 'experimental');
-  assert.deepEqual(frozenAfter.content.analysis.model.approvedCategories, []);
+  assert.equal(frozenAfter.content.analysis.mode, 'qualified-model');
+  assert.equal(frozenAfter.content.analysis.model.status, 'qualified');
+  assert.deepEqual(frozenAfter.content.analysis.model.approvedCategories, ['JS-002']);
+  assert.equal(frozenAfter.content.analysis.inputSchema, 'vynlt-evidence-v3');
   await dashboard.setViewportSize({ width: 390, height: 844 });
   assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await ml.screenshot({ path: 'test-results/dashboard-ml-mobile.png', style: '.topbar { visibility: hidden !important; }' });

@@ -37,12 +37,12 @@ export interface InsightAssessment {
   experimentalSignal?: { minScore: number; maxScore: number; scoredVariants: number; reviewOnlyVariants: number };
 }
 export interface InsightAnalysis {
-  schemaVersion: typeof insightVersion;
-  inputSchema: typeof evidenceVersion;
-  decisionPolicy: typeof decisionVersion | 'vynlt-controlled-signal-v1';
+  schemaVersion: typeof insightVersion | 'vylnt-insights-v2';
+  inputSchema: typeof evidenceVersion | 'vynlt-evidence-v3';
+  decisionPolicy: typeof decisionVersion | 'vynlt-controlled-signal-v1' | 'vylnt-controlled-category-v1';
   remediationCatalog: typeof catalogVersion;
   scanId: string;
-  model: { name: string; hash: string | null; status: 'unavailable' | 'experimental' | 'qualified'; approvedCategories: string[]; evaluationHash?: string; candidateHash?: string; scope?: string };
+  model: { name: string; hash: string | null; status: 'unavailable' | 'experimental' | 'qualified'; approvedCategories: string[]; evaluationHash?: string; candidateHash?: string; scope?: string; categoryPolicyHash?: string; qualificationPolicy?: string; registrationHash?: string; holdoutHash?: string };
   mode: 'evidence-summary' | 'qualified-model' | 'experimental-model';
   limitations: string[];
   summary: string;

@@ -115,7 +115,8 @@ describe('conservative target CSP evidence v3', () => {
     const parsed = parseEvidenceLstm(model), r = scan("script-src 'self'");
     expect(inspectEvidenceLstm(parsed, r).find(p => p.findingId === target(r).id)?.score).toBeTypeOf('number');
     expect(() => parseEvidenceLstm({ ...model, featureNames: fixture.model.featureNames })).toThrow();
-    const { bundledEvidenceRelease } = await import('../packages/ml/evidence-release');
+    const { bundledEvidenceRelease: current, archivedEvidenceReleases } = await import('../packages/ml/evidence-release');
+    const bundledEvidenceRelease = [current, ...archivedEvidenceReleases].find(r => r?.qualificationPolicy === 'vynlt-controlled-signal-v1');
     if (!bundledEvidenceRelease) throw new Error('Expected bundled v2 experimental fixture');
     const json = JSON.stringify(model), hash = Buffer.from(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(json))).toString('hex');
     const result = await analyseEvidenceReport(r, { ...bundledEvidenceRelease, modelJson: json, modelHash: hash });

@@ -1,6 +1,6 @@
 # Finish M4 GitHub enforcement
 
-Code is published on `codex/m4-security-gate`. The connected integration denies pull-request creation and branch-protection administration (403 Resource not accessible by integration). GitHub currently reports main unprotected and no rulesets. This file is an account-owner checklist, not a claim that enforcement is active.
+Status update, 2026-10-25: the user merged implementation PR #1 and completed demo PR #3 after a failing security run followed by a passing fix. GitHub main is protected and requires VYNLT security gate for everyone. The steps below are retained as setup/reference instructions. The full protection API still returns 403, so review/up-to-date/bypass/force/deletion details remain a verification follow-up; see M4_BUILD_PLAN.md for actual evidence.
 
 ## Review the implementation
 

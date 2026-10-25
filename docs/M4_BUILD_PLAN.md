@@ -1,6 +1,6 @@
 # M4 — Fresh security scans before push and merge
 
-Status: engineering and hosted scan acceptance complete, 2026-10-25; **M4 remains open** for owner-side PR/protection configuration and verified protected-merge behavior.
+Status: engineering, required-check setup and user-confirmed protected-merge demo complete, 2026-10-25. M4 remains open only for verification of the originally agreed fine-grained review/protection settings; the full API still denies administration reads.
 
 ## Agreed behavior
 
@@ -14,7 +14,9 @@ Build and scan the exact proposed commit; block high/critical rule findings at h
 - [x] Dedicated GitHub workflow and reusable pinned-tool example, policy/config ownership files (enforcement not yet configured).
 - [x] Local failed/fixed/dirty-worktree/error/cleanup/privacy acceptance and regressions: 11 groups and 221 unit tests passed.
 - [x] Publish hosted failing/fixed revisions and inspect actual Actions results and artifact upload steps.
-- [ ] Verify main protection, workflow ownership review and local-hook bypass resistance through GitHub.
+- [x] Main protected and VYNLT security gate required for everyone, from GitHub Actions; implementation PR #1 merged.
+- [x] User-confirmed direct-push rejection and failed/fixed merge demonstration; demo123 runs fail then pass and PR #3 is merged.
+- [ ] Verify code-owner review, strict up-to-date, bypass and force/deletion settings; full protection API returns 403.
 
 ## Initial findings
 
@@ -51,4 +53,17 @@ Historical pending states above are superseded by this evidence:
 
 Type checking, production build and whitespace checks passed. CI runs on intermediate revisions are retained; only the implementation full CI and dedicated fail/fix runs above are claimed here. No new installed native Edge, live Supabase, blockchain or model-quality certification was performed.
 
-Remaining: create/review the implementation PR, configure required checks/code-owner review/no ordinary bypass on main, then show a failing demo PR cannot merge and its fixed revision becomes eligible. The connector denies those write operations with 403, and main was last observed unprotected. Owner instructions are in [M4_GITHUB_SETUP.md](M4_GITHUB_SETUP.md). No PR was created automatically and nothing was merged into main. Hook installation in the user's working repository remains an explicit opt-in command, not an unannounced Git configuration change.
+## Owner-completed acceptance — 2026-10-25
+
+The user completed the GitHub steps and confirms the fail/fix demo works. Verified independently:
+
+- [Implementation PR #1](https://github.com/faizsaleem8/Vylnt/pull/1) merged into main.
+- Public main metadata now reports protected=true, VYNLT security gate required from GitHub Actions (app ID 15368), enforcement everyone.
+- User-provided terminal screenshot shows GH006 rejection of a direct push to main, requiring a PR and the security check.
+- Demo123 revision f63939057e6f2a2bc1ae9f179899e42c509fe1c3 failed specifically at Fresh security scan in [run 40147536120](https://github.com/faizsaleem8/Vylnt/actions/runs/40147536120); artifact upload passed.
+- Fixed revision 2f1bb24ddd43f193865fdc792e760ed721f602df passed Fresh security scan and artifact upload in [run 40147969307](https://github.com/faizsaleem8/Vylnt/actions/runs/40147969307).
+- [Demo PR #3](https://github.com/faizsaleem8/Vylnt/pull/3) merged as 396a1dceabcbb327d31dade553a6cb3a75712ae4. The source is secure again and the local tree is clean. Earlier PR #2 was closed without merging.
+
+This supersedes earlier statements that no PR/protection existed. The failed-merge interaction itself is user-confirmed, corroborated by required-check metadata and the real failed/fixed runs; no independent UI recording is claimed.
+
+Remaining: full branch-protection GET still returns 403, so code-owner review, strict up-to-date, ordinary/admin bypass and force/deletion fields remain unverified. Keep that policy subtask open rather than guessing from the required-status summary. Existing instructions remain in M4_GITHUB_SETUP.md. No hook installation or administrative change was performed in this documentation update. No application tests were rerun for documentation-only changes; whitespace checks apply. ML-Q is unchanged and remains open.

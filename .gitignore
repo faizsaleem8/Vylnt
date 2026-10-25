@@ -10,3 +10,5 @@ test-results/
 ml/data/
 ml/artifacts/
 __pycache__/
+# Independent demo repository (not a VYNLT submodule).
+/signaldesk-demo/

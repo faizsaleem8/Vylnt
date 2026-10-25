@@ -1,5 +1,7 @@
 # Finish M4 GitHub enforcement
 
+Scope update, 2026-10-26: M4 is closed in the user's accepted demonstration scope. The user waived the protection/review requirements below; they are optional reference instructions, not remaining completion tasks. No GitHub protection was changed or disabled. Without separately enforced repository rules, failing Actions checks do not necessarily stop pushes or merges. See M4_BUILD_PLAN.md for closure evidence and report-mode limitations. Older pending-closure statements below describe the original scope only.
+
 Status update, 2026-10-25: the user merged implementation PR #1 and completed demo PR #3 after a failing security run followed by a passing fix. GitHub main is protected and requires VYNLT security gate for everyone. The steps below are retained as setup/reference instructions. The full protection API still returns 403, so review/up-to-date/bypass/force/deletion details remain a verification follow-up; see M4_BUILD_PLAN.md for actual evidence.
 
 ## Review the implementation

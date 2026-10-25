@@ -1,6 +1,12 @@
 # M4 — Fresh security scans before push and merge
 
-Status: engineering, required-check setup and user-confirmed protected-merge demo complete, 2026-10-25. M4 remains open only for verification of the originally agreed fine-grained review/protection settings; the full API still denies administration reads.
+Status: **Closed in user-accepted demonstration scope, 2026-10-26.** Scanner, Actions fail/fix flows and dashboard workflow/report export are complete. The user explicitly waived branch-protection/up-to-date, direct/force/deletion/bypass restrictions and maintainer/code-owner review as closure requirements. No remote settings were changed; unverified fields remain unverified. Failed Actions checks alone do not guarantee rejection of a push or merge. Earlier pending/open entries below are historical, superseded by this scope decision.
+
+## Accepted scope update — 2026-10-26
+
+The original fresh-build runner remains available. The additional uploaded-report workflow evaluates exported observations with shared rules, rejects invalid/inconsistent reports and distinguishes blockers from warnings. The user demonstrated hosted blocking and confirms a new report after remediation passed. Dashboard **GitHub setup** supplies the tested YAML and exports the selected scan as `vynlt-report.json`; type/build, eight extracted-workflow cases and 17-state accessibility/browser audit passed. See GITHUB_REPORT_SETUP.md.
+
+Uploaded-report mode does not prove source authenticity, current-code/commit association, freshness or live blockchain verification. ML remains informational. Administrative protection/review was removed from acceptance by the user; this does not certify those settings or disable any existing protections. No new tests were run for this documentation-only closure; whitespace checks passed. ML-Q remains open separately.
 
 ## Agreed behavior
 
@@ -16,7 +22,7 @@ Build and scan the exact proposed commit; block high/critical rule findings at h
 - [x] Publish hosted failing/fixed revisions and inspect actual Actions results and artifact upload steps.
 - [x] Main protected and VYNLT security gate required for everyone, from GitHub Actions; implementation PR #1 merged.
 - [x] User-confirmed direct-push rejection and failed/fixed merge demonstration; demo123 runs fail then pass and PR #3 is merged.
-- [ ] Verify code-owner review, strict up-to-date, bypass and force/deletion settings; full protection API returns 403.
+- Waived (2026-10-26): branch protection/up-to-date, push/deletion/bypass restrictions and maintainer/code-owner review verification. These are not blockers in the accepted demonstration scope and are not claimed verified.
 
 ## Initial findings
 

@@ -1,4 +1,4 @@
-# VYNLT evidence and insights contracts
+# VYLNT evidence and insights contracts
 
 Authoritative TypeScript definitions: `packages/core/insight-contracts.ts`. The eight-unit candidate schema is in `packages/core/evidence-lstm.ts`; the feature columns and extraction are in `packages/core/evidence-context.ts`.
 
@@ -38,7 +38,7 @@ This abbreviated illustration is not a full parser fixture. Executable acceptanc
 
 ## Frozen InsightReport / vynlt-frozen-insights-v1
 
-Content contains version, originalScan, originalScanHash and analysis. Analysis freezes schema/input/decision/catalog versions, model identity/status/approved categories, limitations, summary, issues and contextual groups. A stored envelope adds id, hash and createdAt. ID and hash equal SHA-256 of VYNLT canonical JSON of content, excluding envelope timestamps. Original scan SHA-256 remains separate. This is not a blockchain anchor. Mutable feedback is excluded.
+Content contains version, originalScan, originalScanHash and analysis. Analysis freezes schema/input/decision/catalog versions, model identity/status/approved categories, limitations, summary, issues and contextual groups. A stored envelope adds id, hash and createdAt. ID and hash equal SHA-256 of VYLNT canonical JSON of content, excluding envelope timestamps. Original scan SHA-256 remains separate. This is not a blockchain anchor. Mutable feedback is excluded.
 
 Equal content reuses the same version. Changed source evidence, schema, decision/catalog version or model identity changes content and therefore hash. Both PDF and JSON use that content; PDF bytes need not match across renderer versions. The combined JSON uses the PostgreSQL jsonb byte calculation and rejects over 1 MiB. No truncation is used to fit reports.
 

@@ -11,7 +11,7 @@ export async function verifyHostedApi(options: { origin: string; tokenA: string;
   probeMigration004?: (scanId: string, token: string, pageUrl: string) => Promise<void>; probeIsolation?: (scanId: string, token: string, pageUrl: string) => Promise<void> }): Promise<AcceptanceResult> {
   const result: AcceptanceResult = { checks: [], skipped: [], cleanupFailures: [] };
   const ids = [randomUUID(), randomUUID()];
-  const pageUrl = `https://vynlt-acceptance-${randomUUID()}.invalid/` + 'p'.repeat(3500);
+  const pageUrl = `https://vylnt-acceptance-${randomUUID()}.invalid/` + 'p'.repeat(3500);
   const body = (id: string, n = 0) => ({ scanId: id, observation: { url: pageUrl + '?acceptance-secret=discarded#discarded', scannedAt: new Date(Date.now() + n).toISOString(), headers: {}, scripts: [], resources: [], domCollected: true } });
   const first = body(ids[0]), second = body(ids[1], 1);
   let frozen: StoredInsightReport | undefined;

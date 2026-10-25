@@ -126,7 +126,7 @@ try {
   assert.deepEqual((await api(path + '.json')).data, saved);
   pass('export identity, tamper rejection, wrong deployment/block/event rejection and unchanged JSON');
   await writeFile(join(dir, 'report.json'), JSON.stringify(saved)); await writeFile(join(dir, 'proof.json'), JSON.stringify(proof)); await writeFile(join(dir, 'tampered.json'), JSON.stringify(tampered));
-  const runCli = (file: string) => promisify(execFile)(process.execPath, ['scripts/blockchain.mjs', 'verify', join(dir, file), join(dir, 'proof.json')], { env: { ...process.env, VYNLT_CHAIN_DEPLOYMENT: config.manifest }, windowsHide: true });
+  const runCli = (file: string) => promisify(execFile)(process.execPath, ['scripts/blockchain.mjs', 'verify', join(dir, file), join(dir, 'proof.json')], { env: { ...process.env, VYLNT_CHAIN_DEPLOYMENT: config.manifest }, windowsHide: true });
   assert.match((await runCli('report.json')).stdout, /"result": "matching"/);
   await assert.rejects(() => runCli('tampered.json'));
   pass('public verification CLI succeeds for original export and fails for altered content');
@@ -149,6 +149,9 @@ try {
   await Promise.all(batch.map(r => service!.enqueue('a', r)));
   await until(async () => { await service!.tick(); return (await Promise.all(batch.map(r => service!.status('a', r.id)))).every(v => v.proof?.status === 'confirmed'); }, 'distinct concurrent jobs', 20000);
   const nonces = await Promise.all(batch.map(async r => (await provider.getTransaction((await service!.status('a', r.id)).proof!.transactionHash!))!.nonce));
+  // Concurrent enqueue completion order is not guaranteed; uniqueness and
+  // consecutive serialized nonces are required regardless of input-array order.
+  nonces.sort((a, b) => a - b);
   assert.equal(new Set(nonces).size, 2); assert.equal(nonces[1], nonces[0] + 1);
   pass('concurrent distinct reports serialize unique transaction nonces');
 
@@ -326,7 +329,7 @@ try {
   pass('fresh local chain cannot reuse historical confirmations');
   await writeFile(join(dir, 'report.json'), JSON.stringify(saved)); await writeFile(join(dir, 'proof.json'), JSON.stringify(proof));
   await mkdir('test-results', { recursive: true }); await writeFile('test-results/blockchain-acceptance.json', JSON.stringify({ passed: results, failures: [], scope: 'isolated local chain; no hosted/public attestation', artifacts: dir }, null, 2));
-  console.log('VYNLT local blockchain acceptance passed:', results.length);
+  console.log('VYLNT local blockchain acceptance passed:', results.length);
 } finally {
   await context?.close(); await browser?.close(); await stopApi(); await service?.close(); await stopNode(); provider.destroy();
 }

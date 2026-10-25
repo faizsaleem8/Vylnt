@@ -9,19 +9,19 @@ import { defaultRateLimits } from '../apps/server/rate-limits';
 
 it('requires explicit production origins/storage/shared limits and validates trusted networks', () => {
   expect(readDeploymentConfig({}, 4318).trustedProxies).toEqual([]);
-  expect(readDeploymentConfig({ VYNLT_TRUSTED_PROXIES: '127.0.0.1,::1,10.0.0.0/24' }, 4318).trustedProxies).toHaveLength(3);
+  expect(readDeploymentConfig({ VYLNT_TRUSTED_PROXIES: '127.0.0.1,::1,10.0.0.0/24' }, 4318).trustedProxies).toHaveLength(3);
   for (const value of ['true', '*', '0.0.0.0/0', '::/0', '10.0.0.0/99', '10.0.0.1/', '10.0.0.1/24/4', '']) {
-    if (value) expect(() => readDeploymentConfig({ VYNLT_TRUSTED_PROXIES: value }, 4318)).toThrow('VYNLT_TRUSTED_PROXIES');
+    if (value) expect(() => readDeploymentConfig({ VYLNT_TRUSTED_PROXIES: value }, 4318)).toThrow('VYLNT_TRUSTED_PROXIES');
   }
-  const production = { NODE_ENV: 'production', VYNLT_STORAGE: 'supabase', VYNLT_ALLOWED_ORIGINS: 'https://vynlt.example.test' };
-  expect(readDeploymentConfig(production, 4318).origins).toEqual(['https://vynlt.example.test']);
-  for (const origins of ['*', 'http://vynlt.example.test', 'https://user:secret@example.test', 'https://example.test/path', '']) expect(() => readDeploymentConfig({ ...production, VYNLT_ALLOWED_ORIGINS: origins }, 4318)).toThrow();
+  const production = { NODE_ENV: 'production', VYLNT_STORAGE: 'supabase', VYLNT_ALLOWED_ORIGINS: 'https://vylnt.example.test' };
+  expect(readDeploymentConfig(production, 4318).origins).toEqual(['https://vylnt.example.test']);
+  for (const origins of ['*', 'http://vylnt.example.test', 'https://user:secret@example.test', 'https://example.test/path', '']) expect(() => readDeploymentConfig({ ...production, VYLNT_ALLOWED_ORIGINS: origins }, 4318)).toThrow();
   expect(() => readDeploymentConfig({ NODE_ENV: 'production' }, 4318)).toThrow();
   expect(readRateBackendConfig({})).toEqual({ mode: 'memory' });
   expect(() => readRateBackendConfig({ NODE_ENV: 'production' })).toThrow('redis');
-  const redis = { VYNLT_RATE_STORE: 'redis', VYNLT_REDIS_URL: 'redis://localhost:6379', VYNLT_RATE_KEY_SECRET: 's'.repeat(64) };
+  const redis = { VYLNT_RATE_STORE: 'redis', VYLNT_REDIS_URL: 'redis://localhost:6379', VYLNT_RATE_KEY_SECRET: 's'.repeat(64) };
   expect(readRateBackendConfig(redis).mode).toBe('redis');
-  for (const change of [{ VYNLT_RATE_STORE: 'unknown' }, { VYNLT_REDIS_URL: 'https://invalid.test' }, { VYNLT_REDIS_URL: 'redis://localhost/?secret=raw' }, { VYNLT_RATE_KEY_SECRET: 'short' }, { VYNLT_RATE_NAMESPACE: 'unsafe:namespace' }]) expect(() => readRateBackendConfig({ ...redis, ...change })).toThrow();
+  for (const change of [{ VYLNT_RATE_STORE: 'unknown' }, { VYLNT_REDIS_URL: 'https://invalid.test' }, { VYLNT_REDIS_URL: 'redis://localhost/?secret=raw' }, { VYLNT_RATE_KEY_SECRET: 'short' }, { VYLNT_RATE_NAMESPACE: 'unsafe:namespace' }]) expect(() => readRateBackendConfig({ ...redis, ...change })).toThrow();
 });
 
 it('trusts forwarding only from explicitly configured peers and stops at an untrusted hop', async () => {

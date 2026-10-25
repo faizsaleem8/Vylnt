@@ -1,10 +1,10 @@
-name: VYNLT application security
+name: VYLNT application security
 on: [push, pull_request]
 permissions:
   contents: read
 jobs:
   security-gate:
-    name: VYNLT security gate
+    name: VYLNT security gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: vynlt-security-gate-${{ github.sha }}
+          name: vylnt-security-gate-${{ github.sha }}
           path: reports/gate/
           retention-days: 7
           if-no-files-found: warn

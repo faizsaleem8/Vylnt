@@ -1,4 +1,4 @@
-# VYNLT M5 — local blockchain reports
+# VYLNT M5 — local blockchain reports
 
 2026-10-24 automatic generation follow-up complete: React finalises and hashes insights when analysis completes, not only on export. It shows the full canonical SHA-256 and separate submission status, reuses immutable versions, merges concurrent history reads and aborts obsolete work. Save failures expose an explicit retry; existing backend submission/backoff remains unchanged. Real-chain acceptance passed 15 groups including automatic generation/save/hash/anchoring without a download. Full browser regression, final type checking and builds passed; original acceptance below remains historical. No new hosted/native/public-network certification or ML qualification is claimed.
 

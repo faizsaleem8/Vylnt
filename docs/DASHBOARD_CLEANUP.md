@@ -1,4 +1,4 @@
-# VYNLT dashboard cleanup — 2026-10-24
+# VYLNT dashboard cleanup — 2026-10-24
 
 Insights layout follow-up: PDF and JSON exports are now visible together as a vertical button group, with JSON directly below PDF. Prioritised issues use consistent title, severity and expand-control columns, plus heading spacing below the save status. This supersedes the secondary JSON disclosure described in earlier notes. Export payloads, original scan actions and analysis/anchoring behavior are unchanged. Validation is recorded in PLAN.md.
 

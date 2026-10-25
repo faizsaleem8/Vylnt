@@ -6,13 +6,13 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 
-if (!process.env.VYNLT_REDIS_URL) throw new Error('Set VYNLT_REDIS_URL privately in .env before running this real-service check. No Redis service is installed by this command.');
+if (!(process.env.VYLNT_REDIS_URL ?? process.env.VYNLT_REDIS_URL)) throw new Error('Set VYLNT_REDIS_URL privately in .env before running this real-service check. No Redis service is installed by this command.');
 await mkdir('.local', { recursive: true });
 const entry = resolve('.local/redis-acceptance-module.mjs');
 await build({ stdin: { contents: "export { createApp } from './apps/server/app'; export { FileStore } from './apps/server/store'; export { readRateBackendConfig, openRateBackend } from './apps/server/shared-rate-limits';", resolveDir: process.cwd() }, bundle: true, outfile: entry, platform: 'node', format: 'esm', packages: 'external' });
 const { createApp, FileStore, readRateBackendConfig, openRateBackend } = await import(pathToFileURL(entry).href);
 const windowMs = 10000, results = [];
-const config = readRateBackendConfig({ ...process.env, VYNLT_RATE_STORE: 'redis', VYNLT_RATE_NAMESPACE: `vynlt-check-${randomUUID()}`, VYNLT_RATE_KEY_SECRET: randomBytes(32).toString('hex') });
+const config = readRateBackendConfig({ ...process.env, VYLNT_RATE_STORE: 'redis', VYLNT_RATE_NAMESPACE: `vylnt-check-${randomUUID()}`, VYLNT_RATE_KEY_SECRET: randomBytes(32).toString('hex') });
 async function scenario(name, limits, work) {
   const backends = [], servers = [], urls = [];
   try {

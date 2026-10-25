@@ -1,10 +1,10 @@
-# VYNLT frontend design
+# VYLNT frontend design
 
 Design source: [Anthropic frontend-design skill](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md), requested 2026-10-16. This direction supersedes the earlier Apple visual treatment; its interaction regression protections remain requirements.
 
 ## Design plan, before implementation
 
-VYNLT is an inspection workspace. The extension is the primary place to collect and read observations; the optional dashboard helps review saved reports. Make collection coverage as legible as findings so a missing observation cannot look like a clean security result.
+VYLNT is an inspection workspace. The extension is the primary place to collect and read observations; the optional dashboard helps review saved reports. Make collection coverage as legible as findings so a missing observation cannot look like a clean security result.
 
 Palette: porcelain `#eef2f6` (canvas), white `#ffffff` (evidence), ink `#263142` (text), slate `#5f6b7c` (secondary text), violet `#5841c6` (navigation/actions), teal `#137b78` (observed coverage). Separate semantic warning/error colors communicate severity. A slate dark theme retains these roles.
 
@@ -48,7 +48,7 @@ The 2026-10-21 snapshot LSTM increment retains this layout and automatic loading
 
 Automatic React ML analysis is visible in scan details without requiring a disclosure, model file or Run action. It follows the shared palette/type system, with reserved live status text and no new animation. Synthetic provenance and uncalibrated score meaning precede results. Text results retain every original severity and never imply that a contextual prediction resolves a finding. Model details use a native disclosure with a wrapping hash. All ML content remains excluded from print. Inference is local after the static ML chunk loads; results are scoped to the current report and asynchronous work is invalidated on navigation/unmount. Validation is recorded in PLAN.md.
 
-The previous training-data and model-upload controls were removed after the user clarified that training and model releases belong to VYNLT developers. Normal users receive the bundled analysis automatically; they are not asked for labels, private keys or model setup. Developer preparation/training remains offline. Mobile, theme and enlarged-text acceptance covers the automatic analysis panel.
+The previous training-data and model-upload controls were removed after the user clarified that training and model releases belong to VYLNT developers. Normal users receive the bundled analysis automatically; they are not asked for labels, private keys or model setup. Developer preparation/training remains offline. Mobile, theme and enlarged-text acceptance covers the automatic analysis panel.
 
 The PDF export increment keeps **Download PDF** beside saved-report actions inside the extension. Pending requests disable the button; failures keep the report and allow retry, and successful responses trigger a file download without navigation. The PDF uses an opaque white A4 layout, local Plex typography, violet section labels and explicit coverage/heuristic warnings. The summary and each finding start separate pages, with long evidence flowing across pages and a numbered footer. Saved review notes are distinct from immutable evidence. Nine-page long-evidence and one-page empty-report fixtures were rendered with Poppler and visually inspected; text, Unicode samples, page numbers and boundary checks passed. Full PDF/UA and native screen-reader acceptance remain open.
 

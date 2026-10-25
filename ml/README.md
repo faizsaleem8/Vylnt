@@ -1,4 +1,4 @@
-# VYNLT experimental ML
+# VYLNT experimental ML
 
 Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](../docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](../docs/ML_BUILD_PLAN.md).
 
@@ -31,11 +31,11 @@ npm run ml:prepare -- --sequence --manifest ml/data/annotations.json --output ml
 npm run ml:train:lstm -- --dataset ml/data/sequences.json --output ml/artifacts/lstm-v1 --epochs 60
 npm run ml:bundle -- --model ml/artifacts/lstm-v1/model.json --check
 # Bundle only after reviewing the recorded evaluation/limitations.
-npm run ml:bundle -- --model ml/artifacts/lstm-v1/model.json --name "VYNLT experimental LSTM"
+npm run ml:bundle -- --model ml/artifacts/lstm-v1/model.json --name "VYLNT experimental LSTM"
 npm run check
 ```
 
-Multiple sequence datasets may follow `--dataset`; global duplicate/family/schema checks run before training. Combined files are capped at 64 MiB and 50,000 examples. Baseline feature exports cannot be silently converted into sequences; prepare again from the sanitized source reports. No ordinary user training controls are added. `VYNLT_ML_PYTHON` selects the interpreter for demo commands; direct training/test commands use the invoked `python`.
+Multiple sequence datasets may follow `--dataset`; global duplicate/family/schema checks run before training. Combined files are capped at 64 MiB and 50,000 examples. Baseline feature exports cannot be silently converted into sequences; prepare again from the sanitized source reports. No ordinary user training controls are added. `VYLNT_ML_PYTHON` selects the interpreter for demo commands; direct training/test commands use the invoked `python`.
 
 Artifacts: `model.json`, `evaluation.json`, `split-groups.json`, independent framework `parity.json`, and logistic `baseline.json`. Evaluation records dependency versions, merged dataset SHA-256, split/training seeds, losses and held-out confusion/precision/recall/F1/FPR/FNR. Missing denominators are null. Freeze the dataset and review family identity before interpreting results. The committed browser parity fixture contains only synthetic numeric inputs/weights.
 
@@ -53,7 +53,7 @@ The logistic baseline remains available for comparison and release compatibility
 
 ## Automatic ML in the React dashboard
 
-Open a saved scan. VYNLT automatically loads its bundled model and runs analysis in React; users do not prepare datasets, upload models or click Run. The visible ML section reports progress, errors, results and model identity. Loading does not depend on expanding a disclosure. When a scan changes, the previous results disappear immediately; pending analyses cannot restore results after navigation/disconnect. The model must match the scan ruleset, otherwise analysis reports unavailable and original rule findings remain usable.
+Open a saved scan. VYLNT automatically loads its bundled model and runs analysis in React; users do not prepare datasets, upload models or click Run. The visible ML section reports progress, errors, results and model identity. Loading does not depend on expanding a disclosure. When a scan changes, the previous results disappear immediately; pending analyses cannot restore results after navigation/disconnect. The model must match the scan ruleset, otherwise analysis reports unavailable and original rule findings remain usable.
 
 Inference validates the numeric release and dispatches to the matching logistic or LSTM feature schema/runtime, abstaining on unsupported rules. It runs locally with no prediction API request. Loading the interface fetches its static code chunk; no report/model/feature data is sent elsewhere for analysis. Results remain in page memory and are excluded from existing JSON/PDF/hash exports until combined-report finalization is implemented. This currently analyses the saved scan being viewed, not all remote scans while the dashboard is closed.
 
@@ -61,13 +61,13 @@ Inference validates the numeric release and dispatches to the matching logistic 
 
 ## Developer model ownership and release
 
-VYNLT developers own data preparation, independent labeling, training, held-out evaluation and model releases. Ordinary users should not perform these tasks. Keep private source reports, annotations, datasets and evaluation records outside the product interface; the manifest workflow below remains available for developer use. Do not automatically turn rule scores, model predictions or saved review verdicts into ground-truth labels. Feature extraction is automatic; trustworthy security labels require independent evidence.
+VYLNT developers own data preparation, independent labeling, training, held-out evaluation and model releases. Ordinary users should not perform these tasks. Keep private source reports, annotations, datasets and evaluation records outside the product interface; the manifest workflow below remains available for developer use. Do not automatically turn rule scores, model predictions or saved review verdicts into ground-truth labels. Feature extraction is automatic; trustworthy security labels require independent evidence.
 
 After training and evaluating an experimental model, validate and bundle it for the React build:
 
 ```powershell
 npm run ml:bundle -- --model ml/artifacts/baseline-v1/model.json --check
-npm run ml:bundle -- --model ml/artifacts/baseline-v1/model.json --name "VYNLT experimental baseline"
+npm run ml:bundle -- --model ml/artifacts/baseline-v1/model.json --name "VYLNT experimental baseline"
 npm run check
 ```
 
@@ -80,11 +80,11 @@ Use Python 3.10+ with NumPy/scikit-learn. From the project root:
 ```powershell
 python -m venv .local/ml-venv
 .local/ml-venv/Scripts/python.exe -m pip install -r ml/requirements.txt
-$env:VYNLT_ML_PYTHON = (Resolve-Path .local/ml-venv/Scripts/python.exe).Path
+$env:VYLNT_ML_PYTHON = (Resolve-Path .local/ml-venv/Scripts/python.exe).Path
 npm run ml:demo
 ```
 
-On Linux/macOS use `.local/ml-venv/bin/python`. Alternatively an existing `python` environment with the dependencies works; `VYNLT_ML_PYTHON` selects the interpreter for the demo only. The full Python test suite now includes the LSTM and requires `requirements-lstm.txt`: `python -m unittest discover -s ml/tests` (or `npm run test:ml` for system Python). For baseline-only dependencies use `python -m unittest discover -s ml/tests -p test_baseline.py`. The initial validated environment is Python 3.12.6, scikit-learn 1.5.2, NumPy 1.26.4; other allowed dependency versions need revalidation. Freeze the environment used for a research result.
+On Linux/macOS use `.local/ml-venv/bin/python`. Alternatively an existing `python` environment with the dependencies works; `VYLNT_ML_PYTHON` selects the interpreter for the demo only. The full Python test suite now includes the LSTM and requires `requirements-lstm.txt`: `python -m unittest discover -s ml/tests` (or `npm run test:ml` for system Python). For baseline-only dependencies use `python -m unittest discover -s ml/tests -p test_baseline.py`. The initial validated environment is Python 3.12.6, scikit-learn 1.5.2, NumPy 1.26.4; other allowed dependency versions need revalidation. Freeze the environment used for a research result.
 
 The demo writes `test-results/ml-demo/dataset.json` and `model/{model,evaluation,split-groups}.json`. It creates 60 synthetic examples in 30 synthetic application families. Each family deliberately has identical observable metadata with opposing assigned labels. Those labels exercise mechanics only; they are not independent evidence of impact. In the first run, logistic regression matched the all-alerts-actionable comparator (test precision 0.5, recall 1, F1 0.667, false-positive rate 1). **No false-positive improvement or real-world accuracy is established.** Timing is batch-local and includes preprocessing; it is not a service latency benchmark.
 
@@ -122,7 +122,7 @@ Review verdicts (`fixed`, `accepted_risk`, `false_positive`, `open`) are not imp
 
 Assign the same family ID to all related sites, subdomains, ports, local copies, templates and variants of an application. A family is not merely an origin. The system cannot infer shared ownership or template ancestry automatically. Misgrouping can invalidate evaluation even though no group IDs overlap.
 
-Create a private random HMAC key once, keep it outside source control, and reuse it for this dataset's preparation. For example, generate a value with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`, then set it locally as `VYNLT_ML_DATASET_KEY`. Never put it or credentials in annotations or chat.
+Create a private random HMAC key once, keep it outside source control, and reuse it for this dataset's preparation. For example, generate a value with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`, then set it locally as `VYLNT_ML_DATASET_KEY`. Never put it or credentials in annotations or chat.
 
 ```powershell
 npm run ml:prepare -- --manifest ml/data/annotations.json --output ml/data/dataset.json

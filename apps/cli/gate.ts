@@ -13,7 +13,7 @@ const { values } = parseArgs({ options: { repo: { type: 'string', default: '.' }
 const controller = new AbortController();
 for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => controller.abort());
 try {
-  if (values.help) console.log('VYNLT fresh security gate\n--repo <npm website git repo> --commit <HEAD|full SHA> --output <artifact parent>\n--install-hook | --uninstall-hook | --pre-push\nExit: 0 pass, 1 blocking findings, 2 execution/configuration failure. No exceptions.');
+  if (values.help) console.log('VYLNT fresh security gate\n--repo <npm website git repo> --commit <HEAD|full SHA> --output <artifact parent>\n--install-hook | --uninstall-hook | --pre-push\nExit: 0 pass, 1 blocking findings, 2 execution/configuration failure. No exceptions.');
   else {
     const modes = [values['pre-push'], values['install-hook'], values['uninstall-hook']].filter(Boolean);
     if (modes.length > 1) throw new Error('Choose only one hook command');
@@ -22,7 +22,7 @@ try {
     if (!process.env.PLAYWRIGHT_BROWSERS_PATH && existsSync(resolve(toolRoot, '.local/browsers'))) process.env.PLAYWRIGHT_BROWSERS_PATH = resolve(toolRoot, '.local/browsers');
     if (values['install-hook'] || values['uninstall-hook']) {
       await manageHook(repo, fileURLToPath(import.meta.url), Boolean(values['uninstall-hook']));
-      console.log(values['uninstall-hook'] ? 'VYNLT hook removed (if installed).' : 'VYNLT pre-push hook installed. GitHub protection is still required.');
+      console.log(values['uninstall-hook'] ? 'VYLNT hook removed (if installed).' : 'VYLNT pre-push hook installed. GitHub protection is still required.');
     } else {
       let commits = [values.commit];
       if (values['pre-push']) {

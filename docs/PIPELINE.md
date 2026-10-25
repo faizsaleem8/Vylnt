@@ -1,4 +1,4 @@
-# VYNLT scan-to-blockchain pipeline
+# VYLNT scan-to-blockchain pipeline
 
 Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](ML_BUILD_PLAN.md).
 
@@ -20,7 +20,7 @@ The React Worker matches findings to target cookie/script/resource/response-poli
 
 The active v2 release is a trained eight-unit controlled LSTM under `vynlt-controlled-signal-v1`. Compatible, non-conflicting known development input variants get one calibrated, four-decimal experimental score per unique context. Issues summarize score ranges and context counts once; assessments, severity, recommendations and original evidence remain unchanged. Unfamiliar, missing or conflicting evidence receives no score. No category passed quality qualification, so this policy cannot assign contextual states or suppress findings. The reviewed-release policy remains a separate legacy path. High/critical findings remain visible. See `ml/evaluations/README.md` for measured failures and tested scope.
 
-VYNLT developers own controlled specifications, automated oracles, training and release. Ordinary users never prepare datasets or upload a model; user verdicts/rule scores are not ground truth. The user removed mandatory independent human review from the current phase; paired-review tooling remains optional. Held-out labels cannot train the safety list or tune model/calibration/thresholds. No background training on user scans or external AI provider is used. Cookie persistence is a controlled fixture correlation, not evidence of real authentication purpose.
+VYLNT developers own controlled specifications, automated oracles, training and release. Ordinary users never prepare datasets or upload a model; user verdicts/rule scores are not ground truth. The user removed mandatory independent human review from the current phase; paired-review tooling remains optional. Held-out labels cannot train the safety list or tune model/calibration/thresholds. No background training on user scans or external AI provider is used. Cookie persistence is a controlled fixture correlation, not evidence of real authentication purpose.
 
 ## Frozen report exports
 

@@ -1,4 +1,4 @@
-# VYNLT evidence-v2 evaluation record
+# VYLNT evidence-v2 evaluation record
 
 ## Current expanded result and milestone scope
 
@@ -12,7 +12,7 @@ Current scope override: the user removed independent human review from the exper
 
 ## Approved upstream controlled corpus
 
-The user approved selecting open-source applications for local assessment. Three MIT-licensed source families (2048, TodoMVC JavaScript ES6 and reveal.js barebones) are now pinned by commit and 23 file hashes. Two full collection runs passed 33 scenarios each, with independent network assertions and working browser interactions. No live upstream deployment was scanned. Headers/cookies/fixture resources and their controlled labels belong to the VYNLT harness, not upstream vulnerability claims. Full scope, source links and reproduction are in `docs/ML_APPLICATION_CORPUS.md`.
+The user approved selecting open-source applications for local assessment. Three MIT-licensed source families (2048, TodoMVC JavaScript ES6 and reveal.js barebones) are now pinned by commit and 23 file hashes. Two full collection runs passed 33 scenarios each, with independent network assertions and working browser interactions. No live upstream deployment was scanned. Headers/cookies/fixture resources and their controlled labels belong to the VYLNT harness, not upstream vulnerability claims. Full scope, source links and reproduction are in `docs/ML_APPLICATION_CORPUS.md`.
 
 The new cohort has 30 rows / 24 input variants / three families and three conflicting variants. The combined frozen snapshot has 59 rows / 37 variants / four families and 12 audited conflicts (three development conflicts). Train/validation/test have 20/10/29 rows across 2/1/1 families; the only test family remains the earlier generated template. Contextual development examples conflict with equally observable change/unknown examples and are excluded. Readiness remains false, no security candidate is fitted and no test evaluation or accuracy claim is published. There are zero independent human reviews. More copies or relabelled families cannot cure missing observable context.
 
@@ -59,4 +59,4 @@ No security precision, recall, coverage or uncertainty interval is reported for 
 
 At least ten held-out application families overall; each approved category needs 30 change-required and 30 contextual test contexts, each class across three families; precision >=90%, recall >=95%, non-abstention coverage >=50%; no high/critical actionable contextual misclassification; precision improvement over rule-only with recall within five percentage points; published intervals and independently reviewed application scope. The present cohort cannot satisfy these gates.
 
-Next data work belongs to VYNLT developers: independently verify more application configurations, retain related templates in one family, review evidence/labels with independent reviewers, audit disagreements and freeze the expanded split before fitting. Users are never asked to prepare training data. Context that the scanner cannot observe continues to require abstention.
+Next data work belongs to VYLNT developers: independently verify more application configurations, retain related templates in one family, review evidence/labels with independent reviewers, audit disagreements and freeze the expanded split before fitting. Users are never asked to prepare training data. Context that the scanner cannot observe continues to require abstention.

@@ -23,7 +23,7 @@ export function anchorPanel(id: string, api: Api, current: () => boolean = () =>
   const proof = button('Download anchor proof', async () => {
     const record = await request('anchor-proof.json'); if (!alive()) return;
     const url = URL.createObjectURL(new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a'); a.href = url; a.download = `vynlt-${id}-anchor-proof.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const a = document.createElement('a'); a.href = url; a.download = `vylnt-${id}-anchor-proof.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }); proof.hidden = true;
   node.append(label, status, details, verify, retry, proof, verification, note);
   async function refresh() {

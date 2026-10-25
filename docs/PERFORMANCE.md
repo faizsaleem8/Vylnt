@@ -1,4 +1,4 @@
-# VYNLT performance measurements
+# VYLNT performance measurements
 
 Latest export split: the default PDF is full-data again (without generated recommendations or ML), while insights use a separate verified POST export. The benchmark currently calls the default full-data renderer; it does not measure insights verification or its combined API/ML/render cost. Historic concise-default and earlier full-template results below are retained as dated evidence, not current capacity guarantees.
 
@@ -18,7 +18,7 @@ From the project root, after `npm run build` and `npm run setup:browser`:
 npm run benchmark:pdf
 ```
 
-The default is three sequential renders per profile. `VYNLT_BENCH_RUNS` accepts 1 through 10 for shorter or longer runs. Results overwrite `test-results/pdf-benchmark/results.json` and `summary.md` (ignored artifacts). Each render starts a fresh Node worker and Chromium instance using the actual server PDF generator. The benchmark does not start or restart the API, contact Supabase, scan a site or read real reports. It discards generated PDF bytes after checking the signature and measuring size.
+The default is three sequential renders per profile. `VYLNT_BENCH_RUNS` accepts 1 through 10 for shorter or longer runs. Results overwrite `test-results/pdf-benchmark/results.json` and `summary.md` (ignored artifacts). Each render starts a fresh Node worker and Chromium instance using the actual server PDF generator. The benchmark does not start or restart the API, contact Supabase, scan a site or read real reports. It discards generated PDF bytes after checking the signature and measuring size.
 
 | Profile | Input | Derived findings | Reviews |
 |---|---|---:|---|
@@ -58,7 +58,7 @@ The large PDF profile is a renderer stress case, not an accepted upload workload
 
 ## Database and local-file benchmark
 
-Run `npm run benchmark:storage`. It uses the installed PGlite development dependency and writes ignored results to `test-results/storage-benchmark/results.json` and `summary.md`. `VYNLT_STORAGE_BENCH_RUNS` accepts 1–20 (default five measured repetitions plus one warmup per operation). It does not use Supabase credentials or connect to a hosted database.
+Run `npm run benchmark:storage`. It uses the installed PGlite development dependency and writes ignored results to `test-results/storage-benchmark/results.json` and `summary.md`. `VYLNT_STORAGE_BENCH_RUNS` accepts 1–20 (default five measured repetitions plus one warmup per operation). It does not use Supabase credentials or connect to a hosted database.
 
 The PostgreSQL benchmark applies migrations 001–003 in an in-memory database with a local Auth shim. It seeds through the real ingestion function before timing, then exercises the history, site and comparison functions as the authenticated owner. Profiles contain 1,000 or 10,000 reports, with either ten scans per website or all scans of one page. A second owner has an additional report. Measurements include query/result serialization; they exclude seeding, network, Auth and PostgREST. Statistics are analyzed before measurement. This WASM environment and warm sequential workload do not predict production latency or concurrency.
 
@@ -99,7 +99,7 @@ An initial expression-only hash index was rejected after plans showed sequential
 
 ## Dynamic-page collector benchmark
 
-`npm run benchmark:observer` runs three paired baseline/collector trials with alternating order (`VYNLT_OBSERVER_BENCH_RUNS=1..10`). Each controlled page contains 2,000 inert script elements and receives 120 mutation batches about 20 ms apart. It loads the actual built content script with a test-only Chrome-message transport. All network requests are intercepted; no website or account is used.
+`npm run benchmark:observer` runs three paired baseline/collector trials with alternating order (`VYLNT_OBSERVER_BENCH_RUNS=1..10`). Each controlled page contains 2,000 inert script elements and receives 120 mutation batches about 20 ms apart. It loads the actual built content script with a test-only Chrome-message transport. All network requests are intercepted; no website or account is used.
 
 The benchmark exposed and now guards against cancellation of the pending final snapshot at the automatic observer budget. At 100 callbacks the observer disconnects but retains its last debounced collection. The test checks two automatic snapshots, 150-script/300-resource caps, URL sanitization, no further automatic sends after the budget, and successful explicit collection afterward. CI runs one paired trial as a behavior regression, without timing thresholds.
 

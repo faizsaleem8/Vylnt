@@ -3,7 +3,7 @@ import { canonicalJson } from '../core/integrity';
 import { parseAnalysisModel, predictAnalysis } from '../core/ml-model';
 import { bundledModel } from './bundled-model';
 
-/** No training, persistence or transport. The deployed VYNLT release owns the model. */
+/** No training, persistence or transport. The deployed VYLNT release owns the model. */
 export async function analyseScan(report: Report, release: { name: string; model: unknown } = bundledModel) {
   const model = parseAnalysisModel(release.model);
   const values = predictAnalysis(model, report);

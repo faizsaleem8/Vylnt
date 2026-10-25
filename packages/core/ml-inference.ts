@@ -17,7 +17,7 @@ export type MlModel = z.infer<typeof modelSchema>;
 export const modelFileByteLimit = 64 * 1024;
 export function parseMlModel(value: unknown): MlModel {
   const parsed = modelSchema.safeParse(value);
-  if (!parsed.success) throw new Error('Unsupported model. Load a VYNLT experimental logistic model.json with matching features, finite parameters and liveUseApproved set to false.');
+  if (!parsed.success) throw new Error('Unsupported model. Load a VYLNT experimental logistic model.json with matching features, finite parameters and liveUseApproved set to false.');
   return parsed.data;
 }
 export function predictFeatures(model: MlModel, features: Record<string, number>): number {

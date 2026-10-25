@@ -50,7 +50,7 @@ export async function runGate(options: { repo: string; commit?: string; output: 
   signal.addEventListener('abort', abort);
   let temporary: string | undefined, stage = 'commit resolution';
   const result: GateResult = { version: 1, commit: options.commit ?? 'HEAD', policy: gatePolicy, rulesetVersion: RULESET_VERSION, status: 'error', checks: [] };
-  const summary = ['# VYNLT security gate', '', 'Fresh commit scan · experimental ML does not decide the gate.', ''];
+  const summary = ['# VYLNT security gate', '', 'Fresh commit scan · experimental ML does not decide the gate.', ''];
   const gitEnv = { ...process.env }; for (const name of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES']) delete gitEnv[name];
   const git = async (args: string[], cwd = repo) => (await execute('git', ['-c', 'core.hooksPath=' + join(temporary ?? tmpdir(), 'no-hooks'), ...args], { cwd, signal, env: gitEnv, windowsHide: true, maxBuffer: 16 * 1024 * 1024 })).stdout.trim();
   function start(args: string[], cwd: string, port?: number) {
@@ -76,9 +76,9 @@ export async function runGate(options: { repo: string; commit?: string; output: 
     result.toolHash = createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
     if (!/^(?:HEAD|[0-9a-f]{40}(?:[0-9a-f]{24})?)$/.test(result.commit)) throw new Error('Use HEAD or a full commit SHA');
     result.commit = await git(['rev-parse', '--verify', result.commit + '^{commit}']);
-    console.log(`VYNLT: checking exact commit ${result.commit}`);
+    console.log(`VYLNT: checking exact commit ${result.commit}`);
     await mkdir(output, { recursive: true });
-    temporary = await mkdtemp(join(tmpdir(), 'vynlt-gate-'));
+    temporary = await mkdtemp(join(tmpdir(), 'vylnt-gate-'));
     // Refuse links/submodules rather than following files outside the proposed tree.
     stage = 'snapshot validation';
     const tree = await git(['ls-tree', '-r', result.commit]);
@@ -95,7 +95,7 @@ export async function runGate(options: { repo: string; commit?: string; output: 
     const pkg = JSON.parse(await readFile(join(app, 'package.json'), 'utf8'));
     if (typeof pkg.scripts?.[config.startScript] !== 'string' || (config.buildScript && typeof pkg.scripts?.[config.buildScript] !== 'string')) throw new Error('Configured npm script missing');
     await readFile(join(app, 'package-lock.json'));
-    stage = 'dependency installation'; console.log('VYNLT: installing locked application dependencies'); await command(['ci', '--ignore-scripts', '--no-audit', '--no-fund'], app, config.commandTimeoutMs);
+    stage = 'dependency installation'; console.log('VYLNT: installing locked application dependencies'); await command(['ci', '--ignore-scripts', '--no-audit', '--no-fund'], app, config.commandTimeoutMs);
     if (config.buildScript) { stage = 'application build'; await command(['run', config.buildScript], app, config.commandTimeoutMs); }
     stage = 'application startup';
     const port = await availablePort(config.port), origin = `${config.protocol}://127.0.0.1:${port}`;
@@ -111,7 +111,7 @@ export async function runGate(options: { repo: string; commit?: string; output: 
     for (const [index, route] of config.routes.entries()) {
       stage = 'fresh page scan'; signal.throwIfAborted();
       if (application.child.exitCode !== null || application.error()) throw new Error('Application stopped');
-      console.log(`VYNLT: fresh scan ${index + 1}/${config.routes.length}`);
+      console.log(`VYLNT: fresh scan ${index + 1}/${config.routes.length}`);
       const report = await scanPage(origin + route, { allowedLocalOrigins: [origin], ignoreHTTPSErrors: config.ignoreHTTPSErrors, signal, requireComplete: true });
       if (new URL(report.observation.url).origin !== origin) throw new Error('Unexpected scan origin');
       const policy = evaluateGate(report), insights = await freezeInsights(report);
@@ -137,14 +137,14 @@ export async function runGate(options: { repo: string; commit?: string; output: 
     signal.removeEventListener('abort', abort);
     if (temporary) {
       // Only delete the exact directory allocated by mkdtemp, never a configured path.
-      if (resolve(temporary).startsWith(resolve(tmpdir()) + sep) && temporary.split(sep).at(-1)?.startsWith('vynlt-gate-')) await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+      if (resolve(temporary).startsWith(resolve(tmpdir()) + sep) && temporary.split(sep).at(-1)?.startsWith('vylnt-gate-')) await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
     }
     await mkdir(output, { recursive: true });
     await writeFile(join(output, 'gate-result.json'), JSON.stringify(result, null, 2));
     summary.push('', `**Result: ${result.status.toUpperCase()}**`, result.error ?? '', '', `Commit: ${escape(result.commit)}`, `Policy: ${gatePolicy}`, '', 'CI observations are not blockchain-anchored and do not establish exploitability.');
     await writeFile(join(output, 'summary.md'), summary.join('\n'));
     if (options.summary) await writeFile(options.summary, summary.join('\n') + '\n', { flag: 'a' });
-    console.log(`VYNLT gate: ${result.status}. Artifacts: ${output}`);
+    console.log(`VYLNT gate: ${result.status}. Artifacts: ${output}`);
     if (result.error) console.error(result.error);
   }
   return result;

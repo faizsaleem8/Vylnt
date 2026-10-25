@@ -14,7 +14,7 @@ let browser, server, extensionContext; let issued = 0, refreshed = 0, loggedOut 
 const session = () => ({ access_token: makeToken(++issued), token_type: 'bearer', expires_in: 120, refresh_token: `fixture-refresh-${issued}`, user });
 async function untilReady() { for (let i = 0; i < 70; i++) { try { if ((await fetch(`${origin}/api/health`)).ok) return; } catch {} await new Promise(r => setTimeout(r, 150)); } throw new Error('Test API did not start'); }
 try {
-  server = spawn(process.execPath, ['dist/server/index.js'], { stdio: 'ignore', env: { ...process.env, VYNLT_STORAGE: 'supabase', SUPABASE_URL: supabaseUrl, SUPABASE_PUBLISHABLE_KEY: publicKey, HOST: '127.0.0.1', PORT: '4320', VYNLT_ALLOWED_ORIGINS: origin } });
+  server = spawn(process.execPath, ['dist/server/index.js'], { stdio: 'ignore', env: { ...process.env, VYLNT_STORAGE: 'supabase', SUPABASE_URL: supabaseUrl, SUPABASE_PUBLISHABLE_KEY: publicKey, HOST: '127.0.0.1', PORT: '4320', VYLNT_ALLOWED_ORIGINS: origin } });
   await untilReady(); browser = await chromium.launch({ channel: 'chromium', headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }); const errors = [];
   await page.clock.install();
@@ -51,7 +51,7 @@ try {
   await page.goto(origin);
   await page.getByLabel('Email address').fill(user.email); await page.getByLabel('Password', { exact: true }).fill('wrong'); await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByRole('alert').filter({ hasText: 'Invalid login credentials' }).waitFor(); assert.equal(await page.getByLabel('Password', { exact: true }).inputValue(), '');
-  await page.getByRole('button', { name: 'New to VYNLT?', exact: false }).click(); await page.getByLabel('Password', { exact: true }).fill('fixture-password'); await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await page.getByRole('button', { name: 'New to VYLNT?', exact: false }).click(); await page.getByLabel('Password', { exact: true }).fill('fixture-password'); await page.getByRole('button', { name: 'Create account', exact: true }).click();
   await page.getByText('Check your email to confirm', { exact: false }).waitFor();
   await page.screenshot({ path: 'test-results/supabase-sign-in.png', fullPage: true });
   await page.getByLabel('Password', { exact: true }).fill('fixture-password'); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await page.getByText('Workspace connected', { exact: false }).waitFor();

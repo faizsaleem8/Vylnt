@@ -44,7 +44,7 @@ try {
       const resources = http.createServer((_req, res) => { res.writeHead(200, { 'Content-Type': 'image/gif' }); res.end(Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64')); });
       const server = https.createServer(tls, (req, res) => {
         let pathname; try { pathname = new URL(req.url, 'https://localhost').pathname; } catch { res.writeHead(400); res.end(); return; }
-        if (pathname === '/vynlt-fixture.js') { res.writeHead(200, { 'Content-Type': 'text/javascript', 'Access-Control-Allow-Origin': '*' }); res.end('document.documentElement.dataset.vynltFixtureExecuted="true";'); return; }
+        if (pathname === '/vylnt-fixture.js') { res.writeHead(200, { 'Content-Type': 'text/javascript', 'Access-Control-Allow-Origin': '*' }); res.end('document.documentElement.dataset.vylntFixtureExecuted="true";'); return; }
         const path = applicationAsset(app, pathname);
         if (!path) { res.writeHead(404); res.end(); return; }
         if (path === entry) {
@@ -65,15 +65,15 @@ try {
           await context.route('**/*', route => { const url = new URL(route.request().url()); if (!allowed.has(url.origin)) { blockedExternal++; return route.abort(); } return route.continue(); });
           const page = await context.newPage(); page.on('pageerror', () => scriptErrors++);
           await page.addInitScript(() => {
-            globalThis.vynltFixturePolicyViolations = 0;
+            globalThis.vylntFixturePolicyViolations = 0;
             document.addEventListener('securitypolicyviolation', event => {
-              if (event.blockedURI.endsWith('/vynlt-fixture.js') && event.effectiveDirective === 'script-src-elem' && event.disposition === 'enforce') globalThis.vynltFixturePolicyViolations++;
+              if (event.blockedURI.endsWith('/vylnt-fixture.js') && event.effectiveDirective === 'script-src-elem' && event.disposition === 'enforce') globalThis.vylntFixturePolicyViolations++;
             });
           });
           await page.goto(target, { waitUntil: 'load' });
           // Only booleans/counts persist. Synthetic interaction text is not collected.
           if (app.id === 'game-2048') { await page.locator('.tile').first().waitFor(); await page.keyboard.press('ArrowLeft'); assert.ok(await page.locator('.tile').count() >= 2); }
-          if (app.id === 'todomvc') { await page.locator('.new-todo').fill('VYNLT controlled task'); await page.locator('.new-todo').press('Enter'); await page.locator('.todo-list li').first().waitFor(); assert.equal(await page.locator('.todo-list li').count(), 1); }
+          if (app.id === 'todomvc') { await page.locator('.new-todo').fill('VYLNT controlled task'); await page.locator('.new-todo').press('Enter'); await page.locator('.todo-list li').first().waitFor(); assert.equal(await page.locator('.todo-list li').count(), 1); }
           if (app.id === 'reveal') { await page.waitForFunction(() => window.Reveal?.isReady()); await page.keyboard.press('ArrowRight'); await page.waitForFunction(() => window.Reveal.getIndices().h === 1); }
           if (!['game-2048', 'todomvc', 'reveal'].includes(app.id) && !app.smoke) throw new Error('Application needs an explicit functional smoke test');
           if (app.smoke === 'jake-tetris') {
@@ -110,20 +110,20 @@ try {
             await page.locator('#next').click(); await page.waitForFunction(() => game.level === 1);
           }
           if (profile.id === 'readable-preference') {
-            assert.equal(await page.evaluate(() => document.documentElement.dataset.vynltPreferenceReadable), 'true');
+            assert.equal(await page.evaluate(() => document.documentElement.dataset.vylntPreferenceReadable), 'true');
             assert.ok((await context.cookies()).find(c => c.name === 'session_fixture')?.expires > Date.now() / 1000);
           }
           if (profile.id === 'cookie-no-httponly' || profile.id === 'unspecified-cookie-purpose') assert.equal(await page.evaluate(() => document.cookie.split(';').some(c => c.trim().startsWith('session_fixture='))), true);
           if (profile.id === 'cookie-cross-site') assert.equal((await context.cookies()).find(c => c.name === 'session_fixture')?.sameSite, 'None');
-          if (profile.id.startsWith('script-permitted-')) await page.waitForFunction(() => document.documentElement.dataset.vynltFixtureExecuted === 'true');
+          if (profile.id.startsWith('script-permitted-')) await page.waitForFunction(() => document.documentElement.dataset.vylntFixtureExecuted === 'true');
           if (profile.id.startsWith('script-excluded-')) {
-            await page.waitForFunction(() => globalThis.vynltFixturePolicyViolations > 0);
-            assert.equal(await page.evaluate(() => document.documentElement.dataset.vynltFixtureExecuted === 'true'), false);
+            await page.waitForFunction(() => globalThis.vylntFixturePolicyViolations > 0);
+            assert.equal(await page.evaluate(() => document.documentElement.dataset.vylntFixtureExecuted === 'true'), false);
           }
           assert.equal(scriptErrors, 0, `Application script error: ${app.id}/${profile.id}`);
         } finally { await context.close(); }
         const report = await scanPage(target, { ignoreHTTPSErrors: true, waitMs: 100, allowedLocalOrigins: [...allowed] });
-        assert.ok(!JSON.stringify(report).includes('controlled-placeholder') && !JSON.stringify(report).includes('VYNLT controlled task'), 'Collection must omit fixture cookie values and page interaction text');
+        assert.ok(!JSON.stringify(report).includes('controlled-placeholder') && !JSON.stringify(report).includes('VYLNT controlled task'), 'Collection must omit fixture cookie values and page interaction text');
         const name = `${app.id}-${profile.id}`;
         const targetIndexes = controlledTargetIndexes(report, profile);
         if (profile.rule) assert.ok(targetIndexes.length > 0, `Controlled target absent: ${name}`);
@@ -139,7 +139,7 @@ try {
         const record = { version: 1, application: app.id, repository: app.repository, revision: app.revision, familyId: app.familyId, sourceLockHash: lockHash, harnessHash,
           profile: profile.id, requirement: applicationRequirement(profile), label: profile.label, targetCategory: profile.rule, reportHash: sourceDigest(JSON.stringify(report)),
           oracle, unlabelledFindingCount: report.findings.length - targetIndexes.length, behavior: { passed: true, scriptErrors, blockedExternalRequests: blockedExternal, readablePreferenceVerified: profile.id === 'readable-preference', scriptExecutionVerified: profile.id.startsWith('script-'), scriptExecutionExpected: profile.id.startsWith('script-permitted-') },
-          review: reviewReadiness(packet), limitation: 'Locally imposed configuration and optional VYNLT fixture assets. No human review, no upstream deployment assessment, no production safety claim.' };
+          review: reviewReadiness(packet), limitation: 'Locally imposed configuration and optional VYLNT fixture assets. No human review, no upstream deployment assessment, no production safety claim.' };
         const evidenceRecord = `upstream-local-oracle-v1:${sourceDigest(JSON.stringify(record))}`;
         await save(`${name}.oracle.json`, record); records.push({ ...record, evidenceRecord });
         targetIndexes.forEach(findingIndex => { manifest.examples.push({ reportFile: `${name}.scan.json`, findingIndex, familyId: app.familyId, label: profile.label,
@@ -149,7 +149,7 @@ try {
     }
   }
   await save('manifest.json', manifest); await save('oracle-records.json', records); await save('packet-paths.json', packetPaths);
-  await save('summary.json', { version: 1, passed: records.length, sourceFamilies: apps.length, annotations: manifest.examples.length, independentHumanReviews: 0, sourceLockHash: lockHash, harnessHash, provenance: 'controlled', limitations: ['Counts are before input grouping and frozen splits.', 'Upstream browser source with VYNLT-controlled local deployment configurations, not reviewed real-application labels.', 'Only locked browser assets are served; omitted optional fonts/images can return 404.'] });
+  await save('summary.json', { version: 1, passed: records.length, sourceFamilies: apps.length, annotations: manifest.examples.length, independentHumanReviews: 0, sourceLockHash: lockHash, harnessHash, provenance: 'controlled', limitations: ['Counts are before input grouping and frozen splits.', 'Upstream browser source with VYLNT-controlled local deployment configurations, not reviewed real-application labels.', 'Only locked browser assets are served; omitted optional fonts/images can return 404.'] });
   console.log(`Saved private corpus to ${output}. Controlled provenance only; no model release or dataset preparation by users.`);
 } catch (error) { await save('failure.json', { status: 'failed', reason: 'Controlled corpus run failed; inspect the developer console. No exception/page content is persisted.', completedScenarios: records.length, sourceLockHash: lockHash }); throw error; }
 finally { await browser.close(); }

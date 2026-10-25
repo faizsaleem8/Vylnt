@@ -1,12 +1,12 @@
 @font-face {
-  font-family: "VYNLT Plex";
+  font-family: "VYLNT Plex";
   src: url("./fonts/plex-sans.ttf") format("truetype");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
 }
 :root {
-  font: 100%/1.5 "VYNLT Plex", system-ui, sans-serif;
+  font: 100%/1.5 "VYLNT Plex", system-ui, sans-serif;
   font-synthesis: none;
   color-scheme: light;
   background: var(--background);

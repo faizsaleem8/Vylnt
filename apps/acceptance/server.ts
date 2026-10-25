@@ -74,7 +74,7 @@ export async function startAcceptance() {
   const helper = createAcceptanceApp({ origin, config, auth, run, onResults: async results => {
     await mkdir('test-results/supabase-acceptance', { recursive: true });
     await writeFile('test-results/supabase-acceptance/results.json', JSON.stringify({ measuredAt: new Date().toISOString(), ...results }, null, 2));
-    console.log(`VYNLT live verification: ${results.checks.length} checks passed; ${results.skipped.length} skipped; ${results.failure ? 'failure' : 'no failure'}; ${results.cleanupFailures.length} cleanup failures. No credentials saved.`);
+    console.log(`VYLNT live verification: ${results.checks.length} checks passed; ${results.skipped.length} skipped; ${results.failure ? 'failure' : 'no failure'}; ${results.cleanupFailures.length} cleanup failures. No credentials saved.`);
   } });
   const browser = await build({ entryPoints: ['apps/acceptance/client.ts'], bundle: true, write: false, platform: 'browser', format: 'esm' });
   helper.app.get('/', async (_req, res) => res.type('html').send(await readFile('apps/acceptance/index.html', 'utf8')));
@@ -82,7 +82,7 @@ export async function startAcceptance() {
   helper.app.get('/acceptance.css', async (_req, res) => res.type('css').send(await readFile('apps/acceptance/style.css', 'utf8')));
   helper.app.use(createApp({ auth, store: new SupabaseStore(config.url, config.publishableKey), mode: 'supabase', supabase: config, origins: [origin] }));
   const server = createServer(helper.app); await new Promise<void>((r, reject) => { server.once('error', reject); server.listen(4321, '127.0.0.1', r); });
-  console.log(`VYNLT private Supabase / ML-7 verification: ${origin} (expires in 30 minutes). Sign in through this page, never in chat.`);
+  console.log(`VYLNT private Supabase / ML-7 verification: ${origin} (expires in 30 minutes). Sign in through this page, never in chat.`);
   const timer = setTimeout(() => { helper.clear(); server.close(); }, 30 * 60 * 1000); timer.unref();
   for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => { clearTimeout(timer); helper.clear(); server.closeAllConnections(); server.close(); });
 }

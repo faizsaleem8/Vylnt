@@ -4,7 +4,7 @@ Status: **Closed in user-accepted demonstration scope, 2026-10-26.** Scanner, Ac
 
 ## Accepted scope update — 2026-10-26
 
-The original fresh-build runner remains available. The additional uploaded-report workflow evaluates exported observations with shared rules, rejects invalid/inconsistent reports and distinguishes blockers from warnings. The user demonstrated hosted blocking and confirms a new report after remediation passed. Dashboard **GitHub setup** supplies the tested YAML and exports the selected scan as `vynlt-report.json`; type/build, eight extracted-workflow cases and 17-state accessibility/browser audit passed. See GITHUB_REPORT_SETUP.md.
+The original fresh-build runner remains available. The additional uploaded-report workflow evaluates exported observations with shared rules, rejects invalid/inconsistent reports and distinguishes blockers from warnings. The user demonstrated hosted blocking and confirms a new report after remediation passed. Dashboard **GitHub setup** supplies the tested YAML and exports the selected scan as `vylnt-report.json`; type/build, eight extracted-workflow cases and 17-state accessibility/browser audit passed. See GITHUB_REPORT_SETUP.md.
 
 Uploaded-report mode does not prove source authenticity, current-code/commit association, freshness or live blockchain verification. ML remains informational. Administrative protection/review was removed from acceptance by the user; this does not certify those settings or disable any existing protections. No new tests were run for this documentation-only closure; whitespace checks passed. ML-Q remains open separately.
 
@@ -20,7 +20,7 @@ Build and scan the exact proposed commit; block high/critical rule findings at h
 - [x] Dedicated GitHub workflow and reusable pinned-tool example, policy/config ownership files (enforcement not yet configured).
 - [x] Local failed/fixed/dirty-worktree/error/cleanup/privacy acceptance and regressions: 11 groups and 221 unit tests passed.
 - [x] Publish hosted failing/fixed revisions and inspect actual Actions results and artifact upload steps.
-- [x] Main protected and VYNLT security gate required for everyone, from GitHub Actions; implementation PR #1 merged.
+- [x] Main protected and VYLNT security gate required for everyone, from GitHub Actions; implementation PR #1 merged.
 - [x] User-confirmed direct-push rejection and failed/fixed merge demonstration; demo123 runs fail then pass and PR #3 is merged.
 - Waived (2026-10-26): branch protection/up-to-date, push/deletion/bypass restrictions and maintainer/code-owner review verification. These are not blockers in the accepted demonstration scope and are not claimed verified.
 
@@ -64,7 +64,7 @@ Type checking, production build and whitespace checks passed. CI runs on interme
 The user completed the GitHub steps and confirms the fail/fix demo works. Verified independently:
 
 - [Implementation PR #1](https://github.com/faizsaleem8/Vylnt/pull/1) merged into main.
-- Public main metadata now reports protected=true, VYNLT security gate required from GitHub Actions (app ID 15368), enforcement everyone.
+- Public main metadata now reports protected=true, VYLNT security gate required from GitHub Actions (app ID 15368), enforcement everyone.
 - User-provided terminal screenshot shows GH006 rejection of a direct push to main, requiring a PR and the security check.
 - Demo123 revision f63939057e6f2a2bc1ae9f179899e42c509fe1c3 failed specifically at Fresh security scan in [run 40147536120](https://github.com/faizsaleem8/Vylnt/actions/runs/40147536120); artifact upload passed.
 - Fixed revision 2f1bb24ddd43f193865fdc792e760ed721f602df passed Fresh security scan and artifact upload in [run 40147969307](https://github.com/faizsaleem8/Vylnt/actions/runs/40147969307).

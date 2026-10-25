@@ -9,7 +9,7 @@ it('preserves tagged reading structure and declares mapped roles, language, XMP 
   input.catalog.set(PDFName.of('StructTreeRoot'), input.context.register(tree));
   const font = await readFile('packages/ui/fonts/plex-sans.ttf');
   const result = await PDFDocument.load(await finalizeReportPdf(await input.save(), font));
-  expect(result.getTitle()).toBe('VYNLT scan report');
+  expect(result.getTitle()).toBe('VYLNT scan report');
   expect(result.catalog.get(PDFName.of('Lang'))?.toString()).toBe('(en)');
   const outputTree = result.catalog.lookup(PDFName.of('StructTreeRoot'), PDFDict);
   expect(outputTree.lookup(PDFName.of('RoleMap'), PDFDict).get(PDFName.of('Strong'))?.toString()).toBe('/Span');

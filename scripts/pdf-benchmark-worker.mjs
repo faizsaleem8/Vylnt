@@ -1,9 +1,9 @@
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
 
-const { generatePdf, parseSubmission, reportHash } = await import(pathToFileURL(process.env.VYNLT_BENCH_MODULE).href);
+const { generatePdf, parseSubmission, reportHash } = await import(pathToFileURL((process.env.VYLNT_BENCH_MODULE ?? process.env.VYNLT_BENCH_MODULE)).href);
 const profiles = { typical: { scripts: 0, pathLength: 0, notes: false }, medium: { scripts: 25, pathLength: 40, notes: true }, large: { scripts: 150, pathLength: 2400, notes: true } };
-const profile = profiles[process.env.VYNLT_BENCH_PROFILE];
+const profile = profiles[(process.env.VYLNT_BENCH_PROFILE ?? process.env.VYNLT_BENCH_PROFILE)];
 if (!profile) throw new Error('Unknown benchmark profile');
 const submission = { scanId: '00000000-0000-4000-8000-000000000001', observation: {
   url: 'https://example.test/pdf-benchmark', scannedAt: '2026-10-20T00:00:00Z', headers: {}, cookies: [], domCollected: true, resources: [],

@@ -1,4 +1,4 @@
-# VYNLT open-source application corpus
+# VYLNT open-source application corpus
 
 ## Final expanded snapshot — 2026-10-22
 
@@ -47,17 +47,17 @@ Each run has an exclusive directory in `.local/ml-applications/runs/`. Only a ru
 
 2026-10-22 expansion: 17 profiles per app (51 scenarios) include permitted/excluded classic defer, async and module fixtures. The corrected run passed all 51, including enforced browser CSP events, execution/non-execution, metadata feature agreement and application interaction. These are six new scenarios per app, not new families. Earlier 11-profile results below remain historical. The new combined v3 preparation contains 78 rows / 59 tensors / four families and still fails held-out coverage. See `ML_EVIDENCE_V3.md`; no active release promotion.
 
-Eleven profiles per application cover baseline, missing positive HSTS, missing framing controls, broad script policy, missing cookie Secure, missing cookie HttpOnly, SameSite=None, a mixed HTTP image, an unpinned external script, an intentionally readable preference fixture and an unspecified cookie purpose. Headers, synthetic cookies and optional script/image fixtures are VYNLT harness changes. They are not claims about upstream application defaults or vulnerabilities.
+Eleven profiles per application cover baseline, missing positive HSTS, missing framing controls, broad script policy, missing cookie Secure, missing cookie HttpOnly, SameSite=None, a mixed HTTP image, an unpinned external script, an intentionally readable preference fixture and an unspecified cookie purpose. Headers, synthetic cookies and optional script/image fixtures are VYLNT harness changes. They are not claims about upstream application defaults or vulnerabilities.
 
 Change-warranted labels express the local scenario's stated deployment requirements: a positive HSTS lifetime, framing disabled, a restrictive script policy, a server-only fixture cookie, same-site-only fixture use, HTTPS resources and integrity for a known immutable fixture script. These requirements are controlled specifications; they do not prove exploitation or authentication purpose in an arbitrary application. The readable preference case deliberately uses the same observable cookie metadata but verifies JavaScript access is required by its local fixture. The unspecified-purpose case must remain needs-review. Conflicts are retained because names and uncollected application intent cannot become model identity features.
 
-Node's HTTPS client checks actual response configuration independently of VYNLT rule output. A separate browser context verifies gameplay, adding one synthetic task or advancing a slide; cookie profiles additionally verify applicable browser behaviour. These checks return booleans/counts only. The scanner is then checked for the specified category. Baselines must produce zero findings. No majority vote or automatic human sign-off is used.
+Node's HTTPS client checks actual response configuration independently of VYLNT rule output. A separate browser context verifies gameplay, adding one synthetic task or advancing a slide; cookie profiles additionally verify applicable browser behaviour. These checks return booleans/counts only. The scanner is then checked for the specified category. Baselines must produce zero findings. No majority vote or automatic human sign-off is used.
 
 Each successful scenario saves sanitized scan metadata, a controlled review packet and a hash-bound oracle record identifying source revision, lock hash, harness-source hash, scenario requirement, profile and scan hash. Private manifests include only target findings with controlled provenance. Review packets contain no suggested labels; independent human review counts stay zero. Network response bodies and application interaction text are never written to the scan, oracle, packet or feature dataset. Raw upstream code stays solely in the source cache/checkouts; it never enters model features.
 
 ## Prepare and audit
 
-Use the existing private stable `VYNLT_ML_DATASET_KEY`; do not put it in chat, source files or Git. Replace `<run>` with a completed run path:
+Use the existing private stable `VYLNT_ML_DATASET_KEY`; do not put it in chat, source files or Git. Replace `<run>` with a completed run path:
 
 ```powershell
 npm run ml:prepare:insights -- --manifest <run>/manifest.json --output <run>/dataset.json

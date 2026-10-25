@@ -24,7 +24,7 @@ for (let family = 0; family < 30; family++) for (const label of ['actionable', '
 }
 await writeFile(output + '/dataset.json', JSON.stringify(datasetEnvelope(examples), null, 2));
 const code = await new Promise((done, reject) => {
-  const child = spawn(process.env.VYNLT_ML_PYTHON ?? 'python', [lstm ? 'ml/lstm.py' : 'ml/baseline.py', '--dataset', output + '/dataset.json', '--output', output + '/model'], { stdio: 'inherit', windowsHide: true });
+  const child = spawn((process.env.VYLNT_ML_PYTHON ?? process.env.VYNLT_ML_PYTHON) ?? 'python', [lstm ? 'ml/lstm.py' : 'ml/baseline.py', '--dataset', output + '/dataset.json', '--output', output + '/model'], { stdio: 'inherit', windowsHide: true });
   child.on('error', reject); child.on('exit', done);
 });
 process.exitCode = code ?? 1;

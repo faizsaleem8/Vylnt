@@ -1,4 +1,4 @@
-# VYNLT demo ledger
+# VYLNT demo ledger
 
 The dashboard's former Blockchain ledger navigation is now **Verify report** for uploaded file checks. The standalone demo remains available directly at `/ledger.html` and from that page's Open demo ledger link. Older embedded-view instructions below are historical.
 
@@ -22,7 +22,7 @@ Open **Blockchain ledger** in the dashboard sidebar after signing in. This separ
 
 ## Demo sequence
 
-1. Keep `npm run chain:node` running. Compile/deploy once for that running node with `npm run chain:compile` and `npm run chain:deploy` if needed. Use `VYNLT_BLOCKCHAIN=local` and restart the API after deployment. See [local setup](M5_ACCEPTANCE.md).
+1. Keep `npm run chain:node` running. Compile/deploy once for that running node with `npm run chain:compile` and `npm run chain:deploy` if needed. Use `VYLNT_BLOCKCHAIN=local` and restart the API after deployment. See [local setup](M5_ACCEPTANCE.md).
 2. Open a saved scan. Wait for its insights to save and Blockchain status to become Recorded.
 3. Open **Blockchain ledger**. Find the report hash, transaction and block. Expand **Block links** to show its block hash and parent hash. Intervening blocks can contain unrelated transactions; displayed anchor events need not be in adjacent blocks.
 4. Generate a different frozen report and return to the ledger. It refreshes every ten seconds; **Refresh ledger** checks immediately. Re-exporting unchanged content does not create another anchor event.

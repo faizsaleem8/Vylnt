@@ -18,11 +18,11 @@ describe('pinned controlled application corpus', () => {
   });
   it('never labels unrelated upstream inventory or cookies with the controlled fixture label', () => {
     const report = createReport(crypto.randomUUID(), { url: 'https://localhost:1234/index.html', scannedAt: '2026-10-22T00:00:00Z',
-      headers: {}, domCollected: true, resources: [], scripts: [{ url: 'https://analytics.test/loader.js', integrity: false }, { url: 'https://127.0.0.1:1234/vynlt-fixture.js', integrity: false }],
+      headers: {}, domCollected: true, resources: [], scripts: [{ url: 'https://analytics.test/loader.js', integrity: false }, { url: 'https://127.0.0.1:1234/vylnt-fixture.js', integrity: false }],
       cookies: [{ name: 'upstream_cookie', secure: true, httpOnly: false, session: true, sameSite: 'lax' }, { name: 'session_fixture', secure: true, httpOnly: false, session: true, sameSite: 'lax' }] });
     const script = applicationProfiles.find(p => p.id === 'script-permitted-defer')!;
     const cookie = applicationProfiles.find(p => p.id === 'cookie-no-httponly')!;
-    expect(controlledTargetIndexes(report, script).map(i => report.findings[i].url)).toEqual(['https://127.0.0.1:1234/vynlt-fixture.js']);
+    expect(controlledTargetIndexes(report, script).map(i => report.findings[i].url)).toEqual(['https://127.0.0.1:1234/vylnt-fixture.js']);
     expect(controlledTargetIndexes(report, cookie).map(i => report.findings[i].evidence.cookieName)).toEqual(['session_fixture']);
     expect(controlledTargetIndexes(report, applicationProfiles[0])).toEqual([]);
   });

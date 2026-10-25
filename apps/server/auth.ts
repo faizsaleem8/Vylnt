@@ -3,7 +3,7 @@ import type { Identity } from './store';
 export interface Authenticator { authenticate(token: string): Promise<Identity | undefined> }
 export const LOCAL_OWNER = '00000000-0000-4000-8000-000000000001';
 export function localAuth(expected: string): Authenticator {
-  if (expected.length < 32) throw new Error('VYNLT_API_TOKEN must contain at least 32 characters. Run npm run setup:local.');
+  if (expected.length < 32) throw new Error('VYLNT_API_TOKEN must contain at least 32 characters. Run npm run setup:local.');
   return { async authenticate(token) {
     const a = Buffer.from(expected), b = Buffer.from(token);
     return a.length === b.length && timingSafeEqual(a, b) ? { ownerId: LOCAL_OWNER, token } : undefined;

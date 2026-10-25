@@ -1,4 +1,4 @@
-# VYNLT UI audit — Emil design engineering
+# VYLNT UI audit — Emil design engineering
 
 > Historical audit. On 2026-10-16 the user requested the Anthropic frontend-design skill. See [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md) for the current visual direction and validation. Earlier interaction fixes remain protected by regression checks.
 
@@ -16,7 +16,7 @@ The updated `scripts/ui-audit.mjs` asserts the corrected behavior and writes evi
 
 Installed the repository's main [emil-design-eng skill](https://github.com/emilkowalski/skills/blob/main/skills/emil-design-eng/SKILL.md) at `C:/Users/yaqoo/.codex/skills/emil-design-eng/SKILL.md`. It is available automatically on the next Codex turn. Other skills in that repository were not installed.
 
-Reviewed the extension side panel, its account and sync feedback, and the existing optional web dashboard. The side panel remains VYNLT's primary workspace. This audit added documentation and an isolated inspection script; it did not change application behavior or styling.
+Reviewed the extension side panel, its account and sync feedback, and the existing optional web dashboard. The side panel remains VYLNT's primary workspace. This audit added documentation and an isolated inspection script; it did not change application behavior or styling.
 
 The skill emphasizes predictable interactions, useful state feedback, cohesive components and restrained motion. The findings below distinguish its explicit button guidance from broader UX recommendations informed by those principles. This is not a complete accessibility certification or a security audit.
 

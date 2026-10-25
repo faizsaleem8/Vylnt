@@ -37,7 +37,7 @@ for (const rule of review.approvedCategories) {
     if (!Array.isArray(ci) || ci.length !== 2 || !ci.every(n => Number.isFinite(n) && n >= 0 && n <= 1) || ci[0] > ci[1]) throw new Error('Invalid uncertainty interval');
   }
 }
-const release = { qualificationPolicy: 'vynlt-reviewed-release-v2', candidateHash: evaluation.candidateHash, evaluationHash: hash(evaluationJson), name: review.name ?? 'VYNLT reviewed category LSTM', modelJson, modelHash: hash(modelJson), datasetHash: model.datasetHash, splitHash: model.splitHash, reviewRecordHash: hash(reviewJson), reviewedScope: review.scope, categories };
+const release = { qualificationPolicy: 'vynlt-reviewed-release-v2', candidateHash: evaluation.candidateHash, evaluationHash: hash(evaluationJson), name: review.name ?? 'VYLNT reviewed category LSTM', modelJson, modelHash: hash(modelJson), datasetHash: model.datasetHash, splitHash: model.splitHash, reviewRecordHash: hash(reviewJson), reviewedScope: review.scope, categories };
 const parity = verifyCandidateParity(model, hash(modelJson), JSON.parse(await readFile(resolve(candidateRoot, 'parity.json'), 'utf8')), Object.keys(categories));
 const output = resolve(values.output);
 if ([values.model, values.evaluation, values.review].some(p => resolve(p) === output)) throw new Error('Output must not overwrite private inputs');

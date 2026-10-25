@@ -37,7 +37,7 @@ const development = data.examples.filter(r => ['train', 'validation'].includes(s
 const supportVariants = [...new Set(development.map(r => r.variant))].sort();
 const supportedRules = [...new Set(development.map(r => r.category))].sort();
 const parity = verifyCandidateParity(model, modelHash, JSON.parse(files['parity.json']), supportedRules);
-const release = experimentalReleaseSchema.parse({ qualificationPolicy: 'vynlt-controlled-signal-v1', effect: 'display-only', name: 'VYNLT controlled LSTM / experimental',
+const release = experimentalReleaseSchema.parse({ qualificationPolicy: 'vynlt-controlled-signal-v1', effect: 'display-only', name: 'VYLNT controlled LSTM / experimental',
   scope: `Developer-controlled local configurations only; ${new Set(data.examples.map(r => r.family)).size} application families. Cookie persistence is a fixture correlation and does not establish real application purpose. No category qualifies for de-emphasis.`,
   candidateHash, evaluationHash: sha(files['evaluation.json']), modelHash, datasetHash: model.datasetHash, splitHash: model.splitHash, modelJson: files['model.json'],
   supportedRules, supportVariants, evaluation: { testFamilies, testExamples: test.length, qualifiedCategories: 0 } });

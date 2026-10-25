@@ -20,7 +20,7 @@ const lstmSchema = z.object({
 export type LstmModel = z.infer<typeof lstmSchema>;
 export function parseLstmModel(value: unknown): LstmModel {
   const parsed = lstmSchema.safeParse(value);
-  if (!parsed.success) throw new Error('Unsupported model. Expected a bounded VYNLT experimental LSTM with matching sequence features.');
+  if (!parsed.success) throw new Error('Unsupported model. Expected a bounded VYLNT experimental LSTM with matching sequence features.');
   return parsed.data;
 }
 const sigmoid = (x: number) => x >= 0 ? 1 / (1 + Math.exp(-x)) : Math.exp(x) / (1 + Math.exp(x));

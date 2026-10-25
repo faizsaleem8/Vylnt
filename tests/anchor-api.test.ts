@@ -89,7 +89,7 @@ describe('local anchoring API boundaries', () => {
     const anchors = Object.assign(Object.create(AnchorService.prototype), { enqueue: async () => { throw new Error('disk'); } });
     const f = await fixture(anchors);
     const r = await request(f.app).post(`/api/scans/${f.scan.scanId}/insight-reports`).set('Authorization', 'Bearer a').send(f.body);
-    expect(r.status).toBe(201); expect(r.headers['x-vynlt-anchor-warning']).toContain('Report saved');
+    expect(r.status).toBe(201); expect(r.headers['x-vylnt-anchor-warning']).toContain('Report saved');
     expect(await f.store.getInsight(identity, r.body.id)).toEqual(r.body);
   });
 });

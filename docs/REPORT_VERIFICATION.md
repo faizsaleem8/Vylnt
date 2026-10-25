@@ -1,6 +1,6 @@
-# VYNLT uploaded report verification
+# VYLNT uploaded report verification
 
-Choose **Verify report** in the dashboard sidebar. Select a downloaded VYNLT JSON and click **Verify report**. No command line or anchor proof upload is needed. The page replaces the old embedded ledger navigation; the separate [demo ledger](BLOCKCHAIN_LEDGER.md) remains at `/ledger.html`.
+Choose **Verify report** in the dashboard sidebar. Select a downloaded VYLNT JSON and click **Verify report**. No command line or anchor proof upload is needed. The page replaces the old embedded ledger navigation; the separate [demo ledger](BLOCKCHAIN_LEDGER.md) remains at `/ledger.html`.
 
 - **Insights JSON:** canonical content is compared to the signed-in owner's immutable saved report. The API validates the saved derivation and original scan linkage, then checks the live blockchain using its trusted journal proof. Only a successful live anchor check produces “Report matches the blockchain anchor.”
 - **Raw Export JSON:** the original scan content is compared with its owner-scoped database SHA-256. A match is explicitly labelled database-only, since that hash is not blockchain-anchored.

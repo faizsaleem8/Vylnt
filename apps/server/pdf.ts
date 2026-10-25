@@ -24,10 +24,10 @@ export function reportHtml(row: StoredScan, font: string, generatedAt = new Date
     const group = modelGroups.get(findingId);
     return group && mode === 'insights' ? `<p><strong>Experimental per-observation outputs:</strong> ${group.actionable} actionable / ${group.contextual} contextual / ${group.abstained} unavailable. This is not a group vulnerability verdict.</p>` : '';
   };
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>VYNLT scan report</title>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>VYLNT scan report</title>
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src data:">
   <style>@font-face{font-family:Plex;src:url(data:font/ttf;base64,${font})}*{box-sizing:border-box}body{font:11pt/1.5 Plex,Arial,sans-serif;color:#263142;margin:0;overflow-wrap:anywhere}h1{font-size:30pt;line-height:1.15;margin:8mm 0}h2{font-size:19pt;line-height:1.25}h3{font-size:12pt;margin-top:6mm}h1,h2,h3{break-after:avoid}p{orphans:3;widows:3}.brand{color:#5841c6;font-weight:bold;letter-spacing:1pt}.muted{color:#5f6b7c}.summary{padding:5mm;background:#eef2f6;border-left:3pt solid #5841c6}.finding{break-before:page}.meta{font-size:9pt}.evidence{white-space:pre-wrap;overflow-wrap:anywhere;font:9pt/1.6 Plex,Arial,sans-serif;border-left:2pt solid #d4dde7;padding-left:4mm}.review{margin-top:6mm}.empty{margin-top:8mm}strong{font-weight:600}</style></head><body>
-  <div class="brand">VYNLT / SCAN REPORT</div><h1>${mode === 'insights' ? 'Insights and recommended changes' : 'Full scan data'}</h1>
+  <div class="brand">VYLNT / SCAN REPORT</div><h1>${mode === 'insights' ? 'Insights and recommended changes' : 'Full scan data'}</h1>
   <p>${escape(report.observation.url)}</p>
   <div class="summary"><strong>Configuration score: ${report.score}/100</strong><br>${report.findings.length} observed findings</div>
   <h2>Collection coverage</h2><p>${coverage.map(([name, collected]) => `${name}: ${collected ? 'collected' : 'not collected'}`).join('<br>')}</p>

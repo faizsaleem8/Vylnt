@@ -1,4 +1,4 @@
-name: VYNLT checks
+name: VYLNT checks
 on: [push, pull_request]
 permissions:
   contents: read
@@ -24,7 +24,7 @@ jobs:
       - name: Dynamic-page collection budget regression
         run: npm run benchmark:observer
         env:
-          VYNLT_OBSERVER_BENCH_RUNS: 1
+          VYLNT_OBSERVER_BENCH_RUNS: 1
       - name: Extension, API, dashboard and security gate regression
         run: npm run test:browser
       - name: Dashboard and side-panel accessibility regression
@@ -36,6 +36,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: vynlt-browser-results
+          name: vylnt-browser-results
           path: test-results/
           retention-days: 7

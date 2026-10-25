@@ -1,4 +1,4 @@
-# VYNLT corpus expansion protocol — 2026-10-22
+# VYLNT corpus expansion protocol — 2026-10-22
 
 Registered before new collection or candidate evaluation. Keep the evidence-v3 schema, fixed family/input-component partitioning, seed 42, 60 training epochs, validation-only checkpoint/calibration/threshold selection and existing category metrics unchanged. Controlled labels remain controlled; human review is not required by the user. No Docker or deployment.
 

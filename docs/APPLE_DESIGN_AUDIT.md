@@ -1,4 +1,4 @@
-# VYNLT UI audit — apple-design
+# VYLNT UI audit — apple-design
 
 > Historical audit. On 2026-10-16 the user requested the Anthropic frontend-design skill. See [FRONTEND_DESIGN.md](FRONTEND_DESIGN.md) for the current visual direction and validation. Earlier interaction fixes remain protected by regression checks.
 
@@ -35,7 +35,7 @@ Original audit scope: the primary extension side panel and the optional web dash
 
 ## Original assessment
 
-VYNLT has a consistent dark visual identity and a usable responsive foundation. Against this skill, the main gaps are scalable typography, a clearer primary workflow, immediate control feedback and adaptable surfaces. Adding glass or springs alone would leave those gaps unresolved. The skill does not require an Apple logo, an all-white interface, or animated gestures where the product has none.
+VYLNT has a consistent dark visual identity and a usable responsive foundation. Against this skill, the main gaps are scalable typography, a clearer primary workflow, immediate control feedback and adaptable surfaces. Adding glass or springs alone would leave those gaps unresolved. The skill does not require an Apple logo, an all-white interface, or animated gestures where the product has none.
 
 P2 means a practical usability/design gap for the next increment. P3 means visual refinement after those gaps. “Direct” identifies explicit skill guidance; “contextual” identifies how that guidance could be applied to this product. All After entries are recommendations.
 
@@ -53,7 +53,7 @@ P2 means a practical usability/design gap for the next increment. P3 means visua
 ## Keep these strengths
 
 - Clear separation of current versus saved scans and explicit site permissions. The extension remains the main workspace; no additional webpage is needed to inspect or export scans.
-- A recognizable VYNLT identity, consistent severity labels and a visible score hierarchy. An Apple-informed refinement can retain that identity.
+- A recognizable VYLNT identity, consistent severity labels and a visible score hierarchy. An Apple-informed refinement can retain that identity.
 - Native controls, details/summary interaction, labeled fields and existing focus/status treatments. Preserve them while correcting the specific gaps.
 - Responsive layout without horizontal document overflow in the previously tested 380px panel and 390px/1440px dashboard fixtures.
 - Accurate coverage and configuration-score wording, and explicit limitations of the local integrity check.

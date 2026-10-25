@@ -6,8 +6,8 @@ import { build } from 'esbuild';
 
 const { values } = parseArgs({ options: { manifest: { type: 'string' }, output: { type: 'string' }, sequence: { type: 'boolean', default: false } } });
 if (!values.manifest || !values.output) throw new Error('Use --manifest <private annotation manifest.json> --output <dataset.json>');
-const secret = process.env.VYNLT_ML_DATASET_KEY ?? '';
-if (secret.length < 32) throw new Error('Set VYNLT_ML_DATASET_KEY to a private random key of at least 32 characters');
+const secret = (process.env.VYLNT_ML_DATASET_KEY ?? process.env.VYNLT_ML_DATASET_KEY) ?? '';
+if (secret.length < 32) throw new Error('Set VYLNT_ML_DATASET_KEY to a private random key of at least 32 characters');
 const manifestPath = resolve(values.manifest), output = resolve(values.output);
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 if (manifest.version !== 1 || !Array.isArray(manifest.examples) || !manifest.examples.length || manifest.examples.length > 50000) throw new Error('Expected manifest version 1 with 1..50000 examples');

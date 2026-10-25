@@ -1,4 +1,4 @@
-# VYNLT M1 acceptance
+# VYLNT M1 acceptance
 
 M1's browser scanner foundation is complete as of 2026-10-21. Native browser checks were performed and reported by the user in Microsoft Edge. Automated checks use real bundled Chromium with disposable profiles; they do not replace native-browser inspection. Installed Google Chrome is not independently certified by the Edge result.
 
@@ -6,9 +6,9 @@ M1's browser scanner foundation is complete as of 2026-10-21. Native browser che
 
 On 2026-10-21 the user confirmed **All three pass** for:
 
-1. Open `http://127.0.0.1:5175/`; open, close and reopen the native VYNLT side panel from its toolbar icon.
+1. Open `http://127.0.0.1:5175/`; open, close and reopen the native VYLNT side panel from its toolbar icon.
 2. Open `http://127.0.0.2:5175/`; grant only that optional site, confirm scanning, revoke access and confirm scanning is blocked, then re-enable it.
-3. Restart Edge and confirm VYNLT can rescan.
+3. Restart Edge and confirm VYLNT can rescan.
 
 These are user-reported results, not agent-observed screenshots or independently captured permission prompts. Computer-use inspection previously stopped because it could not establish the active browser URL; the connected browser inventory did not expose Edge. Permission prompts were handled by the user.
 

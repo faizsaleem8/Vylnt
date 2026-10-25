@@ -26,11 +26,11 @@ export function BlockchainLedger({ api }: { api: <T>(path: string, init?: Reques
   function exportPage() {
     if (data?.result !== 'live') return;
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    const link = document.createElement('a'); link.href = url; link.download = `vynlt-ledger-${data.fromBlock}-${data.toBlock}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const link = document.createElement('a'); link.href = url; link.download = `vylnt-ledger-${data.fromBlock}-${data.toBlock}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <section className="panel ledger" aria-label="Local blockchain ledger">
     <p><a href="/ledger.html" target="_blank" rel="noopener noreferrer">Open separate demo explorer ↗</a></p>
-    <div className="section-heading"><div><h2>Report anchors</h2><p className="muted">Actual transactions from the VYNLT contract on your local chain.</p></div><div className="report-actions"><button disabled={busy} onClick={() => setRefresh(value => value + 1)}>Refresh ledger</button><button disabled={busy || data?.result !== 'live'} onClick={exportPage}>Export ledger JSON</button></div></div>
+    <div className="section-heading"><div><h2>Report anchors</h2><p className="muted">Actual transactions from the VYLNT contract on your local chain.</p></div><div className="report-actions"><button disabled={busy} onClick={() => setRefresh(value => value + 1)}>Refresh ledger</button><button disabled={busy || data?.result !== 'live'} onClick={exportPage}>Export ledger JSON</button></div></div>
     <p role="status">{busy ? 'Reading local blockchain…' : data?.result === 'live' ? `Live node · latest block ${data.latestBlock} · showing blocks ${data.fromBlock}–${data.toBlock}` : data?.message}</p>
     {data?.result === 'live' && <>
       <dl className="ledger-network"><dt>Network</dt><dd>Local Hardhat · chain {data.chainId}</dd><dt>Contract</dt><dd><code>{data.contractAddress}</code></dd><dt>Deployment instance</dt><dd><code>{data.instanceId}</code></dd><dt>Last checked</dt><dd>{new Date(data.checkedAt!).toLocaleString()}</dd></dl>

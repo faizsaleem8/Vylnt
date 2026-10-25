@@ -35,7 +35,7 @@ let server = await readFile(serverPath, 'utf8');
 server = server.replace("'Content-Type': 'text/html',", "'Content-Type': 'text/html', 'Set-Cookie': 'preference=PRIVATE_COOKIE_VALUE; Secure; HttpOnly; SameSite=Lax',");
 server = server.replace('<h1>Local security gate demo</h1>', '<h1>PRIVATE_PAGE_TEXT</h1>');
 await writeFile(serverPath, server);
-await git(['init', '-q', '-b', 'main']); await git(['config', 'user.name', 'VYNLT gate fixture']); await git(['config', 'user.email', 'fixture@example.invalid']);
+await git(['init', '-q', '-b', 'main']); await git(['config', 'user.name', 'VYLNT gate fixture']); await git(['config', 'user.email', 'fixture@example.invalid']);
 await git(['init', '--bare', '-q', remote], root); await git(['remote', 'add', 'origin', remote]);
 const secure = await commit('secure fixture');
 assert.equal((await gate(secure)).status, 'passed');
@@ -54,7 +54,7 @@ for (const file of await readdir(join(root, 'run-2'))) {
 }
 await writeFile(join(repo, 'previous-report.json'), '{"status":"passed","review":"fixed"}');
 await manageHook(repo, entry);
-await failure(() => git(['push', 'origin', 'main']), /VYNLT gate: blocked/);
+await failure(() => git(['push', 'origin', 'main']), /VYLNT gate: blocked/);
 assert.equal(await git(['rev-parse', 'refs/heads/main'], remote), secure);
 pass('actual pre-push hook rejects vulnerable code; old/fixed-labelled reports cannot clear it');
 
@@ -67,7 +67,7 @@ const fixed = await commit('fix insecure reference');
 await git(['push', '-q', 'origin', 'main']);
 assert.equal(await git(['rev-parse', 'refs/heads/main'], remote), fixed);
 pass('committed fix is rescanned and actual push succeeds');
-await failure(() => git(['push', 'origin', `${fixed}:refs/heads/good`, `${insecure}:refs/heads/bad`]), /VYNLT gate: blocked/);
+await failure(() => git(['push', 'origin', `${fixed}:refs/heads/good`, `${insecure}:refs/heads/bad`]), /VYLNT gate: blocked/);
 await failure(() => git(['rev-parse', '--verify', 'refs/heads/good'], remote), /unknown revision|Needed a single revision/);
 pass('multi-ref push checks all distinct outgoing commits and rejects the push if any fails');
 
@@ -128,4 +128,4 @@ pass('command timeouts and cancellation produce error artifacts and clean up own
 
 await mkdir('test-results', { recursive: true });
 await writeFile('test-results/gate-acceptance.json', JSON.stringify({ passed, failures: [], artifacts: root, scope: `local Git + real Chromium on ${process.platform}; no hosted GitHub protection claim` }, null, 2));
-console.log('VYNLT gate acceptance passed:', passed.length);
+console.log('VYLNT gate acceptance passed:', passed.length);

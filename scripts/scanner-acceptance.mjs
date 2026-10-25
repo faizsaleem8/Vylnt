@@ -14,13 +14,13 @@ const server = http.createServer((req, res) => {
   const path = new URL(req.url, 'http://127.0.0.1').pathname;
   if (path === '/favicon.ico') { res.writeHead(204); res.end(); return; }
   const cacheable = path === '/cache';
-  const etag = `"vynlt-${version}"`;
+  const etag = `"vylnt-${version}"`;
   const revalidated = cacheable && req.headers['if-none-match'] === etag;
   requests.push({ path, version, revalidated });
   const headers = { 'Content-Type': 'text/html', 'Cache-Control': cacheable ? 'public, max-age=600' : 'no-store', ETag: etag };
   if (!revalidated) { headers['X-Frame-Options'] = version === 1 ? 'DENY' : 'SAMEORIGIN'; headers['Content-Security-Policy'] = "default-src 'none'; frame-ancestors 'none'"; }
   res.writeHead(revalidated ? 304 : 200, headers);
-  res.end(revalidated ? undefined : `<!doctype html><title>VYNLT scanner acceptance</title><h1>Controlled fixture ${version}</h1>${path === '/stress' ? Array.from({ length: 2000 }, (_, i) => `<script type="application/json" src="/inert-${i}.json?secret=redacted#private"></script>`).join('') : ''}`);
+  res.end(revalidated ? undefined : `<!doctype html><title>VYLNT scanner acceptance</title><h1>Controlled fixture ${version}</h1>${path === '/stress' ? Array.from({ length: 2000 }, (_, i) => `<script type="application/json" src="/inert-${i}.json?secret=redacted#private"></script>`).join('') : ''}`);
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const origin = `http://127.0.0.1:${server.address().port}`;

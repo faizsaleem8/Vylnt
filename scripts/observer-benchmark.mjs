@@ -4,8 +4,8 @@ import { resolve } from 'node:path';
 
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve('.local/browsers');
 const { chromium } = await import('playwright');
-const runs = Number(process.env.VYNLT_OBSERVER_BENCH_RUNS ?? 3);
-if (!Number.isInteger(runs) || runs < 1 || runs > 10) throw new Error('VYNLT_OBSERVER_BENCH_RUNS must be 1..10');
+const runs = Number((process.env.VYLNT_OBSERVER_BENCH_RUNS ?? process.env.VYNLT_OBSERVER_BENCH_RUNS) ?? 3);
+if (!Number.isInteger(runs) || runs < 1 || runs > 10) throw new Error('VYLNT_OBSERVER_BENCH_RUNS must be 1..10');
 const source = await readFile('dist/extension/content.js', 'utf8');
 await mkdir('test-results/observer-benchmark', { recursive: true });
 const browser = await chromium.launch({ channel: 'chromium', headless: true });
@@ -14,7 +14,7 @@ try {
   for (let run = 1; run <= runs; run++) for (const enabled of (run % 2 ? [false, true] : [true, false])) {
     const context = await browser.newContext();
     try {
-      await context.route('**/*', route => route.request().isNavigationRequest() ? route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><title>VYNLT synthetic observer benchmark</title></head><body></body></html>' }) : route.abort());
+      await context.route('**/*', route => route.request().isNavigationRequest() ? route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><title>VYLNT synthetic observer benchmark</title></head><body></body></html>' }) : route.abort());
       const page = await context.newPage();
       await page.goto('http://127.0.0.1/observer-benchmark');
       await page.evaluate(() => {

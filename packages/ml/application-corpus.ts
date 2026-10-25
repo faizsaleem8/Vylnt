@@ -77,10 +77,10 @@ export function controlledTargetIndexes(report: Report, profile: ApplicationProf
     if (!profile.rule || finding.ruleId !== profile.rule) return [];
     if (profile.rule.startsWith('CK-') && finding.evidence.cookieName !== 'session_fixture') return [];
     if (profile.rule === 'JS-002') {
-      const fixture = new URL(report.observation.url); fixture.hostname = '127.0.0.1'; fixture.pathname = '/vynlt-fixture.js';
+      const fixture = new URL(report.observation.url); fixture.hostname = '127.0.0.1'; fixture.pathname = '/vylnt-fixture.js';
       if (finding.url !== fixture.href) return [];
     }
-    if (profile.rule === 'NET-001' && new URL(finding.url).pathname !== '/vynlt-fixture.gif') return [];
+    if (profile.rule === 'NET-001' && new URL(finding.url).pathname !== '/vylnt-fixture.gif') return [];
     return [index];
   });
 }
@@ -95,7 +95,7 @@ export function applicationRequirement(profile: ApplicationProfile): string {
     'CK-002': 'The inert server-only fixture cookie must be unavailable to JavaScript under this controlled specification.',
     'CK-003': 'This controlled deployment has no cross-site cookie requirement and specifies same-site-only fixture use.',
     'NET-001': 'This controlled deployment requires every resource reference to use HTTPS.',
-    'JS-002': 'This controlled deployment requires integrity for its known immutable VYNLT fixture script.',
+    'JS-002': 'This controlled deployment requires integrity for its known immutable VYLNT fixture script.',
   };
   if (profile.id === 'readable-preference') return 'The inert preference fixture intentionally requires JavaScript access; the browser must verify readability. It is not an authentication cookie.';
   if (profile.id === 'unspecified-cookie-purpose') return 'The fixture cookie purpose is deliberately unspecified; do not infer authentication or a safe configuration from its name.';
@@ -106,10 +106,10 @@ export function controlledResponse(originalHtml: string, profile: ApplicationPro
   const secure = new URL(origin), insecure = new URL(insecureOrigin);
   if (secure.protocol !== 'https:' || insecure.protocol !== 'http:' || ![secure.hostname, insecure.hostname].every(h => h === '127.0.0.1' || h === 'localhost')) throw new Error('Corpus responses require loopback origins');
   let html = originalHtml;
-  if (profile.id === 'mixed-image') html += `<img alt="" src="${insecureOrigin}/vynlt-fixture.gif">`;
-  if (profile.id === 'unpinned-script') html += `<script src="${origin.replace('localhost', '127.0.0.1')}/vynlt-fixture.js"></script>`;
-  if (profile.id.startsWith('script-')) html += `<script ${profile.id.endsWith('-module') ? 'type="module"' : profile.id.endsWith('-async') ? 'async' : 'defer'} src="${origin.replace('localhost', '127.0.0.1')}/vynlt-fixture.js"></script>`;
-  if (profile.id === 'readable-preference') html += '<script>document.documentElement.dataset.vynltPreferenceReadable=String(document.cookie.split(";").some(c=>c.trim().startsWith("session_fixture=")));</script>';
+  if (profile.id === 'mixed-image') html += `<img alt="" src="${insecureOrigin}/vylnt-fixture.gif">`;
+  if (profile.id === 'unpinned-script') html += `<script src="${origin.replace('localhost', '127.0.0.1')}/vylnt-fixture.js"></script>`;
+  if (profile.id.startsWith('script-')) html += `<script ${profile.id.endsWith('-module') ? 'type="module"' : profile.id.endsWith('-async') ? 'async' : 'defer'} src="${origin.replace('localhost', '127.0.0.1')}/vylnt-fixture.js"></script>`;
+  if (profile.id === 'readable-preference') html += '<script>document.documentElement.dataset.vylntPreferenceReadable=String(document.cookie.split(";").some(c=>c.trim().startsWith("session_fixture=")));</script>';
   const hashes = [...html.matchAll(/<script\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script\s*>/gi)].map(m => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`);
   const handlerHashes = [...html.matchAll(/\son[a-z]+\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map(m => `'sha256-${createHash('sha256').update(m[1] ?? m[2]).digest('base64')}'`);
   const scriptSources = profile.id === 'broad-script-policy' ? "https: 'unsafe-inline'" : `'self' ${profile.id.startsWith('script-excluded-') ? '' : `https://127.0.0.1:${secure.port}`} ${hashes.join(' ')}`;
@@ -121,7 +121,7 @@ export function controlledResponse(originalHtml: string, profile: ApplicationPro
   return { html, headers };
 }
 
-/** Independent network oracle: examines configuration, never VYNLT findings. */
+/** Independent network oracle: examines configuration, never VYLNT findings. */
 export function assertControlledResponse(profile: ApplicationProfile, headers: Record<string, string | string[] | undefined>, html: string) {
   const header = (name: string) => { const value = headers[name.toLowerCase()] ?? headers[name]; return Array.isArray(value) ? value[0] : value; };
   const require = (condition: boolean) => { if (!condition) throw new Error(`Independent configuration oracle failed: ${profile.id}`); };
@@ -137,10 +137,10 @@ export function assertControlledResponse(profile: ApplicationProfile, headers: R
     require(cookie.includes('SameSite=None') === (profile.id === 'cookie-cross-site'));
     require(cookie.includes('Max-Age=3600') === (profile.id === 'readable-preference'));
   }
-  if (profile.id === 'mixed-image') require(/src="http:\/\/(?:localhost|127\.0\.0\.1):\d+\/vynlt-fixture.gif"/.test(html));
-  if (profile.id === 'unpinned-script') require(/src="https:\/\/127\.0\.0\.1:\d+\/vynlt-fixture.js"/.test(html));
+  if (profile.id === 'mixed-image') require(/src="http:\/\/(?:localhost|127\.0\.0\.1):\d+\/vylnt-fixture.gif"/.test(html));
+  if (profile.id === 'unpinned-script') require(/src="https:\/\/127\.0\.0\.1:\d+\/vylnt-fixture.js"/.test(html));
   if (profile.id.startsWith('script-')) {
-    require(/src="https:\/\/127\.0\.0\.1:\d+\/vynlt-fixture.js"/.test(html));
+    require(/src="https:\/\/127\.0\.0\.1:\d+\/vylnt-fixture.js"/.test(html));
     require(csp.includes('https://127.0.0.1:') === profile.id.startsWith('script-permitted-'));
     require(html.includes(profile.id.endsWith('-module') ? 'type="module"' : profile.id.endsWith('-async') ? '<script async src=' : '<script defer src='));
   }

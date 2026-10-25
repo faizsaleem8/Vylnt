@@ -72,9 +72,9 @@ it('allows CORS preflight without spending the request allowance and limits publ
 
 it('rejects invalid configuration instead of silently disabling limits', () => {
   expect(readRateLimits({})).toEqual(defaultRateLimits);
-  expect(readRateLimits({ VYNLT_RATE_IP_MAX: '42', VYNLT_RATE_WINDOW_MS: '30000' })).toMatchObject({ ipMax: 42, windowMs: 30000 });
+  expect(readRateLimits({ VYLNT_RATE_IP_MAX: '42', VYLNT_RATE_WINDOW_MS: '30000' })).toMatchObject({ ipMax: 42, windowMs: 30000 });
   for (const value of ['0', '-1', '', '1.5', 'NaN', 'Infinity', '60000ms', '100001']) {
-    expect(() => readRateLimits({ VYNLT_RATE_IP_MAX: value })).toThrow('VYNLT_RATE_IP_MAX');
+    expect(() => readRateLimits({ VYLNT_RATE_IP_MAX: value })).toThrow('VYLNT_RATE_IP_MAX');
   }
-  expect(() => readRateLimits({ VYNLT_RATE_WINDOW_MS: '3600001' })).toThrow('VYNLT_RATE_WINDOW_MS');
+  expect(() => readRateLimits({ VYLNT_RATE_WINDOW_MS: '3600001' })).toThrow('VYLNT_RATE_WINDOW_MS');
 });

@@ -17,7 +17,7 @@ const root = resolve('dist/dashboard');
 const server = createServer(async (req, res) => {
   try {
     const path = new URL(req.url, 'http://localhost').pathname;
-    if (path === '/fixture') { res.setHeader('Content-Type', 'text/html'); res.end('<!doctype html><title>VYNLT controlled audit fixture</title><p>Local audit fixture</p>'); return; }
+    if (path === '/fixture') { res.setHeader('Content-Type', 'text/html'); res.end('<!doctype html><title>VYLNT controlled audit fixture</title><p>Local audit fixture</p>'); return; }
     if (path.startsWith('/api/')) {
       await new Promise(r => setTimeout(r, delay));
       res.setHeader('Content-Type', 'application/json');
@@ -66,8 +66,8 @@ async function inspectAppearance(page, name, toolbarSelector) {
     await page.evaluate(() => scrollTo(0, 0));
     evidence[colorScheme] = await page.evaluate(() => ({ background: getComputedStyle(document.documentElement).backgroundColor, font: getComputedStyle(document.documentElement).fontFamily, width: innerWidth, scrollWidth: document.documentElement.scrollWidth }));
     assert.ok(evidence[colorScheme].scrollWidth <= evidence[colorScheme].width, name + ' ' + colorScheme + ' fits');
-    assert.match(evidence[colorScheme].font, /VYNLT Plex/);
-    assert.ok(await page.evaluate(() => [...document.fonts].some(font => font.family.includes('VYNLT Plex') && font.status === 'loaded')), name + ' bundled font loaded');
+    assert.match(evidence[colorScheme].font, /VYLNT Plex/);
+    assert.ok(await page.evaluate(() => [...document.fonts].some(font => font.family.includes('VYLNT Plex') && font.status === 'loaded')), name + ' bundled font loaded');
     await auditAccess(page, name + '-' + colorScheme);
     await page.screenshot({ path: resolve(out, name + '-' + colorScheme + '.png'), fullPage: true });
   }
@@ -143,11 +143,11 @@ try {
   await dashboard.getByRole('button', { name: 'GitHub setup', exact: true }).click();
   assert.equal(await dashboard.getByRole('button', { name: 'Choose a saved scan', exact: true }).count(), 1);
   assert.equal(await dashboard.getByRole('button', { name: 'Refresh', exact: false }).count(), 0, 'Setup hides unrelated refresh controls');
-  const expectedWorkflow = await readFile('docs/examples/vynlt-report-check.yml', 'utf8');
+  const expectedWorkflow = await readFile('docs/examples/vylnt-report-check.yml', 'utf8');
   const workflowDownload = dashboard.waitForEvent('download');
-  await dashboard.getByRole('button', { name: 'Download vynlt.yml', exact: true }).click();
+  await dashboard.getByRole('button', { name: 'Download vylnt.yml', exact: true }).click();
   const workflowFile = await workflowDownload;
-  assert.equal(workflowFile.suggestedFilename(), 'vynlt.yml');
+  assert.equal(workflowFile.suggestedFilename(), 'vylnt.yml');
   assert.equal(await readFile(await workflowFile.path(), 'utf8'), expectedWorkflow, 'Downloaded YAML matches the tested source');
   await dashboard.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.auditCopiedWorkflow = text; } } }));
   await dashboard.getByRole('button', { name: 'Copy workflow', exact: true }).click();
@@ -233,7 +233,7 @@ try {
   const reportDownload = dashboard.waitForEvent('download');
   await dashboard.getByRole('button', { name: 'Download report for GitHub', exact: true }).click();
   const reportFile = await reportDownload;
-  assert.equal(reportFile.suggestedFilename(), 'vynlt-report.json');
+  assert.equal(reportFile.suggestedFilename(), 'vylnt-report.json');
   assert.deepEqual(JSON.parse(await readFile(await reportFile.path(), 'utf8')), report, 'Setup exports unchanged selected raw scan with the exact workflow filename');
   results.dashboard.githubSetup = 'Exact YAML copy/download, clipboard failure fallback, no-selection/history navigation and selected report export passed';
   await dashboard.getByRole('button', { name: 'Overview', exact: false }).first().click();
@@ -256,7 +256,7 @@ try {
   await dashboard.getByLabel('Email address').waitFor();
   await auditAccess(dashboard, 'dashboard-supabase-login');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-supabase-login.png'), fullPage: true });
-  await dashboard.getByRole('button', { name: 'New to VYNLT? Create an account' }).click();
+  await dashboard.getByRole('button', { name: 'New to VYLNT? Create an account' }).click();
   await auditAccess(dashboard, 'dashboard-register');
   await dashboard.screenshot({ path: resolve(out, 'dashboard-register.png'), fullPage: true });
   await dashboard.getByRole('button', { name: 'Already have an account? Sign in' }).click();

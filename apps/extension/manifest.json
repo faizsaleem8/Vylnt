@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "VYNLT — Web Security Observer",
+  "name": "VYLNT — Web Security Observer",
   "version": "0.2.0",
   "minimum_chrome_version": "120",
-  "description": "Scan, analyze and sync security configuration from the VYNLT side panel.",
+  "description": "Scan, analyze and sync security configuration from the VYLNT side panel.",
   "permissions": ["storage", "tabs", "sidePanel", "scripting", "webRequest", "webNavigation", "cookies"],
   "host_permissions": ["http://localhost/*", "http://127.0.0.1/*", "https://localhost/*", "https://127.0.0.1/*"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": { "service_worker": "background.js", "type": "module" },
   "side_panel": { "default_path": "report.html" },
-  "action": { "default_title": "Open VYNLT side panel" }
+  "action": { "default_title": "Open VYLNT side panel" }
 }

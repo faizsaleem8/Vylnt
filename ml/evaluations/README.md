@@ -1,4 +1,4 @@
-# VYNLT controlled LSTM experiment — 2026-10-22
+# VYLNT controlled LSTM experiment — 2026-10-22
 
 ## Latest expanded v3 result
 
@@ -49,4 +49,4 @@ Identities:
 - Model: `608494ae3de7379ea1a96e68dbfb67a44509d92000a712d209ee71bc2e39c5e7`.
 - Model size: 52,581 bytes; 16 Python/browser parity cases, maximum error about `6.9e-8` against tolerance `1e-6`.
 
-The bundled `vynlt-controlled-signal-v1` policy is explicitly **display-only**. It attaches rounded scores for compatible known development variants, never changes evidence assessments/severity, never hides findings, and never qualifies contextual de-emphasis. Unknown/conflicting contexts get no score. This completes experimental execution, not M6's quality acceptance. Better distinguishable configurations and broader frozen held-out families are the next developer-owned model work; no user dataset preparation or reviewer recruitment is required.
+The bundled `vylnt-controlled-signal-v1` policy is explicitly **display-only**. It attaches rounded scores for compatible known development variants, never changes evidence assessments/severity, never hides findings, and never qualifies contextual de-emphasis. Unknown/conflicting contexts get no score. This completes experimental execution, not M6's quality acceptance. Better distinguishable configurations and broader frozen held-out families are the next developer-owned model work; no user dataset preparation or reviewer recruitment is required.

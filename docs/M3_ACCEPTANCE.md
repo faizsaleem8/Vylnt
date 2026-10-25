@@ -22,7 +22,7 @@ Accepted scope, 2026-10-21: desktop Edge, the existing dashboard and extension s
 | Chromium PDF contained an unmapped Strong role, missing XMP, and untagged repeated footer/decorative borders | PDF finalization adds language/title/XMP and role mapping; footer is marked Artifact; decorative review borders removed | veraPDF 1.30.3 PDF/UA-1 profile, both fixtures pass |
 | European font coverage had only a small sample | Expanded diacritics, currencies, long evidence and review-tail fixtures | Extracted text/bounds and all ten rendered pages inspected |
 
-The PDF finalizer applies only to VYNLT's own tagged template. It preserves the reading structure and adds embedded-font page counters outside the reading order. No report findings, scores, JSON hashes, saved reviews, API payloads or SQL migrations change. The printed hash identifies the original JSON report, not PDF bytes or a combined ML report.
+The PDF finalizer applies only to VYLNT's own tagged template. It preserves the reading structure and adds embedded-font page counters outside the reading order. No report findings, scores, JSON hashes, saved reviews, API payloads or SQL migrations change. The printed hash identifies the original JSON report, not PDF bytes or a combined ML report.
 
 ## Acceptance record
 
@@ -47,7 +47,7 @@ npm.cmd run test:ui
 npm.cmd run test:pdf
 python scripts/check-pdf-layout.py
 # Optional: separately installed official veraPDF CLI and Java
-$env:VYNLT_VERAPDF_JAR = 'path/to/verapdf/bin/cli-1.30.3.jar'
+$env:VYLNT_VERAPDF_JAR = 'path/to/verapdf/bin/cli-1.30.3.jar'
 npm.cmd run test:pdf-ua
 ```
 

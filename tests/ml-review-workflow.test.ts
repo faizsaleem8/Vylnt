@@ -3,7 +3,7 @@ import { createReviewPacket, parseReviewPacket, addReviewDecision, reviewReadine
 
 const fixture = () => ({ scanId: crypto.randomUUID(), observation: { url: 'https://user:password@app.test/path?private=discard#token', scannedAt: '2026-10-21T00:00:00Z', headers: {}, resources: [], scripts: Array.from({ length: 71 }, (_, i) => ({ url: `https://cdn.test/${i}.js?secret=discard`, integrity: false })), cookies: [], domCollected: true } });
 const decision = (packet: ReturnType<typeof createReviewPacket>, reviewerId: string, label = 'needs-review') => ({ packetHash: packet.packetHash, caseId: packet.cases.find(c => c.category === 'JS-002')!.id, reviewerId,
-  label, reviewedAt: '2026-10-21T00:00:00Z', scope: 'Unit test only; not a genuine application review', independentEvidence: { recordId: 'test-only-reference', sha256: 'a'.repeat(64), independentOfVynltRules: true } });
+  label, reviewedAt: '2026-10-21T00:00:00Z', scope: 'Unit test only; not a genuine application review', independentEvidence: { recordId: 'test-only-reference', sha256: 'a'.repeat(64), independentOfVylntRules: true } });
 describe('developer independent review packets', () => {
   it('collapses repeated targets, keeps attribution private and strips URL secrets', () => {
     const packet = createReviewPacket(fixture(), 'one-related-template');
@@ -28,7 +28,7 @@ describe('developer independent review packets', () => {
     const changed = structuredClone(packet); changed.source.observation.domCollected = false;
     expect(() => parseReviewPacket(changed)).toThrow('changed');
     expect(() => addReviewDecision(packet, { ...decision(packet, 'r'), packetHash: '0'.repeat(64) })).toThrow('stale');
-    const notIndependent = decision(packet, 'r'); notIndependent.independentEvidence.independentOfVynltRules = false;
+    const notIndependent = decision(packet, 'r'); notIndependent.independentEvidence.independentOfVylntRules = false;
     expect(() => addReviewDecision(packet, notIndependent)).toThrow();
   });
   it('does not promote controlled fixtures through human review declarations', () => {

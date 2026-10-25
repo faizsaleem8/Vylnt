@@ -1,4 +1,4 @@
-# VYNLT ML report insights implementation
+# VYLNT ML report insights implementation
 
 The agreed scope is the existing eight configuration checks. No behavioural vulnerability detection, Docker, deployment, external AI provider or user-owned training workflow is included. Full-data Print / PDF remains separate from insights exports.
 
@@ -30,7 +30,7 @@ See `docs/ML_QUALIFICATION_PLAN.md` for the separate open quality track and `doc
 
 ## Acceptance and limits
 
-M6 is **closed as experimental implementation by explicit user decision**. The separate ML-Q qualification gate below is unmet. The active controlled model is explicitly display-only and experimental; unknown/conflicting contexts receive no score and no finding can move to the contextual section through this policy. Further data/model work belongs to VYNLT developers, not end users.
+M6 is **closed as experimental implementation by explicit user decision**. The separate ML-Q qualification gate below is unmet. The active controlled model is explicitly display-only and experimental; unknown/conflicting contexts receive no score and no finding can move to the contextual section through this policy. Further data/model work belongs to VYLNT developers, not end users.
 
 Each approved category requires at least 30 change-required and 30 contextual test variants, each class across three families; at least ten test families overall; precision >=90%, recall >=95%, non-abstention coverage >=50%; no high/critical actionable example classified contextual; precision above rule-only with recall no more than five points lower. Publish uncertainty intervals and scope. Fit on training only, choose calibration and thresholds on validation only, evaluate frozen test once per release. Controlled-suite success alone cannot approve real-application de-emphasis.
 
@@ -81,7 +81,7 @@ Hosted ML-7 is complete. Expanded ML-3/ML-4 engineering is complete: 190 rows / 
 
 ### 2026-10-22 — Approved open-source ML-3 corpus
 - User explicitly approved selecting publicly licensed open-source applications for local controlled assessment. Selected pinned 2048, TodoMVC JavaScript ES6 and reveal.js barebones; retained MIT notices, locked 23 canonical source blobs by commit/SHA-256. No upstream package/build scripts, Docker or deployment.
-- Added explicit source-fetch and offline collection commands, hash verification, asset allowlists, narrow loopback origin scopes, controlled configuration profiles across eight checks and independent response/browser-interaction oracles. Source changes and synthetic cookies/scripts are attributed to the VYNLT harness, not upstream vulnerabilities. Packets and labels remain controlled provenance and cannot qualify real-application de-emphasis.
+- Added explicit source-fetch and offline collection commands, hash verification, asset allowlists, narrow loopback origin scopes, controlled configuration profiles across eight checks and independent response/browser-interaction oracles. Source changes and synthetic cookies/scripts are attributed to the VYLNT harness, not upstream vulnerabilities. Packets and labels remain controlled provenance and cannot qualify real-application de-emphasis.
 - Implementation validation and actual corpus collection are in progress. Independent human review and category qualification remain open; no model bundled.
 - First complete open-source corpus run passed all 33 application/profile scenarios, including three zero-finding baselines, independent configuration checks, working gameplay/task creation/slide navigation and controlled review packets. A browser discovery failure was corrected by importing Playwright after selecting the project runtime. The final run adds exact harness identity and explicit privacy-marker checks; dataset grouping/readiness and full regression remain in progress.
 - Final approved-corpus validation completed: all 33 scenarios passed with exact harness/source identities and fixture-value/text exclusion; 30 new rows / 24 variants / three upstream families, three audited conflicts and zero human reviews. Combined snapshot: 59 controlled rows / 37 variants / four families, 12 conflicts (three development conflicts), frozen train/validation/test rows 20/10/29. Fitting remains ineligible after conflicting contextual development targets are excluded; no model fitting or security test evaluation was attempted.

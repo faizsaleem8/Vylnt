@@ -5,7 +5,7 @@ interface TabScan { requestId: string; documentId?: string; report: Report }
 let queue: Promise<unknown> = Promise.resolve();
 function enqueue<T>(work: () => Promise<T>): Promise<T> {
   const next = queue.then(work);
-  queue = next.catch(error => console.error('VYNLT:', error instanceof Error ? error.message : 'operation failed'));
+  queue = next.catch(error => console.error('VYLNT:', error instanceof Error ? error.message : 'operation failed'));
   return next;
 }
 const key = (tabId: number) => `tab:${tabId}`;
@@ -30,7 +30,7 @@ async function register() {
   const { origins = [] } = await chrome.permissions.getAll();
   const matches = origins.filter(o => o.startsWith('http'));
   await chrome.scripting.unregisterContentScripts();
-  if (matches.length) await chrome.scripting.registerContentScripts([{ id: 'vynlt-dom', matches, js: ['content.js'], runAt: 'document_idle' }]);
+  if (matches.length) await chrome.scripting.registerContentScripts([{ id: 'vylnt-dom', matches, js: ['content.js'], runAt: 'document_idle' }]);
 }
 chrome.runtime.onInstalled.addListener(() => { void enqueue(register); });
 chrome.runtime.onStartup.addListener(() => { void enqueue(register); });

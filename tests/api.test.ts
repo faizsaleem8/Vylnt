@@ -103,7 +103,7 @@ describe('API contracts and ownership', () => {
 });
 describe('durability and integrity', () => {
   it('persists atomic writes across store instances and serializes concurrent ingestion', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'vynlt-store-')); dirs.push(dir);
+    const dir = await mkdtemp(join(tmpdir(), 'vylnt-store-')); dirs.push(dir);
     const file = join(dir, 'scans.json'); const store = new FileStore(file); const identity = { ownerId: 'owner-a', token: 'a' };
     const input = payload();
     await Promise.all([store.put(identity, parseSubmission(input)), store.put(identity, parseSubmission(input))]);

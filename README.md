@@ -1,10 +1,10 @@
-# VYNLT
+# VYLNT
 
 Fresh-commit security gate (M4): build/scan committed npm applications before branch pushes and in GitHub Actions. High/critical findings at high confidence block; other findings warn, and experimental ML cannot waive them. See [gate setup and limits](docs/M4_SECURITY_GATE.md), [implementation/acceptance status](docs/M4_BUILD_PLAN.md) and [run commands](RUN_COMMANDS.md). Hosted branch protection must be verified separately; local hooks can be bypassed.
 
 Dashboard: contextual Back, scan/website deletion and a compact report with one Downloads menu and expandable ML/blockchain details. Automatic report saving/anchoring remains enabled by the existing configuration. See [dashboard cleanup](docs/DASHBOARD_CLEANUP.md) for behavior, acceptance and deletion boundaries.
 
-Local blockchain reporting (M5): frozen insights automatically queue their canonical SHA-256 when `VYNLT_BLOCKCHAIN=local`. Saved versions in React and the extension expose separate proof/status/live verification controls. Raw PDFs and immutable insights content retain their existing hashes. See [setup, commands and disposable-chain limits](docs/M5_ACCEPTANCE.md). No public deployment, wallet or SQL migration is required.
+Local blockchain reporting (M5): frozen insights automatically queue their canonical SHA-256 when `VYLNT_BLOCKCHAIN=local`. Saved versions in React and the extension expose separate proof/status/live verification controls. Raw PDFs and immutable insights content retain their existing hashes. See [setup, commands and disposable-chain limits](docs/M5_ACCEPTANCE.md). No public deployment, wallet or SQL migration is required.
 
 Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](docs/ML_BUILD_PLAN.md).
 
@@ -27,7 +27,7 @@ npm.cmd run check
 npm.cmd run dev
 ```
 
-Keep the API running, then use the extension side panel below. No dashboard webpage is required. With `VYNLT_STORAGE=local`, use the generated `VYNLT_API_TOKEN` from the ignored `.env`; the development API stores reports in `.local/scans.json`. With `VYNLT_STORAGE=supabase` (the configured project), use email/password sign-in or create an account and confirm your email. Sessions remain in panel memory only. `setup:local` leaves an existing `.env` unchanged. The older web dashboard at `http://127.0.0.1:4318` remains optional.
+Keep the API running, then use the extension side panel below. No dashboard webpage is required. With `VYLNT_STORAGE=local`, use the generated `VYLNT_API_TOKEN` from the ignored `.env`; the development API stores reports in `.local/scans.json`. With `VYLNT_STORAGE=supabase` (the configured project), use email/password sign-in or create an account and confirm your email. Sessions remain in panel memory only. `setup:local` leaves an existing `.env` unchanged. The older web dashboard at `http://127.0.0.1:4318` remains optional.
 
 For the extension's controlled lab, use a second terminal:
 
@@ -37,7 +37,7 @@ npm.cmd run lab
 
 1. Open `chrome://extensions`, enable **Developer mode**, select **Load unpacked**, and choose this project's `dist/extension` directory.
 2. Visit `http://127.0.0.1:5174/insecure`.
-3. Click VYNLT's toolbar icon to open its side panel alongside the website.
+3. Click VYLNT's toolbar icon to open its side panel alongside the website.
 4. Expand **Account & automatic sync**, select **Load workspace connection**, then **Sign in** (or **Create account**, confirm your email and return here). Pressing Enter also submits sign-in. Local development mode instead asks for its API token. The default API address is localhost; expand **Connection settings** only when you need to change it.
 5. Select **Rescan page**. This reloads the current page to observe response headers. Inspect evidence and remediation under **Current scan**; select **Export JSON** to download it.
 6. Sign-in checks authenticated API/database access, then automatically syncs the current page's existing scan and new scans while the panel stays open. **Saved scans** retrieves paginated history from the API/Supabase; select a scan to inspect, review findings, compare saved observations, export, verify its hash or delete it. No manual send button or separate dashboard login is needed.
@@ -81,7 +81,7 @@ Run `npm run benchmark:observer` after a build to compare a controlled dynamic p
 
 The React dashboard automatically analyses each selected saved scan in a cancellable Web Worker. Missing/incompatible/unqualified releases use conservative evidence summaries. The legacy synthetic model is a developer fixture and cannot dismiss real findings. Ordinary users do not label data, upload models or click Run; no Python service or external AI provider is required for inference.
 
-The current [developer workflow](docs/ML_DEVELOPER_WORKFLOW.md) covers private paired-review packets, feature-only preparation, frozen family splits, offline eight-unit LSTM/logistic comparison, validation-selected calibration/thresholds, held-out evaluation and qualified releases. Snapshot order is structural, not runtime execution or source/sink evidence. The controlled generator is one shared template family and cannot establish real-world quality. See [evaluation/readiness](docs/ML_EVALUATION.md); legacy v1 demos remain documented in [ml/README.md](ml/README.md). VYNLT does not train itself on user scans or infer ground truth from user verdicts/rule scores.
+The current [developer workflow](docs/ML_DEVELOPER_WORKFLOW.md) covers private paired-review packets, feature-only preparation, frozen family splits, offline eight-unit LSTM/logistic comparison, validation-selected calibration/thresholds, held-out evaluation and qualified releases. Snapshot order is structural, not runtime execution or source/sink evidence. The controlled generator is one shared template family and cannot establish real-world quality. See [evaluation/readiness](docs/ML_EVALUATION.md); legacy v1 demos remain documented in [ml/README.md](ml/README.md). VYLNT does not train itself on user scans or infer ground truth from user verdicts/rule scores.
 
 The approved [open-source controlled corpus](docs/ML_APPLICATION_CORPUS.md) adds pinned 2048, TodoMVC and reveal.js applications: `npm run ml:applications:fetch` verifies/downloads licensed browser assets; `npm run ml:applications` runs 33 offline localhost configuration/interaction scenarios without upstream installation scripts. With the expanded 33-case generated suite, the private frozen cohort has 60 rows across four families. It trained the first controlled LSTM, but its once-only 30-example test evaluation did not qualify any category. Better distinguishable data and held-out coverage remain necessary.
 
@@ -124,7 +124,7 @@ The API now limits requests per connection and verified owner, with a separate w
 
 Only localhost hosts are granted at install. Other HTTP(S) hosts are optional and granted through the side panel. Network visibility is bounded by Chrome's permissions, including cross-origin resources. DOM references do not prove whether a resource loaded, was blocked, or was upgraded. Browser preload lists, meta CSP, full CSP semantics, cached/back-forward navigation edge cases, service-worker-generated responses and JavaScript data flow are not comprehensively analyzed. Cookie purpose is inferred from its name and marked medium confidence.
 
-The extension uses Chrome's `tabs` permission to identify the active website when you switch tabs with the side panel open. Chrome may display a browsing-history permission warning for this capability. VYNLT only queries the active tab for these controls; it does not collect browsing history, tab titles or favicons. This permission does not authorize scanning: each additional website still requires **Enable this site**. Browser internal pages, local files and Chrome Web Store pages show an explanation with scanning disabled. After upgrading, reload the unpacked extension and reopen the side panel so the new permission takes effect.
+The extension uses Chrome's `tabs` permission to identify the active website when you switch tabs with the side panel open. Chrome may display a browsing-history permission warning for this capability. VYLNT only queries the active tab for these controls; it does not collect browsing history, tab titles or favicons. This permission does not authorize scanning: each additional website still requires **Enable this site**. Browser internal pages, local files and Chrome Web Store pages show an explanation with scanning disabled. After upgrading, reload the unpacked extension and reopen the side panel so the new permission takes effect.
 
 The content observer collects at most 150 scripts and 300 DOM references per update and stops after 100 mutation callbacks. Network collection is bounded to 300 resources; combined evidence to 600. SPA path changes create new snapshots and reuse the same document's response policies. Query-only/fragment changes intentionally do not create separate snapshots. Browser performance baselines and broader SPA/back-forward-cache coverage remain future work.
 

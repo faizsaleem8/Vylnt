@@ -46,7 +46,7 @@ describe('frozen insights versions', () => {
     expect((await request(app).get(savedPath).set('Authorization', 'Bearer a')).status).toBe(404);
   });
   it('retains frozen content across local store reload and rejects forged narratives', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'vynlt-insights-'));
+    const dir = await mkdtemp(join(tmpdir(), 'vylnt-insights-'));
     try {
       const path = join(dir, 'store.json'), store = new FileStore(path), r = scan();
       await store.put(identity, r); const original = await freezeInsights(r);

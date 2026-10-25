@@ -19,7 +19,7 @@ assert.ok(workerFile, 'Build the dashboard first');
 const source = await readFile(`dist/dashboard/assets/${workerFile}`);
 const server = createServer((req, res) => {
   if (req.url === '/worker.js') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); res.end(source); }
-  else { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<!doctype html><html lang="en"><title>VYNLT worker fixture</title><button id="counter">0</button></html>'); }
+  else { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<!doctype html><html lang="en"><title>VYLNT worker fixture</title><button id="counter">0</button></html>'); }
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const { chromium } = await import('playwright');

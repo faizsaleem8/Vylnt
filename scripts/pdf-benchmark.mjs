@@ -7,8 +7,8 @@ import { cpus, platform, release, totalmem } from 'node:os';
 import { build } from 'esbuild';
 
 const execute = promisify(execFile);
-const runs = Number(process.env.VYNLT_BENCH_RUNS ?? 3);
-if (!Number.isInteger(runs) || runs < 1 || runs > 10) throw new Error('VYNLT_BENCH_RUNS must be 1..10');
+const runs = Number((process.env.VYLNT_BENCH_RUNS ?? process.env.VYNLT_BENCH_RUNS) ?? 3);
+if (!Number.isInteger(runs) || runs < 1 || runs > 10) throw new Error('VYLNT_BENCH_RUNS must be 1..10');
 await mkdir('.local', { recursive: true });
 await mkdir('test-results/pdf-benchmark', { recursive: true });
 const modulePath = resolve('.local/pdf-benchmark-module.mjs');
@@ -24,7 +24,7 @@ async function treeMemory(root) {
 }
 
 async function measure(profile, iteration) {
-  const child = fork(resolve('scripts/pdf-benchmark-worker.mjs'), [], { env: { ...process.env, VYNLT_BENCH_MODULE: modulePath, VYNLT_BENCH_PROFILE: profile }, stdio: ['ignore', 'inherit', 'inherit', 'ipc'], windowsHide: true });
+  const child = fork(resolve('scripts/pdf-benchmark-worker.mjs'), [], { env: { ...process.env, VYLNT_BENCH_MODULE: modulePath, VYLNT_BENCH_PROFILE: profile }, stdio: ['ignore', 'inherit', 'inherit', 'ipc'], windowsHide: true });
   let finished = false, peakBytes = 0, peakProcesses = 0, samples = 0, memoryError, result, sampling;
   const completion = new Promise((resolveDone, reject) => {
     child.on('error', reject);
@@ -34,7 +34,7 @@ async function measure(profile, iteration) {
         if (process.platform === 'win32') {
           // Start the persistent sampler before rendering so PowerShell startup does not hide short-lived children.
           sampling = new Promise(resolveSampling => {
-            const monitor = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', resolve('scripts/pdf-memory-sampler.ps1')], { env: { ...process.env, VYNLT_BENCH_PID: String(child.pid) }, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true });
+            const monitor = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-File', resolve('scripts/pdf-memory-sampler.ps1')], { env: { ...process.env, VYLNT_BENCH_PID: String(child.pid) }, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true });
             let started = false;
             const start = () => { if (!started) { started = true; if (child.connected) child.send({ type: 'start' }); } };
             const timeout = setTimeout(() => { memoryError = 'Memory sampler startup timed out.'; monitor.kill(); start(); }, 10000);
@@ -73,7 +73,7 @@ for (const profile of ['typical', 'medium', 'large']) for (let iteration = 1; it
 const result = { measuredAt: new Date().toISOString(), environment: { os: platform(), release: release(), node: process.version, cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem() },
   methodology: 'Fresh Node worker and Chromium for each render; sequential synthetic API-valid submissions. Elapsed time includes browser launch, font loading, PDF generation and browser shutdown, but excludes API/database/network. Tree working set/RSS is sampled with OS queries plus 250 ms between queries; it can miss peaks and double-count shared pages. Sampling overhead affects timing. Node peak RSS excludes Chromium. No real reports, credentials or process command lines are stored. These are local observations, not production capacity or maximum-input certification.', measurements };
 await writeFile('test-results/pdf-benchmark/results.json', JSON.stringify(result, null, 2));
-const lines = ['# VYNLT PDF benchmark', '', result.methodology, '', '| Profile | Run | Status | Findings | Time (ms) | PDF bytes | Node peak (MiB) | Sampled tree peak (MiB) | Samples |', '|---|---:|---|---:|---:|---:|---:|---:|---:|'];
+const lines = ['# VYLNT PDF benchmark', '', result.methodology, '', '| Profile | Run | Status | Findings | Time (ms) | PDF bytes | Node peak (MiB) | Sampled tree peak (MiB) | Samples |', '|---|---:|---|---:|---:|---:|---:|---:|---:|'];
 for (const r of measurements) lines.push(`| ${r.profile} | ${r.iteration} | ${r.status} | ${r.findingCount} | ${r.elapsedMs} | ${r.pdfBytes ?? '-'} | ${(r.nodePeakRssBytes / 1048576).toFixed(1)} | ${r.sampledTreePeakBytes === null ? '-' : (r.sampledTreePeakBytes / 1048576).toFixed(1)} | ${r.memorySamples} |`);
 await writeFile('test-results/pdf-benchmark/summary.md', lines.join('\n') + '\n');
 if (measurements.some(r => r.status !== 'success')) process.exitCode = 1;

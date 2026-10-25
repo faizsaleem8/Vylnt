@@ -8,8 +8,8 @@ import { platform, release, cpus } from 'node:os';
 import { build } from 'esbuild';
 import { PGlite } from '@electric-sql/pglite';
 
-const repeats = Number(process.env.VYNLT_STORAGE_BENCH_RUNS ?? 5);
-if (!Number.isInteger(repeats) || repeats < 1 || repeats > 20) throw new Error('VYNLT_STORAGE_BENCH_RUNS must be 1..20');
+const repeats = Number((process.env.VYLNT_STORAGE_BENCH_RUNS ?? process.env.VYNLT_STORAGE_BENCH_RUNS) ?? 5);
+if (!Number.isInteger(repeats) || repeats < 1 || repeats > 20) throw new Error('VYLNT_STORAGE_BENCH_RUNS must be 1..20');
 await mkdir('.local', { recursive: true });
 await mkdir('test-results/storage-benchmark', { recursive: true });
 const modulePath = resolve('.local/storage-benchmark-module.mjs');
@@ -122,7 +122,7 @@ for (const count of [100, 1000]) {
 const output = { measuredAt: new Date().toISOString(), environment: { os: platform(), release: release(), node: process.version, cpu: cpus()[0]?.model }, repeats,
   methodology: 'Warm sequential reads of synthetic reports. PGlite is in-memory WASM PostgreSQL with real migrations/RLS and an Auth shim; not hosted Supabase, network, production disk or concurrency. Data ingested through the real RPC before timing. Comparisons are measured before and after migration 004 against each unchanged dataset. FileStore reads/writes an isolated temporary file seeded outside timing; reads include JSON parse/sort/clone, writes include serialized whole-file rewrite/rename. OS caches are warm; no fsync durability or production capacity claim. Result assertions run outside timed regions.', fileSizes, queryPlans, results };
 await writeFile('test-results/storage-benchmark/results.json', JSON.stringify(output, null, 2));
-const lines = ['# VYNLT storage benchmark', '', output.methodology, '', '| Engine | Scans | Layout | Operation | Min ms | Median ms | Max ms |', '|---|---:|---|---|---:|---:|---:|'];
+const lines = ['# VYLNT storage benchmark', '', output.methodology, '', '| Engine | Scans | Layout | Operation | Min ms | Median ms | Max ms |', '|---|---:|---|---|---:|---:|---:|'];
 for (const r of results) lines.push(`| ${r.engine} | ${r.scans} | ${r.layout} | ${r.operation} | ${r.minMs} | ${r.medianMs} | ${r.maxMs} |`);
 await writeFile('test-results/storage-benchmark/summary.md', lines.join('\n') + '\n');
 console.log('PASS storage benchmarks: query totals/order/coverage summaries, owner isolation, anonymous denial, file review integrity and local capacity checks.');

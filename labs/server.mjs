@@ -17,11 +17,11 @@ export function handler(req, res) {
   if (secure) {
     headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'";
     headers['X-Frame-Options'] = 'DENY';
-    headers['Set-Cookie'] = 'vynlt_session=lab-only; HttpOnly; Secure; SameSite=Strict; Path=/secure';
+    headers['Set-Cookie'] = 'vylnt_session=lab-only; HttpOnly; Secure; SameSite=Strict; Path=/secure';
     if (tls) headers['Strict-Transport-Security'] = 'max-age=31536000';
-  } else headers['Set-Cookie'] = 'vynlt_session=lab-only; SameSite=Lax; Path=/insecure';
+  } else headers['Set-Cookie'] = 'vylnt_session=lab-only; SameSite=Lax; Path=/insecure';
   res.writeHead(200, headers);
-  res.end(`<!doctype html><html lang="en"><meta charset="utf-8"><title>VYNLT ${secure ? 'hardened' : 'insecure'} lab</title><body><h1>VYNLT controlled lab</h1><p>${secure ? 'Restrictive response policies and protected cookie attributes.' : 'Deliberately missing response policies and weak session cookie attributes.'}</p><p>${tls ? 'HTTPS fixture: HSTS and HTTP resource checks apply.' : 'HTTP fixture: use the HTTPS lab for HSTS and mixed-content checks.'}</p><nav><a href="/secure">Hardened page</a> · <a href="/insecure">Insecure page</a> · <a href="/dynamic">Dynamic page</a></nav><p>Install the extension, open its popup, and select Rescan page.</p><button id="dynamic">Add dynamic image</button><button id="route">Change SPA route</button><p id="result"></p><script src="/app.js"></script>${tls && !secure ? '<img alt="Local mixed-resource fixture" src="http://127.0.0.1:5174/pixel.svg?token=private">' : ''}</body></html>`);
+  res.end(`<!doctype html><html lang="en"><meta charset="utf-8"><title>VYLNT ${secure ? 'hardened' : 'insecure'} lab</title><body><h1>VYLNT controlled lab</h1><p>${secure ? 'Restrictive response policies and protected cookie attributes.' : 'Deliberately missing response policies and weak session cookie attributes.'}</p><p>${tls ? 'HTTPS fixture: HSTS and HTTP resource checks apply.' : 'HTTP fixture: use the HTTPS lab for HSTS and mixed-content checks.'}</p><nav><a href="/secure">Hardened page</a> · <a href="/insecure">Insecure page</a> · <a href="/dynamic">Dynamic page</a></nav><p>Install the extension, open its popup, and select Rescan page.</p><button id="dynamic">Add dynamic image</button><button id="route">Change SPA route</button><p id="result"></p><script src="/app.js"></script>${tls && !secure ? '<img alt="Local mixed-resource fixture" src="http://127.0.0.1:5174/pixel.svg?token=private">' : ''}</body></html>`);
 }
 export async function startLabs() {
   const servers = [http.createServer(handler)];
@@ -37,7 +37,7 @@ export async function startLabs() {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const servers = await startLabs();
-  console.log('VYNLT HTTP lab: http://127.0.0.1:5174/insecure');
-  if (servers.length > 1) console.log('VYNLT HTTPS lab: https://127.0.0.1:5443/insecure');
+  console.log('VYLNT HTTP lab: http://127.0.0.1:5174/insecure');
+  if (servers.length > 1) console.log('VYLNT HTTPS lab: https://127.0.0.1:5443/insecure');
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { for (const server of servers) server.close(); });
 }

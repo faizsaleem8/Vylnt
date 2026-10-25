@@ -32,7 +32,7 @@ export function AnchorStatus({ id, api }: { id: string; api: <T>(path: string, i
         if (!c.signal.aborted) await refreshRef.current?.();
       } else {
         const data = await apiRef.current(path + 'anchor-proof.json', { signal: c.signal }); if (c.signal.aborted) return;
-        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const link = document.createElement('a'); link.href = url; link.download = `vynlt-${id}-anchor-proof.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const link = document.createElement('a'); link.href = url; link.download = `vylnt-${id}-anchor-proof.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
     } catch { if (!c.signal.aborted) setState(previous => ({ id, view: previous?.view, message: 'Operation unavailable. Check the API and local node, then retry.' })); }
     finally { if (!c.signal.aborted) setBusy(false); }

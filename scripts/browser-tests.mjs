@@ -31,7 +31,7 @@ async function expandReportTools(page) {
 const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 try {
   servers = await startLabs(); assert.equal(servers.length, 2, 'Run npm run lab:tls first');
-  apiProcess = spawn(process.execPath, ['dist/server/index.js'], { env: { ...process.env, PORT: '4319', HOST: '127.0.0.1', VYNLT_STORAGE: 'local', VYNLT_API_TOKEN: token, VYNLT_DATA_FILE: dataFile, VYNLT_ALLOWED_ORIGINS: apiOrigin, VYNLT_RATE_WRITE_MAX: '200' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  apiProcess = spawn(process.execPath, ['dist/server/index.js'], { env: { ...process.env, PORT: '4319', HOST: '127.0.0.1', VYLNT_STORAGE: 'local', VYLNT_API_TOKEN: token, VYLNT_DATA_FILE: dataFile, VYLNT_ALLOWED_ORIGINS: apiOrigin, VYLNT_RATE_WRITE_MAX: '200' }, stdio: ['ignore', 'pipe', 'pipe'] });
   apiProcess.stderr.on('data', d => logs.push(d.toString()));
   await until(async () => (await fetch(`${apiOrigin}/api/health`)).ok, 'API readiness');
   const extension = resolve('dist/extension');
@@ -55,7 +55,7 @@ try {
   await ungrantedPage.goto('https://second.vynlt-permission.test/');
   await until(async () => await permissionPanel.locator('#site').textContent() === 'second.vynlt-permission.test', 'cross-origin navigation updates panel');
   assert.equal(await permissionPanel.locator('#enable').isEnabled(), true);
-  assert.ok(!(await history()).some(r => r.observation.url.includes('vynlt-permission.test')), 'Reading the active URL must not authorize collection');
+  assert.ok(!(await history()).some(r => r.observation.url.includes('vylnt-permission.test')), 'Reading the active URL must not authorize collection');
   await ungrantedPage.goto('chrome://settings/');
   await until(async () => (await permissionPanel.locator('#monitor-status').textContent()).includes('cannot be scanned'), 'restricted-page explanation');
   assert.equal(await permissionPanel.locator('#enable').isDisabled(), true);
@@ -185,13 +185,13 @@ try {
   const pdfDownload = reportPage.waitForEvent('download');
   await reportPage.getByRole('button', { name: 'Download PDF', exact: true }).click();
   const pdfFile = await pdfDownload;
-  assert.match(pdfFile.suggestedFilename(), /^vynlt-.*\.pdf$/);
+  assert.match(pdfFile.suggestedFilename(), /^vylnt-.*\.pdf$/);
   await pdfFile.saveAs('test-results/extension-report.pdf');
   assert.equal((await readFile('test-results/extension-report.pdf')).subarray(0, 5).toString(), '%PDF-');
   assert.equal(context.pages().length, pageCount, 'PDF download stays inside the extension');
   const jsonDownload = reportPage.waitForEvent('download');
   await reportPage.getByRole('button', { name: 'Export JSON', exact: false }).click();
-  assert.match((await jsonDownload).suggestedFilename(), /^vynlt-.*\.json$/);
+  assert.match((await jsonDownload).suggestedFilename(), /^vylnt-.*\.json$/);
   assert.ok(await reportPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Panel must fit narrow viewport');
   await reportPage.evaluate(() => window.scrollTo(0, 0)); await reportPage.screenshot({ path: 'test-results/extension-side-panel.png', fullPage: true });
   assert.equal(await worker.evaluate(async () => (await chrome.storage.local.get('history')).history), undefined);
@@ -208,7 +208,7 @@ try {
   // The original panel must not establish a second account/sync session.
   await reportPage.locator('#api-token').fill(token);
   await reportPage.getByRole('button', { name: 'Connect workspace', exact: true }).click();
-  await reportPage.getByText('Another VYNLT panel is connected.', { exact: false }).waitFor();
+  await reportPage.getByText('Another VYLNT panel is connected.', { exact: false }).waitFor();
   await otherPanel.close();
   const count = (await history()).length;
   await reportPage.evaluate(() => chrome.runtime.sendMessage({ type: 'PAUSE', paused: true })); await page.reload();
@@ -248,9 +248,9 @@ try {
   await dashboard.getByRole('button', { name: 'Save decision' }).first().click();
   await dashboard.getByText('Review decision saved.', { exact: false }).waitFor();
   assert.equal(await dashboard.locator('.scan-integrity').count(), 0, 'redundant original scan integrity UI is removed');
-  const downloadPromise = dashboard.waitForEvent('download'); await dashboard.getByRole('button', { name: 'Export JSON', exact: false }).click(); assert.match((await downloadPromise).suggestedFilename(), /^vynlt-.*\.json$/);
+  const downloadPromise = dashboard.waitForEvent('download'); await dashboard.getByRole('button', { name: 'Export JSON', exact: false }).click(); assert.match((await downloadPromise).suggestedFilename(), /^vylnt-.*\.json$/);
   await dashboard.screenshot({ path: 'test-results/dashboard-report.png', fullPage: true });
-  // VYNLT runs ML without any model upload, training or Run controls.
+  // VYLNT runs ML without any model upload, training or Run controls.
   const ml = dashboard.locator('.ml-analysis');
   await ml.getByRole('heading', { name: 'Prioritised issues', exact: true }).waitFor();
   await expandReportTools(dashboard);

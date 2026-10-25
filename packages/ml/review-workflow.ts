@@ -14,7 +14,7 @@ export const reviewDecisionSchema = z.object({
   packetHash: hex, caseId: hex, reviewerId: z.string().trim().min(1).max(120),
   reviewedAt: z.iso.datetime(), scope: z.string().trim().min(1).max(512),
   label: z.enum(['change-warranted', 'contextual', 'needs-review']),
-  independentEvidence: z.object({ recordId: z.string().trim().min(1).max(200), sha256: hex, independentOfVynltRules: z.literal(true) }).strict(),
+  independentEvidence: z.object({ recordId: z.string().trim().min(1).max(200), sha256: hex, independentOfVylntRules: z.literal(true) }).strict(),
 }).strict();
 export type ReviewDecision = z.infer<typeof reviewDecisionSchema>;
 type ReviewCase = { id: string; category: string; variantHash: string; findingIds: string[]; representativeFindingIndex: number;

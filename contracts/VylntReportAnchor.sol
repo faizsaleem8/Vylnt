@@ -2,7 +2,7 @@
 pragma solidity 0.8.38;
 
 /// Digest identity only: this contract does not attest to scan or model quality.
-contract VynltReportAnchor {
+contract VylntReportAnchor {
     address public immutable writer;
     bytes32 public immutable instanceId;
     mapping(bytes32 => uint256) public anchoredAt;

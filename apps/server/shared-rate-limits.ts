@@ -9,17 +9,17 @@ export class RateBackendUnavailable extends Error {
   constructor() { super('Request protection is temporarily unavailable. Retry shortly.'); }
 }
 export function readRateBackendConfig(env: NodeJS.ProcessEnv): RateBackendConfig {
-  const mode = env.VYNLT_RATE_STORE ?? 'memory';
-  if (!['memory', 'redis'].includes(mode)) throw new Error('VYNLT_RATE_STORE must be memory or redis');
-  if (env.NODE_ENV === 'production' && mode !== 'redis') throw new Error('Production requires VYNLT_RATE_STORE=redis');
+  const mode = (env.VYLNT_RATE_STORE ?? env.VYNLT_RATE_STORE) ?? 'memory';
+  if (!['memory', 'redis'].includes(mode)) throw new Error('VYLNT_RATE_STORE must be memory or redis');
+  if (env.NODE_ENV === 'production' && mode !== 'redis') throw new Error('Production requires VYLNT_RATE_STORE=redis');
   if (mode === 'memory') return { mode };
   let url: URL;
-  try { url = new URL(env.VYNLT_REDIS_URL ?? ''); } catch { throw new Error('Set VYNLT_REDIS_URL to a Redis connection URL'); }
-  if (!['redis:', 'rediss:'].includes(url.protocol) || !url.hostname || url.hash || url.search || !/^\/\d*$/.test(url.pathname || '/')) throw new Error('VYNLT_REDIS_URL must use redis/rediss with an optional database number');
-  const secret = env.VYNLT_RATE_KEY_SECRET ?? '';
-  if (secret.length < 32 || secret.length > 512 || /\s/.test(secret)) throw new Error('VYNLT_RATE_KEY_SECRET must be 32..512 characters without whitespace and identical across replicas');
-  const namespace = env.VYNLT_RATE_NAMESPACE ?? 'vynlt';
-  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(namespace)) throw new Error('VYNLT_RATE_NAMESPACE must be 1..64 letters, digits, underscores or hyphens');
+  try { url = new URL((env.VYLNT_REDIS_URL ?? env.VYNLT_REDIS_URL) ?? ''); } catch { throw new Error('Set VYLNT_REDIS_URL to a Redis connection URL'); }
+  if (!['redis:', 'rediss:'].includes(url.protocol) || !url.hostname || url.hash || url.search || !/^\/\d*$/.test(url.pathname || '/')) throw new Error('VYLNT_REDIS_URL must use redis/rediss with an optional database number');
+  const secret = (env.VYLNT_RATE_KEY_SECRET ?? env.VYNLT_RATE_KEY_SECRET) ?? '';
+  if (secret.length < 32 || secret.length > 512 || /\s/.test(secret)) throw new Error('VYLNT_RATE_KEY_SECRET must be 32..512 characters without whitespace and identical across replicas');
+  const namespace = (env.VYLNT_RATE_NAMESPACE ?? env.VYNLT_RATE_NAMESPACE) ?? 'vylnt';
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(namespace)) throw new Error('VYLNT_RATE_NAMESPACE must be 1..64 letters, digits, underscores or hyphens');
   return { mode: 'redis', url: url.toString(), secret, namespace };
 }
 

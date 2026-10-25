@@ -68,7 +68,7 @@ async function api<T>(path: string, init: RequestInit = {}, pdf = false): Promis
     if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
     return blob as T;
   }
-  const data = await response.json().catch(() => { throw new SyncFailure('The API returned an invalid response. Check the API base URL and restart the VYNLT server.'); });
+  const data = await response.json().catch(() => { throw new SyncFailure('The API returned an invalid response. Check the API base URL and restart the VYLNT server.'); });
   if (version !== epoch) throw new DOMException('Session changed', 'AbortError');
   if (!response.ok) {
     if (response.status === 401) throw new SyncFailure('Your workspace session was rejected. Sign out and sign in again.', false);
@@ -96,12 +96,12 @@ function resetConnection() {
 async function connected(token: string) {
   // A browser-wide lease prevents two panels uploading the same scans to different accounts.
   const acquired = await new Promise<boolean>((resolve, reject) => {
-    void navigator.locks.request('vynlt-account-sync', { ifAvailable: true }, async lock => {
+    void navigator.locks.request('vylnt-account-sync', { ifAvailable: true }, async lock => {
       if (!lock) { resolve(false); return; }
       await new Promise<void>(release => { releaseConnection = release; resolve(true); });
     }).catch(reject);
   });
-  if (!acquired) throw new Error('Another VYNLT panel is connected. Sign out there before connecting here.');
+  if (!acquired) throw new Error('Another VYLNT panel is connected. Sign out there before connecting here.');
   accessToken = token;
   status('Checking authenticated workspace access…');
   try { await api('/scans?limit=1'); }
@@ -338,7 +338,7 @@ get('delete').onclick = () => handle(async () => {
 get('export').onclick = () => {
   if (!selected) return;
   const url = URL.createObjectURL(new Blob([JSON.stringify(selected, null, 2)], { type: 'application/json' }));
-  const link = element('a'); link.href = url; link.download = 'vynlt-' + selected.scanId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const link = element('a'); link.href = url; link.download = 'vylnt-' + selected.scanId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 get('pdf').onclick = () => {
   if (!selected || view !== 'saved' || pdfBusy) return;
@@ -351,7 +351,7 @@ get('pdf').onclick = () => {
       const blob = await api<Blob>(`/reports/${id}/pdf`, {}, true);
       if (!stillSelected()) return;
       const url = URL.createObjectURL(blob), link = element('a');
-      link.href = url; link.download = `vynlt-${id}.pdf`; link.click();
+      link.href = url; link.download = `vylnt-${id}.pdf`; link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       get('message').textContent = 'PDF download started. Saved reviews are included; unsaved drafts are not.';
     } catch (error) { if (stillSelected()) get('message').textContent = error instanceof Error ? error.message : 'PDF download failed. Retry.'; }
@@ -366,7 +366,7 @@ async function refreshState() {
     paused = state.paused; get('pause').textContent = paused ? 'Resume' : 'Pause';
     currentScan = state.scan;
     let url: URL | undefined;
-    let unavailable = tab?.url ? 'This browser page or local file cannot be scanned. Open an HTTP or HTTPS website.' : 'Cannot read this tab’s address. Reload VYNLT in chrome://extensions and reopen the panel.';
+    let unavailable = tab?.url ? 'This browser page or local file cannot be scanned. Open an HTTP or HTTPS website.' : 'Cannot read this tab’s address. Reload VYLNT in chrome://extensions and reopen the panel.';
     try {
       const candidate = new URL(tab?.url ?? '');
       const webStore = candidate.hostname === 'chromewebstore.google.com' || (candidate.hostname === 'chrome.google.com' && /^\/webstore(?:\/|$)/.test(candidate.pathname));

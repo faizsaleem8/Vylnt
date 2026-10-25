@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 if (Number(process.versions.node.split('.')[0]) < 24) {
-  const node = process.env.VYNLT_NODE ?? join(homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin', process.platform === 'win32' ? 'node.exe' : 'node');
+  const node = (process.env.VYLNT_NODE ?? process.env.VYNLT_NODE) ?? join(homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin', process.platform === 'win32' ? 'node.exe' : 'node');
   const child = spawn(node, [process.argv[1]], { stdio: 'inherit', windowsHide: true });
   child.on('exit', code => process.exit(code ?? 1));
 } else {

@@ -1,4 +1,4 @@
-# VYNLT M2 acceptance
+# VYLNT M2 acceptance
 
 M2 is complete for the current development scope, including verified hosted two-account isolation. The user explicitly does not want Docker or deployment now. Real shared rate limiting, physical-index/plan inspection and production measurements are deferred deployment work, not current milestone blockers; they remain unverified. Local SQL/mocked API tests are not substitutes for future real-service/production checks.
 
@@ -17,7 +17,7 @@ Run `npm run verify:supabase`, then open `http://127.0.0.1:4321` in your browser
 
 Sign in privately as Account A. Optionally connect a different confirmed account as B, then choose **Run live checks**. With A only, two-account isolation is explicitly skipped; a green single-account result does not complete RLS acceptance. After each run tokens are discarded, so reconnect both accounts for another run. Do not share passwords or access/refresh tokens in chat.
 
-The browser uses VYNLT's existing memory-only Supabase client. Passwords go directly to Supabase Auth and are cleared from the form; the helper receives only access tokens, validates them with Auth and retains them in memory for one run. Host/Origin checks protect against DNS rebinding/cross-origin posts. No credentials/tokens are logged or written to disk. Only sanitized check names, durations, skipped/failure status and generated scan IDs needing cleanup are saved under ignored `test-results/supabase-acceptance/results.json`.
+The browser uses VYLNT's existing memory-only Supabase client. Passwords go directly to Supabase Auth and are cleared from the form; the helper receives only access tokens, validates them with Auth and retains them in memory for one run. Host/Origin checks protect against DNS rebinding/cross-origin posts. No credentials/tokens are logged or written to disk. Only sanitized check names, durations, skipped/failure status and generated scan IDs needing cleanup are saved under ignored `test-results/supabase-acceptance/results.json`.
 
 The verifier creates at most two synthetic scan records using normal API ingestion, checks the deployed functions, and attempts deletion of only its generated scan IDs even after a failure. If cleanup failures are reported, reconnect the owning account and delete those specific fixture scans; do not delete unrelated reports. It makes no accounts, sends no mail and does not load-test the hosted project.
 
@@ -25,7 +25,7 @@ With distinct A/B accounts, the verifier also checks that B receives 404 for A's
 
 ## Redis verification without Docker
 
-A real Redis endpoint is still required. Set `VYNLT_REDIS_URL` privately in the ignored .env, then run `npm run verify:redis`. This command installs nothing, uses a unique test namespace/secret, and leaves only automatically expiring keys. It never flushes Redis, deletes production keys or stops the service. No endpoint/credentials are printed.
+A real Redis endpoint is still required. Set `VYLNT_REDIS_URL` privately in the ignored .env, then run `npm run verify:redis`. This command installs nothing, uses a unique test namespace/secret, and leaves only automatically expiring keys. It never flushes Redis, deletes production keys or stops the service. No endpoint/credentials are printed.
 
 The prepared harness checks counters shared between independent app/backend connections, per-owner separation, client/owner/write bucket behavior, Retry-After/expiry and a disconnected backend returning sanitized 503 while the other connection works. It uses in-memory synthetic API fixtures, not Supabase data. The harness has **not been run against a real service** while no endpoint is available; code/compile checks alone do not verify distributed operation. Redis failover/server outage and production topology/load remain separate checks.
 

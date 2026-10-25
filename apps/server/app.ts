@@ -31,7 +31,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     if (origin) { res.set('Access-Control-Allow-Origin', origin); res.vary('Origin'); }
     res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
     res.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.set('Access-Control-Expose-Headers', 'Retry-After, RateLimit, RateLimit-Policy, X-VYNLT-Anchor-Warning');
+    res.set('Access-Control-Expose-Headers', 'Retry-After, RateLimit, RateLimit-Policy, X-VYLNT-Anchor-Warning');
     if (req.method === 'OPTIONS') { res.sendStatus(204); return; }
     next();
   });
@@ -108,8 +108,8 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const result = await options.store.putInsight(identity(res), content);
     if (options.anchors) {
       try { await options.anchors.enqueue(identity(res).ownerId, result.report); }
-      catch { res.set('X-VYNLT-Anchor-Warning', 'Report saved; anchoring could not be queued. Save this version again to retry.'); }
-    } else if (options.anchorWarning) res.set('X-VYNLT-Anchor-Warning', options.anchorWarning);
+      catch { res.set('X-VYLNT-Anchor-Warning', 'Report saved; anchoring could not be queued. Save this version again to retry.'); }
+    } else if (options.anchorWarning) res.set('X-VYLNT-Anchor-Warning', options.anchorWarning);
     res.status(result.created ? 201 : 200).json(result.report);
   });
   app.get('/api/scans/:id/insight-reports', async (req, res) => {
@@ -168,7 +168,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const stored = await ownedInsight(req.params.id, res); if (!stored) return;
     const view = await options.anchors?.status(identity(res).ownerId, stored.id);
     if (!view?.proof) { res.status(404).json({ error: 'No anchor proof recorded for this version.' }); return; }
-    res.attachment(`vynlt-${stored.id}-anchor-proof.json`).json(view.proof);
+    res.attachment(`vylnt-${stored.id}-anchor-proof.json`).json(view.proof);
   });
   app.get('/api/insight-reports/:id{.:format}', async (req, res) => {
     const id = z.string().regex(/^[0-9a-f]{64}$/).parse(req.params.id);
@@ -178,14 +178,14 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     if (!await verifyFrozenInsights(stored)) { res.status(409).json({ error: 'Frozen report integrity or supported decision policy verification failed.' }); return; }
     const source = await options.store.get(identity(res), stored.content.originalScan.scanId);
     if (!source || source.hash !== stored.content.originalScanHash) { res.status(409).json({ error: 'Original scan verification failed.' }); return; }
-    if (format === 'json') { res.attachment(`vynlt-insights-${id}.json`).json(stored); return; }
+    if (format === 'json') { res.attachment(`vylnt-insights-${id}.json`).json(stored); return; }
     const pdf = await (options.renderPdf ?? generatePdf)({ ...source, report: stored.content.originalScan, feedback: [] }, 'insights', undefined, stored);
-    if (!res.destroyed) res.attachment(`vynlt-${source.report.scanId}-insights.pdf`).type('application/pdf').send(pdf);
+    if (!res.destroyed) res.attachment(`vylnt-${source.report.scanId}-insights.pdf`).type('application/pdf').send(pdf);
   });
   app.get('/api/reports/:id', async (req, res) => {
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
-    res.attachment(`vynlt-${row.report.scanId}.json`).json(row.report);
+    res.attachment(`vylnt-${row.report.scanId}.json`).json(row.report);
   });
   app.get('/api/reports/:id/verify', async (req, res) => {
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
@@ -196,12 +196,12 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
     const pdf = await (options.renderPdf ?? generatePdf)(row, 'full');
-    if (!res.destroyed) res.attachment(`vynlt-${row.report.scanId}.pdf`).type('application/pdf').send(pdf);
+    if (!res.destroyed) res.attachment(`vylnt-${row.report.scanId}.pdf`).type('application/pdf').send(pdf);
   });
   app.post('/api/reports/:id/insights/pdf', async (req, res) => {
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
-    res.status(410).json({ error: 'This on-demand synthetic export is retired. Refresh VYNLT and use saved insight reports.' });
+    res.status(410).json({ error: 'This on-demand synthetic export is retired. Refresh VYLNT and use saved insight reports.' });
   });
   app.post('/api/scans/:id/findings/:findingId/feedback', async (req, res) => {
     const feedback = await options.store.feedback(identity(res), z.uuid().parse(req.params.id), req.params.findingId as string, feedbackSchema.parse(req.body));

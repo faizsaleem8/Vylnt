@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def load_engine():
-    spec = importlib.util.spec_from_file_location('vynlt_evidence_v3_engine', Path(__file__).with_name('insights.py'))
+    spec = importlib.util.spec_from_file_location('vylnt_evidence_v3_engine', Path(__file__).with_name('insights.py'))
     engine = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(engine)
     engine.VERSION = 'vynlt-evidence-v3'

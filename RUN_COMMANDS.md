@@ -1,8 +1,8 @@
-# VYNLT run commands
+# VYLNT run commands
 
 ## Fresh-commit security gate (M4)
 
-After building VYNLT and installing Chromium:
+After building VYLNT and installing Chromium:
 
 ```powershell
 npm.cmd run gate
@@ -43,7 +43,7 @@ Sign in with your configured Supabase account. ML analysis runs automatically in
 
 ## Extension in Edge
 
-Open `edge://extensions` and click **Reload** on VYNLT after a build.
+Open `edge://extensions` and click **Reload** on VYLNT after a build.
 
 If it is not installed, enable Developer mode, choose **Load unpacked**, and select:
 
@@ -58,10 +58,10 @@ Open the extension side panel, connect to the workspace and enable access for th
 The existing checkout is configured for Supabase and local blockchain anchoring. Preserve its private `.env`. The relevant non-secret settings are:
 
 ```dotenv
-VYNLT_STORAGE=supabase
+VYLNT_STORAGE=supabase
 HOST=127.0.0.1
 PORT=4318
-VYNLT_BLOCKCHAIN=local
+VYLNT_BLOCKCHAIN=local
 ```
 
 Dependencies are already installed on the existing machine. On a fresh checkout, use Node 24 and install the locked dependencies/browser before the startup steps:
@@ -73,7 +73,7 @@ npm.cmd run setup:browser
 
 The fresh checkout also needs its own private environment configuration; see [API setup](docs/API.md). The installed Chromium supports server-generated PDFs and automated scanning; it is separate from the Edge extension. Do not run installation commands on every startup.
 
-Hardhat needs Node 24. On this machine, blockchain scripts automatically select the available bundled Node 24 runtime. On another machine, use Node 24 or set `VYNLT_NODE` to its executable.
+Hardhat needs Node 24. On this machine, blockchain scripts automatically select the available bundled Node 24 runtime. On another machine, use Node 24 or set `VYLNT_NODE` to its executable.
 
 ## Restart and stop
 

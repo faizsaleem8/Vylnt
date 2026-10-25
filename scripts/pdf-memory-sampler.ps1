@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$rootProcessId = [int]$env:VYNLT_BENCH_PID
+$rootProcessId = [int]$env:VYLNT_BENCH_PID
 # Only process IDs, parent IDs and working sets are inspected. No command lines.
 for ($sampleNumber = 0; $sampleNumber -lt 240; $sampleNumber++) {
     $rows = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,WorkingSetSize)

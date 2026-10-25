@@ -7,7 +7,7 @@ export interface RateLimits { windowMs: number; ipMax: number; userMax: number; 
 export const defaultRateLimits: Readonly<RateLimits> = { windowMs: 60000, ipMax: 600, userMax: 300, writeMax: 60 };
 export function readRateLimits(env: NodeJS.ProcessEnv): RateLimits {
   const positive = (name: string, fallback: number, max: number) => {
-    const raw = env[name];
+    const raw = env[name] ?? env[name.replace(/^VYLNT_/, 'VYNLT_')];
     if (raw === undefined) return fallback;
     if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw)) || Number(raw) < 1 || Number(raw) > max) {
       throw new Error(`${name} must be an integer between 1 and ${max}`);
@@ -15,10 +15,10 @@ export function readRateLimits(env: NodeJS.ProcessEnv): RateLimits {
     return Number(raw);
   };
   return {
-    windowMs: positive('VYNLT_RATE_WINDOW_MS', defaultRateLimits.windowMs, 3600000),
-    ipMax: positive('VYNLT_RATE_IP_MAX', defaultRateLimits.ipMax, 100000),
-    userMax: positive('VYNLT_RATE_USER_MAX', defaultRateLimits.userMax, 100000),
-    writeMax: positive('VYNLT_RATE_WRITE_MAX', defaultRateLimits.writeMax, 100000),
+    windowMs: positive('VYLNT_RATE_WINDOW_MS', defaultRateLimits.windowMs, 3600000),
+    ipMax: positive('VYLNT_RATE_IP_MAX', defaultRateLimits.ipMax, 100000),
+    userMax: positive('VYLNT_RATE_USER_MAX', defaultRateLimits.userMax, 100000),
+    writeMax: positive('VYLNT_RATE_WRITE_MAX', defaultRateLimits.writeMax, 100000),
   };
 }
 

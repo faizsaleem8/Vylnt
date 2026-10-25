@@ -136,7 +136,7 @@ def load_datasets(paths):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='VYNLT offline experimental alert baseline')
+    parser = argparse.ArgumentParser(description='VYLNT offline experimental alert baseline')
     parser.add_argument('--dataset', required=True, nargs='+', help='One or more feature-only JSON exports, prepared with the same private dataset key')
     parser.add_argument('--output', required=True)
     parser.add_argument('--seed', default='vynlt-v1')
@@ -151,11 +151,11 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     for name, value in [('model.json', artifact), ('evaluation.json', report), ('split-groups.json', groups)]:
         (output / name).write_text(json.dumps(value, indent=2, allow_nan=False) + '\n', encoding='utf-8')
-    print(f"VYNLT experimental baseline completed ({report['provenance']}); live use is disabled. See evaluation.json for limitations.")
+    print(f"VYLNT experimental baseline completed ({report['provenance']}); live use is disabled. See evaluation.json for limitations.")
 
 
 if __name__ == '__main__':
     try:
         main()
     except (ValueError, KeyError, TypeError, ImportError) as error:
-        raise SystemExit(f'VYNLT ML: {error}') from None
+        raise SystemExit(f'VYLNT ML: {error}') from None

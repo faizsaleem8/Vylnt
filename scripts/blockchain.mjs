@@ -7,7 +7,7 @@ import { createHash, randomBytes } from 'node:crypto';
 // Use the project-compatible bundled runtime without changing the user's global Node.
 const [command, ...args] = process.argv.slice(2);
 if (Number(process.versions.node.split('.')[0]) < 24) {
-  const runtime = process.env.VYNLT_NODE ?? join(homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin', process.platform === 'win32' ? 'node.exe' : 'node');
+  const runtime = (process.env.VYLNT_NODE ?? process.env.VYNLT_NODE) ?? join(homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin', process.platform === 'win32' ? 'node.exe' : 'node');
   await access(runtime);
   const child = spawn(runtime, [process.argv[1], command, ...args], { stdio: 'inherit', windowsHide: true });
   child.on('exit', code => process.exit(code ?? 1));
@@ -17,16 +17,16 @@ if (Number(process.versions.node.split('.')[0]) < 24) {
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill(signal));
 } else if (command === 'compile') {
   const solc = (await import('solc')).default;
-  const source = await readFile('contracts/VynltReportAnchor.sol', 'utf8');
-  const output = JSON.parse(solc.compile(JSON.stringify({ language: 'Solidity', sources: { 'VynltReportAnchor.sol': { content: source } }, settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: 'shanghai', outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } } } })));
+  const source = await readFile('contracts/VylntReportAnchor.sol', 'utf8');
+  const output = JSON.parse(solc.compile(JSON.stringify({ language: 'Solidity', sources: { 'VylntReportAnchor.sol': { content: source } }, settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: 'shanghai', outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } } } })));
   if (output.errors?.some(e => e.severity === 'error')) throw new Error(output.errors.map(e => e.formattedMessage).join('\n'));
-  const contract = output.contracts['VynltReportAnchor.sol'].VynltReportAnchor;
+  const contract = output.contracts['VylntReportAnchor.sol'].VylntReportAnchor;
   await mkdir('.local/blockchain', { recursive: true });
   await writeFile('.local/blockchain/contract.json', JSON.stringify({ abi: contract.abi, bytecode: '0x' + contract.evm.bytecode.object, compiler: solc.version(), sourceHash: createHash('sha256').update(source).digest('hex') }, null, 2));
-  console.log('Compiled VYNLT local anchor contract.');
+  console.log('Compiled VYLNT local anchor contract.');
 } else if (command === 'deploy') {
   const { JsonRpcProvider, Wallet, ContractFactory, hexlify, keccak256 } = await import('ethers');
-  const rpcUrl = process.env.VYNLT_CHAIN_RPC ?? 'http://127.0.0.1:8545';
+  const rpcUrl = (process.env.VYLNT_CHAIN_RPC ?? process.env.VYNLT_CHAIN_RPC) ?? 'http://127.0.0.1:8545';
   const url = new URL(rpcUrl);
   if (!['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) || url.protocol !== 'http:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Only credential-free loopback RPC origins are supported');
   const provider = new JsonRpcProvider(rpcUrl, undefined, { cacheTimeout: -1 });
@@ -42,13 +42,13 @@ if (Number(process.versions.node.split('.')[0]) < 24) {
     const manifest = { version: 1, rpcUrl, chainId: 31337, address, instanceId, writer: wallet.address, runtimeHash: keccak256(await provider.getCode(address)), deploymentTx: receipt.hash, deploymentBlockHash: receipt.blockHash, sourceHash: artifact.sourceHash };
     await writeFile('.local/blockchain/deployment.json', JSON.stringify(manifest, null, 2), { mode: 0o600 });
     await writeFile('.local/blockchain/signer.json', JSON.stringify({ privateKey: wallet.privateKey }), { mode: 0o600 });
-    console.log('Deployed VYNLT local anchor. Instance:', instanceId, 'Contract:', address);
+    console.log('Deployed VYLNT local anchor. Instance:', instanceId, 'Contract:', address);
   } finally { provider.destroy(); }
 } else if (command === 'verify') {
   const { verifyExport } = await import('../dist/server/anchor.js');
   const [reportFile, proofFile] = args;
   if (!reportFile || !proofFile) throw new Error('Usage: npm run chain:verify -- report.json proof.json');
-  const result = await verifyExport(JSON.parse(await readFile(resolve(reportFile), 'utf8')), JSON.parse(await readFile(resolve(proofFile), 'utf8')), process.env.VYNLT_CHAIN_DEPLOYMENT ?? '.local/blockchain/deployment.json');
+  const result = await verifyExport(JSON.parse(await readFile(resolve(reportFile), 'utf8')), JSON.parse(await readFile(resolve(proofFile), 'utf8')), (process.env.VYLNT_CHAIN_DEPLOYMENT ?? process.env.VYNLT_CHAIN_DEPLOYMENT) ?? '.local/blockchain/deployment.json');
   console.log(JSON.stringify(result, null, 2));
   if (result.result !== 'matching') process.exitCode = 1;
 } else { throw new Error('Expected node, compile, deploy or verify'); }

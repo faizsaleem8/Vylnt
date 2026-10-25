@@ -1,4 +1,4 @@
-// Controlled localhost applications and a network oracle independent of VYNLT rules.
+// Controlled localhost applications and a network oracle independent of VYLNT rules.
 import https from 'node:https';
 import http from 'node:http';
 import assert from 'node:assert/strict';
@@ -38,7 +38,7 @@ const handler = (req, res) => {
   const preferenceCode = 'document.documentElement.dataset.readable=String(document.cookie.split(";").some(c=>c.trim().startsWith("session_fixture=")));';
   if (spec.variant === 'persistent-preference') res.setHeader('Content-Security-Policy', `script-src 'self' 'sha256-${createHash('sha256').update(preferenceCode).digest('base64')}'`);
   const body = spec.variant === 'persistent-preference' ? `<script>${preferenceCode}</script>` : spec.rule === 'JS-002' ? `<script src="https://127.0.0.1:${port}/asset.js" ${spec.variant === 'module' ? 'type="module"' : spec.variant === 'async' ? 'async' : 'defer'}></script>` : spec.rule === 'NET-001' ? `<img alt="Controlled fixture" src="http://127.0.0.1:${resourcePort}/${spec.variant ?? 'failed'}/asset.png">` : '';
-  res.end(`<!doctype html><html lang="en"><title>VYNLT controlled fixture</title><body><h1>Controlled fixture</h1>${body}</body></html>`);
+  res.end(`<!doctype html><html lang="en"><title>VYLNT controlled fixture</title><body><h1>Controlled fixture</h1>${body}</body></html>`);
 };
 const server = https.createServer(tls, handler);
 const resources = http.createServer((req, res) => {
@@ -53,7 +53,7 @@ const { scanPage } = await import(pathToFileURL(modulePath).href);
 const manifest = { version: 2, examples: [] }, records = [];
 try {
   for (const spec of specs) {
-    // Network header/HTML assertions use Node's TLS client, not evaluate()/VYNLT rule findings.
+    // Network header/HTML assertions use Node's TLS client, not evaluate()/VYLNT rule findings.
     const result = await new Promise((resolveResult, reject) => https.get(`https://127.0.0.1:${port}/${spec.id}`, { rejectUnauthorized: false }, res => { let body = ''; res.on('data', chunk => body += chunk); res.on('end', () => resolveResult({ headers: res.headers, body })); }).on('error', reject));
     if (spec.rule === 'HDR-001') assert.equal(result.headers['strict-transport-security'], spec.variant === 'zero-lifetime' ? 'max-age=0' : undefined);
     if (spec.rule === 'HDR-002') assert.equal(result.headers['x-frame-options'], undefined);

@@ -13,6 +13,9 @@ const requests = []; let version = 1;
 const server = http.createServer((req, res) => {
   const path = new URL(req.url, 'http://127.0.0.1').pathname;
   if (path === '/favicon.ico') { res.writeHead(204); res.end(); return; }
+  if (path === '/network-ok' || path === '/network-http-error') { res.writeHead(path === '/network-ok' ? 200 : 500, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }); res.end('fixture'); return; }
+  if (path === '/network-failure') { req.socket.destroy(); return; }
+  if (path === '/network-page') { res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' }); res.end('<!doctype html><title>Resource outcome fixture</title><h1>Network metadata</h1>'); return; }
   const cacheable = path === '/cache';
   const etag = `"vylnt-${version}"`;
   const revalidated = cacheable && req.headers['if-none-match'] === etag;
@@ -61,6 +64,17 @@ try {
     return state.scan?.observation.url === origin + '/cache' && state.scan.observation.domCollected;
   }, 'back navigation restores current-page observation');
   results.checks.push('back navigation has a collected observation for the current page');
+  await page.goto(origin + '/network-page'); await scan('/network-page');
+  await page.evaluate(() => Promise.allSettled(['/network-ok?secret=one', '/network-ok?secret=two', '/network-http-error', '/network-failure?secret=three'].map(path => fetch(path))));
+  const outcomes = await until(async () => {
+    const report = await scan('/network-page');
+    const resources = report.observation.resources;
+    return resources.filter(r => r.url === origin + '/network-ok' && r.outcome === 'completed').length === 2
+      && resources.some(r => r.url === origin + '/network-http-error' && r.outcome === 'completed')
+      && resources.some(r => r.url === origin + '/network-failure' && r.outcome === 'failed') ? resources : undefined;
+  }, 'actual browser resource completion/failure events');
+  assert.ok(!JSON.stringify(outcomes).includes('secret='));
+  results.checks.push('actual request completion/failure events; separate query-colliding requests; HTTP 500 is transfer completion, not successful application behaviour');
   assert.ok(!JSON.stringify(await history()).match(/secret=|#private/));
   await panel.evaluate(() => chrome.runtime.sendMessage({ type: 'PAUSE', paused: true }));
   await context.close(); context = undefined;

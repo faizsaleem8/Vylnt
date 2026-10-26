@@ -428,3 +428,9 @@ footer { display: flex; justify-content: space-between; gap: 1.25rem; margin-top
   .finding summary { padding: .75rem; }
   .integrity { break-inside: avoid; }
 }
+.local-projects { display: grid; gap: 20px; }
+.project-panel { padding: 24px; min-width: 0; }
+.project-panel .section-heading { padding: 0; margin: 16px 0; }
+.project-panel input { display: block; margin: 8px 0 20px; max-width: 100%; }
+.project-panel .finding-card { border-top: 1px solid var(--control-line); padding-top: 16px; margin-top: 16px; }
+.project-panel .finding-card button { margin: 0 8px 8px 0; }

@@ -142,3 +142,87 @@ npm.cmd run test:browser
 ```
 
 Omit `--bundle` to run staged acceptance only. Changed model, policy, evaluator, dataset, source/provenance, parity or evaluation bindings cause rejection. An incomplete/failed evaluation cannot be promoted. No Supabase credentials, local blockchain, user training or public deployment is needed for these checks.
+
+## Remaining ML evidence and browser validation
+
+Developer-only evidence audit (no training or holdout evaluation):
+
+```powershell
+npm run ml:audit:evidence -- --dataset .local/ml-category/cohort-2026-10-26/dataset.json --output .local/ml-q2/evidence-next
+```
+
+The output directory must be new. Results identify missing development classes and identical inputs with conflicting labels; they do not approve a model. Dataset paths are developer artifacts and are not shipped to users.
+
+After `npm run build`, run the Worker checks sequentially:
+
+```powershell
+npm run test:ml-worker
+$env:VYLNT_BROWSER_CHANNEL = 'msedge'
+npm run test:ml-worker
+Remove-Item Env:VYLNT_BROWSER_CHANNEL
+npm run test:scanner
+```
+
+Edge must be installed for `msedge`. These commands use disposable automated browser sessions, not your signed-in profile. Results include the browser version, the 318-finding workload, a report near the 512 KiB storage boundary, cancellation and errors. The scanner command checks actual extension network outcomes, cache/restart and bounded dynamic-page collection in Chromium. Timings are local measurements, not production capacity or a native accessibility certification.
+## Local project companion (development)
+
+The companion creates new scans from a registered Git repository's committed files. It does not add evidence to old extension scans. Seven project-backed ML categories are still unqualified; current reports retain the existing assessments. Project evidence is currently an API-local signed record, not part of exported frozen insights. Only register code you trust: build/start scripts run as your local OS user, not inside an OS sandbox.
+
+From the VYLNT folder, build and start the local API with the companion enabled:
+
+```powershell
+npm run build
+$env:VYLNT_PROJECTS = 'local'
+$env:PLAYWRIGHT_BROWSERS_PATH = "$PWD\.local\browsers"
+npm run dev
+```
+
+Chromium must already be installed at that browser path (`npx playwright install chromium` with the same environment variable if needed). Sign in to the dashboard, open **Local projects**, and select **Register a project**. In another terminal, run its command from the VYLNT folder, supplying the explicit website repository root:
+
+```powershell
+npm run project:register -- --repo "C:\path\to\website" --code <one-time-code>
+```
+
+Codes expire after five minutes and work once. The website needs a committed npm lockfile and the existing `.vynlt/gate.json` build/start/routes configuration described in `docs/M4_SECURITY_GATE.md`. Choose HEAD or a full commit SHA in Local projects, then **Scan project**. Uncommitted changes are excluded. Progress and cancellation remain on that page; completed scans open normally. Interrupted API jobs require a new signed-in run; tokens are never saved in the job journal.
+
+Local state and the installation signing key are in ignored `.local/project-companion/`. Keep that key private and retain `trusted-public-keys.json` for archived evidence verification. Project metadata is local to this API installation even when scan storage uses Supabase. Do not start multiple API processes against this directory. Runs set `NODE_ENV=test`, `VYLNT_PROJECT_RUN=1` and `VYLNT_DATA_DIR` to disposable storage; applications must use test-only local storage rather than production services. This environment is not an OS sandbox. Companion evidence has a separate 128 KiB limit and is rejected explicitly when oversized.
+
+Developer acceptance (uses disposable localhost fixtures):
+
+```powershell
+npm run test:projects
+$env:VYLNT_BROWSER_CHANNEL = 'msedge'
+npm run test:projects
+Remove-Item Env:VYLNT_BROWSER_CHANNEL
+```
+
+Project browser evidence checks (CSP execution/blocking, redirects, privacy, request matching, loopback isolation and cancellation):
+
+```powershell
+npm run test:projects:browser
+$env:VYLNT_TEST_BROWSER = 'msedge'
+npm run test:projects:browser
+Remove-Item Env:VYLNT_TEST_BROWSER
+npm run test:projects:data
+```
+
+Developer-only project dataset preparation, after native application adapters, source checks and independent functional oracles exist:
+
+```powershell
+npm run ml:projects:register -- --source .local/project-source-lock.json --exposure .local/historical-exposure.json --output .local/project-development-registration
+npm run ml:projects:prepare -- --registration .local/project-development-registration --manifest .local/project-collection/manifest.json --keys .local/project-companion/trusted-public-keys.json --output .local/project-development-prepared
+```
+
+These example input files are not a supplied dataset. See `docs/ML_PROJECT_DATA.md` for schemas and prerequisites. Preparation requires the existing private family key, writes only new private output directories, and returns exit code 2 with concrete deficits when data is insufficient. It does not train or qualify a model; users do not prepare datasets.
+
+Pinned native application evidence acceptance (developer-only, after the source/dependency setup in `docs/ML_NATIVE_PROJECT_CHECKS.md`):
+
+```powershell
+npm run test:projects:native
+npm run test:projects:native:cancel
+$env:VYLNT_TEST_BROWSER = 'msedge'
+npm run test:projects:native
+Remove-Item Env:VYLNT_TEST_BROWSER
+```
+
+This creates disposable local Jingo data and checks native login/cookie dependency. It is one development prototype, not seven-category qualification or an automatically enabled dashboard adapter.

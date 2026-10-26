@@ -1,5 +1,9 @@
 # VYLNT model qualification follow-up (ML-Q)
 
+The approved seven-category implementation is tracked in [project-backed qualification](ML_PROJECT_QUALIFICATION.md). Local repository pairing, exact-commit runs, signed evidence-v4, bounded Express syntax inventory and conservative category safeguards are implemented as development infrastructure. Functional application adapters, independent corpus collection, the separately frozen candidate/holdout and qualified v4 report integration remain outstanding. These additions do not promote another category.
+
+2026-10-27 follow-up: [ML-Q2 evidence/validation work](ML_Q2_BUILD_PLAN.md) adds a development-only identifiability audit and corrects resource outcome collection in the extension. The audit excludes held-out labels from diagnosis and does not fit or evaluate a candidate. Its class-presence result cannot qualify a category. The existing JS-002 release remains unchanged; seven categories are still open.
+
 Status: **open for seven categories**, separate from experimental M6, which the user closed on 2026-10-22. JS-002's [fresh controlled holdout](ML_FRESH_HOLDOUT_PLAN.md) passed its original qualification gates; release/acceptance status is tracked in PLAN.md. Independent human review is not required for this controlled phase. Results retain controlled provenance and do not establish universal application accuracy. Raw findings, severity and GitHub blocking decisions remain unchanged.
 
 **ML-Q1 is closed:** the qualified JS-002 category is bundled after passing React/API, persistence, archived-report and export acceptance. Users receive it automatically after rebuilding/restarting the API and refreshing the dashboard; they do not train or upload a model. Existing saved versions retain their original analysis; reopening/finalising a scan creates the new version when its analysis changes.

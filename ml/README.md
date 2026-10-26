@@ -1,5 +1,7 @@
 # VYLNT experimental ML
 
+Current status (2026-10-27): JS-002 is qualified only within its recorded controlled-application scope. The remaining seven categories are open under [ML-Q project-backed qualification](../docs/ML_PROJECT_QUALIFICATION.md). Evidence-v4 and the local companion are development infrastructure; no v4 candidate is trained or released yet. The older dated sections below describe historical experimental models, not the current category release. See PLAN.md for current validation results.
+
 Current milestone status (2026-10-23): **experimental M6 is closed by user approval**. [Model qualification](../docs/ML_QUALIFICATION_PLAN.md) is tracked separately and remains open; no category is validated. The expanded v3 experiment failed qualification and remains developer-only. Active v2 analysis is display-only and cannot hide findings or change severity. Local M5 blockchain acceptance is complete; next product work is remaining GitHub Actions M4; Docker/deployment are excluded. See [ML build plan](../docs/ML_BUILD_PLAN.md).
 
 ## Current evidence-v2 workflow

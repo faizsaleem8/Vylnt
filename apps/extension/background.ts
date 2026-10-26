@@ -1,6 +1,6 @@
 import { cookieMetadata, createReport, safeUrl, securityHeaders, cspEvidenceComplete, type Observation, type Report, type Resource, type ScriptMetadata } from '../../packages/core';
 
-interface TabScan { requestId: string; documentId?: string; report: Report }
+interface TabScan { requestId: string; documentId?: string; report: Report; resourceRequests?: Record<string, number> }
 // Serialize temporary scan state. Only monitoring preferences persist to disk.
 let queue: Promise<unknown> = Promise.resolve();
 function enqueue<T>(work: () => Promise<T>): Promise<T> {
@@ -49,12 +49,47 @@ chrome.webRequest.onBeforeRequest.addListener(details => { void enqueue(async ()
     const scan = await getScan(details.tabId);
     if (!scan || !scan.documentId || details.documentId !== scan.documentId || !await allowed(scan.report.observation.url)) return;
     const resources = scan.report.observation.resources;
-    if (resources.length < 300 && !resources.some(r => r.url === safeUrl(details.url) && r.type === details.type)) {
-      resources.push({ url: safeUrl(details.url), type: details.type, outcome: 'requested' });
+    // Keep request identities outside the report. Sanitized URLs can collapse
+    // different query strings; never update a different request by URL alone.
+    const requests = scan.resourceRequests ??= {};
+    const requestKey = `request:${details.requestId}`;
+    const network = resources.filter(r => r.outcome !== 'referenced');
+    if (network.length < 300 && !Object.hasOwn(requests, requestKey)) {
+      requests[requestKey] = network.length;
+      network.push({ url: safeUrl(details.url), type: details.type, outcome: 'requested' });
+      scan.report.observation.resources = [...network, ...resources.filter(r => r.outcome === 'referenced')];
       await save(details.tabId, scan);
     }
   }
 }); return undefined; }, { urls: ['http://*/*', 'https://*/*'] });
+
+function finishResource(details: chrome.webRequest.WebRequestDetails, outcome: 'completed' | 'failed') {
+  return enqueue(async () => {
+    if (details.tabId < 0 || details.type === 'main_frame' || !await active()) return;
+    const scan = await getScan(details.tabId);
+    if (!scan?.documentId || scan.documentId !== details.documentId || !await allowed(scan.report.observation.url)) return;
+    const index = scan.resourceRequests?.[`request:${details.requestId}`];
+    if (index === undefined) return; // Missed start, older scan, or collection cap.
+    const resource = scan.report.observation.resources.filter(r => r.outcome !== 'referenced')[index];
+    // Redirects can retain a request ID: do not attribute the destination's
+    // outcome to the original URL. No inference of upgrade/blocking reasons.
+    if (!resource || resource.url !== safeUrl(details.url) || resource.type !== details.type || resource.outcome !== 'requested') return;
+    resource.outcome = outcome;
+    await save(details.tabId, scan);
+  });
+}
+chrome.webRequest.onCompleted.addListener(details => { void finishResource(details, 'completed'); }, { urls: ['http://*/*', 'https://*/*'] });
+chrome.webRequest.onErrorOccurred.addListener(details => { void finishResource(details, 'failed'); }, { urls: ['http://*/*', 'https://*/*'] });
+chrome.webRequest.onBeforeRedirect.addListener(details => { void enqueue(async () => {
+  const scan = await getScan(details.tabId);
+  const requestKey = `request:${details.requestId}`;
+  if (!await active() || !scan?.documentId || scan.documentId !== details.documentId || !await allowed(scan.report.observation.url)
+      || !scan.resourceRequests || !Object.hasOwn(scan.resourceRequests, requestKey)) return;
+  // Even redirects differing only by a stripped query are distinct requests.
+  // Keep the original observation pending instead of claiming its completion.
+  scan.resourceRequests[requestKey] = -1;
+  await chrome.storage.session.set({ [key(details.tabId)]: scan });
+}); }, { urls: ['http://*/*', 'https://*/*'] });
 
 chrome.webRequest.onHeadersReceived.addListener(details => { void enqueue(async () => {
   if (details.type !== 'main_frame' || !await active()) return;
@@ -80,7 +115,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(details => { void enqueue
   const scan = await getScan(details.tabId);
   if (!scan || scan.documentId !== details.documentId || safeUrl(details.url) === scan.report.observation.url) return;
   const observation = { ...scan.report.observation, url: safeUrl(details.url), scannedAt: new Date().toISOString(), domCollected: false };
-  await save(details.tabId, { requestId: `spa:${crypto.randomUUID()}`, documentId: scan.documentId, report: createReport(crypto.randomUUID(), observation) });
+  await save(details.tabId, { requestId: `spa:${crypto.randomUUID()}`, documentId: scan.documentId, resourceRequests: scan.resourceRequests, report: createReport(crypto.randomUUID(), observation) });
   // The document's response headers remain applicable; refresh DOM and cookie metadata.
   await chrome.tabs.sendMessage(details.tabId, { type: 'COLLECT' }, { documentId: details.documentId }).catch(() => {});
 }); });

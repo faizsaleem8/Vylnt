@@ -10,10 +10,10 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { contentHash } from '../../packages/core/integrity';
 import { evaluateGate, gatePolicy } from '../../packages/core/gate';
-import { RULESET_VERSION } from '../../packages/core';
+import { RULESET_VERSION, type Report } from '../../packages/core';
 import { freezeInsights } from '../../packages/ml/frozen-insights';
 import { scanPage } from './scanner';
-import { gateConfigSchema } from './gate-config';
+import { gateConfigSchema, type GateConfig } from './gate-config';
 
 const execute = promisify(execFile);
 const escape = (value: string) => value.replace(/[&<>"'`|\[\]()*_!\\]/g, ch => `&#${ch.charCodeAt(0)};`).replace(/[\r\n]/g, ' ');
@@ -42,7 +42,11 @@ async function ready(url: string, ignore: boolean) {
   });
 }
 /** Execute trusted application scripts from an immutable local Git revision, never working-tree build output. */
-export async function runGate(options: { repo: string; commit?: string; output: string; signal?: AbortSignal; summary?: string }): Promise<GateResult> {
+export interface SnapshotContext { checkout: string; app: string; config: GateConfig; commit: string; configHash: string; signal: AbortSignal }
+export interface ScanContext extends SnapshotContext { origin: string; report: Report }
+export async function runGate(options: { repo: string; commit?: string; output: string; signal?: AbortSignal; summary?: string; purpose?: 'project';
+  scanner?: typeof scanPage;
+  onSnapshot?: (context: SnapshotContext) => Promise<void>; onScan?: (context: ScanContext) => Promise<void> }): Promise<GateResult> {
   const repo = resolve(options.repo), output = resolve(options.output);
   const signal = options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(600000)]) : AbortSignal.timeout(600000);
   const children = new Set<ChildProcess>();
@@ -55,10 +59,11 @@ export async function runGate(options: { repo: string; commit?: string; output: 
   const git = async (args: string[], cwd = repo) => (await execute('git', ['-c', 'core.hooksPath=' + join(temporary ?? tmpdir(), 'no-hooks'), ...args], { cwd, signal, env: gitEnv, windowsHide: true, maxBuffer: 16 * 1024 * 1024 })).stdout.trim();
   function start(args: string[], cwd: string, port?: number) {
     signal.throwIfAborted();
+    const env={...childEnvironment(port),...(options.purpose==='project'?{NODE_ENV:'test',VYLNT_PROJECT_RUN:'1',VYLNT_DATA_DIR:join(temporary!,'project-data')}:{})};
     // Script names are validated identifiers; cwd is never interpolated into shell text.
     const child = process.platform === 'win32'
-      ? spawn('cmd.exe', ['/d', '/s', '/c', 'npm.cmd ' + args.join(' ')], { cwd, env: childEnvironment(port), windowsHide: true, stdio: 'ignore' })
-      : spawn('npm', args, { cwd, env: childEnvironment(port), detached: true, stdio: 'ignore' });
+      ? spawn('cmd.exe', ['/d', '/s', '/c', 'npm.cmd ' + args.join(' ')], { cwd, env, windowsHide: true, stdio: 'ignore' })
+      : spawn('npm', args, { cwd, env, detached: true, stdio: 'ignore' });
     children.add(child);
     let error: Error | undefined; child.on('error', cause => { error = cause; });
     const finished = new Promise<number | null>(done => { child.once('error', () => done(null)); child.once('exit', code => done(code)); });
@@ -79,6 +84,7 @@ export async function runGate(options: { repo: string; commit?: string; output: 
     console.log(`VYLNT: checking exact commit ${result.commit}`);
     await mkdir(output, { recursive: true });
     temporary = await mkdtemp(join(tmpdir(), 'vylnt-gate-'));
+    if(options.purpose==='project')await mkdir(join(temporary,'project-data'));
     // Refuse links/submodules rather than following files outside the proposed tree.
     stage = 'snapshot validation';
     const tree = await git(['ls-tree', '-r', result.commit]);
@@ -95,6 +101,8 @@ export async function runGate(options: { repo: string; commit?: string; output: 
     const pkg = JSON.parse(await readFile(join(app, 'package.json'), 'utf8'));
     if (typeof pkg.scripts?.[config.startScript] !== 'string' || (config.buildScript && typeof pkg.scripts?.[config.buildScript] !== 'string')) throw new Error('Configured npm script missing');
     await readFile(join(app, 'package-lock.json'));
+    const snapshot: SnapshotContext = { checkout, app, config, commit: result.commit, configHash: result.configHash!, signal };
+    if (options.onSnapshot) { stage = 'project source inspection'; await options.onSnapshot(snapshot); }
     stage = 'dependency installation'; console.log('VYLNT: installing locked application dependencies'); await command(['ci', '--ignore-scripts', '--no-audit', '--no-fund'], app, config.commandTimeoutMs);
     if (config.buildScript) { stage = 'application build'; await command(['run', config.buildScript], app, config.commandTimeoutMs); }
     stage = 'application startup';
@@ -112,8 +120,9 @@ export async function runGate(options: { repo: string; commit?: string; output: 
       stage = 'fresh page scan'; signal.throwIfAborted();
       if (application.child.exitCode !== null || application.error()) throw new Error('Application stopped');
       console.log(`VYLNT: fresh scan ${index + 1}/${config.routes.length}`);
-      const report = await scanPage(origin + route, { allowedLocalOrigins: [origin], ignoreHTTPSErrors: config.ignoreHTTPSErrors, signal, requireComplete: true });
+      const report = await (options.scanner ?? scanPage)(origin + route, { allowedLocalOrigins: [origin], ignoreHTTPSErrors: config.ignoreHTTPSErrors, signal, requireComplete: true });
       if (new URL(report.observation.url).origin !== origin) throw new Error('Unexpected scan origin');
+      if (options.onScan) { stage = 'project evidence collection'; await options.onScan({ ...snapshot, origin, report }); }
       const policy = evaluateGate(report), insights = await freezeInsights(report);
       await writeFile(join(output, `page-${index + 1}.raw.json`), JSON.stringify(report, null, 2));
       await writeFile(join(output, `page-${index + 1}.insights.json`), JSON.stringify({ kind: 'vynlt-ci-insights-v1', commit: result.commit, contentHash: await contentHash(insights), content: insights, anchored: false }, null, 2));

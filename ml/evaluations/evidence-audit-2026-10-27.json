@@ -1,0 +1,295 @@
+{
+  "version": "vylnt-development-evidence-audit-v1",
+  "schemaVersion": "vynlt-evidence-v3",
+  "datasetHash": "ce1c886f13d151e027bb9e2971cabb5dba4486e80f802dce7922cdd7628689a0",
+  "splitHash": "a347f42b24732026a911583cc14cb1c1d9da78b153d6077ef6143b2d3bcbc1a4",
+  "status": "development-audit-only",
+  "testPredictions": 0,
+  "releasePromoted": false,
+  "categories": {
+    "HDR-001": {
+      "developmentRows": 12,
+      "distinctInputs": 10,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 1,
+      "reviewRequiredInputs": 1,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 7,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 7,
+            "contextual": 0
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 2,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: contextual",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "HTTPS/subdomain compatibility and HSTS preload are not established by the response header."
+    },
+    "HDR-002": {
+      "developmentRows": 11,
+      "distinctInputs": 8,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 1,
+      "reviewRequiredInputs": 1,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 5,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 5,
+            "contextual": 0
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 2,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: contextual",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "Whether cross-origin embedding is intentional is not observable from framing headers."
+    },
+    "HDR-003": {
+      "developmentRows": 11,
+      "distinctInputs": 9,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 1,
+      "reviewRequiredInputs": 1,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 6,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 6,
+            "contextual": 0
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 2,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: contextual",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "Meta policies, effective script restrictions and application compatibility need observable evidence; no exploitability inference."
+    },
+    "CK-001": {
+      "developmentRows": 11,
+      "distinctInputs": 9,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 1,
+      "reviewRequiredInputs": 1,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 6,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 6,
+            "contextual": 0
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 2,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: contextual",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "Cookie purpose is unknown; names and lifetime are not authentication evidence."
+    },
+    "CK-002": {
+      "developmentRows": 44,
+      "distinctInputs": 18,
+      "opposedLabelInputs": 17,
+      "uncertainInputs": 9,
+      "reviewRequiredInputs": 17,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 0,
+            "contextual": 1
+          },
+          "eligibleFamilies": {
+            "change-warranted": 0,
+            "contextual": 1
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 0,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 0,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: change-warranted",
+        "validation: change-warranted",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "Cookie purpose and legitimate JavaScript access requirements are unknown."
+    },
+    "CK-003": {
+      "developmentRows": 11,
+      "distinctInputs": 9,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 1,
+      "reviewRequiredInputs": 1,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 6,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 6,
+            "contextual": 0
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 2,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: contextual",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "Legitimate cross-site flows and CSRF protections are unknown."
+    },
+    "NET-001": {
+      "developmentRows": 12,
+      "distinctInputs": 10,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 1,
+      "reviewRequiredInputs": 1,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 7,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 7,
+            "contextual": 0
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 2,
+            "contextual": 0
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 0
+          }
+        }
+      },
+      "missingDevelopmentClasses": [
+        "train: contextual",
+        "validation: contextual"
+      ],
+      "developmentClassesPresent": false,
+      "evidenceGap": "Request failure alone does not identify blocking, upgrade behaviour or absence of a recommended change."
+    },
+    "JS-002": {
+      "developmentRows": 134,
+      "distinctInputs": 132,
+      "opposedLabelInputs": 1,
+      "uncertainInputs": 4,
+      "reviewRequiredInputs": 4,
+      "partitions": {
+        "train": {
+          "distinctEligibleInputs": {
+            "change-warranted": 48,
+            "contextual": 48
+          },
+          "eligibleFamilies": {
+            "change-warranted": 6,
+            "contextual": 6
+          }
+        },
+        "validation": {
+          "distinctEligibleInputs": {
+            "change-warranted": 16,
+            "contextual": 16
+          },
+          "eligibleFamilies": {
+            "change-warranted": 2,
+            "contextual": 2
+          }
+        }
+      },
+      "missingDevelopmentClasses": [],
+      "developmentClassesPresent": true,
+      "evidenceGap": "Existing controlled qualification is separate from development-data readiness; preserve its frozen release."
+    }
+  },
+  "limitations": [
+    "Class presence is necessary, not sufficient for qualification.",
+    "Counts deduplicate numeric inputs; repeated families/resources do not inflate them.",
+    "Conflict diagnostics use training/validation only; test labels never select features or thresholds.",
+    "Absence of a recorded conflict does not prove application intent is observable."
+  ]
+}

@@ -12,12 +12,13 @@ import { freezeInsights, contentHash, verifyFrozenInsights, InsightSizeError, in
 import { assertReportSize, ReportSizeError, reportByteLimit, submissionSizeMessage } from '../../packages/core/report-size';
 import { RateBackendUnavailable, type RateBackend } from './shared-rate-limits';
 import type { AnchorService } from './anchor';
+import { ProjectError, type ProjectService } from './projects';
 
 const paging = (query: express.Request['query']) => ({
   page: z.coerce.number().int().min(1).max(10000).parse(query.page ?? 1),
   limit: z.coerce.number().int().min(1).max(100).parse(query.limit ?? 50)
 });
-export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[]; supabase?: PublicSupabaseConfig; rateLimits?: RateLimits; rateBackend?: RateBackend; trustedProxies?: string[]; renderPdf?: typeof generatePdf; anchors?: AnchorService; anchorWarning?: string }) {
+export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[]; supabase?: PublicSupabaseConfig; rateLimits?: RateLimits; rateBackend?: RateBackend; trustedProxies?: string[]; renderPdf?: typeof generatePdf; anchors?: AnchorService; anchorWarning?: string; projects?: ProjectService }) {
   const app = express(); app.disable('x-powered-by');
   app.set('trust proxy', options.trustedProxies?.length ? options.trustedProxies : false);
   const limits = createRateLimits(options.rateLimits ?? defaultRateLimits, options.rateBackend);
@@ -45,6 +46,17 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     res.json(options.anchors ? await options.anchors.demoLedger(before) : { result: 'disabled', message: options.anchorWarning ?? 'Local blockchain anchoring is disabled.', entries: [], accounts: [] });
   });
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', mode: options.mode ?? 'local' }));
+  const projects = (req: express.Request) => {
+    if (!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress ?? '')) throw new ProjectError('Local projects are available on this computer only',403);
+    if (!options.projects) throw new ProjectError('Local projects are disabled. Set VYLNT_PROJECTS=local and restart the local API.',503);
+    return options.projects;
+  };
+  // Claim is authenticated by a short-lived, single-use capability created by a signed-in owner.
+  app.post('/api/project-pairings/claim', express.json({limit:'8kb'}), async (req,res)=>{
+    const service=projects(req);
+    const {code,path}=z.object({code:z.string().regex(/^[a-f0-9]{48}$/),path:z.string().min(1).max(4096)}).strict().parse(req.body);
+    res.status(201).json(await service.claim(code,path));
+  });
   app.get('/api/config', (_req, res) => {
     res.set('Cache-Control', 'no-store');
     res.json({ mode: options.mode ?? 'local', ...(options.supabase ? { supabase: { url: options.supabase.url, publishableKey: options.supabase.publishableKey } } : {}) });
@@ -61,6 +73,23 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
   app.use('/api/reports/verify-upload', express.json({ limit: 4 * insightByteLimit }));
   app.use('/api', express.json({ limit: '512kb' }));
   const identity = (res: express.Response) => res.locals.identity as Identity;
+  app.post('/api/project-pairings', (req,res)=>{z.object({}).strict().parse(req.body??{});res.status(201).json(projects(req).pairing(identity(res).ownerId));});
+  app.get('/api/projects',async(req,res)=>res.json({projects:await projects(req).list(identity(res).ownerId)}));
+  app.get('/api/project-runs',async(req,res)=>res.json({runs:await projects(req).runs(identity(res).ownerId)}));
+  app.get('/api/project-keys',(req,res)=>res.json({keys:projects(req).signer.trustedKeys}));
+  app.post('/api/projects/:id/runs',async(req,res)=>{
+    const {commit}=z.object({commit:z.string().default('HEAD')}).strict().parse(req.body??{});
+    res.status(202).json(await projects(req).start(identity(res),z.uuid().parse(req.params.id),commit));
+  });
+  app.get('/api/project-runs/:id',async(req,res)=>{const run=await projects(req).get(identity(res).ownerId,z.uuid().parse(req.params.id));if(!run){res.status(404).json({error:'Run not found'});return;}res.json(run);});
+  app.delete('/api/project-runs/:id',async(req,res)=>res.json(await projects(req).cancel(identity(res).ownerId,z.uuid().parse(req.params.id))));
+  app.get('/api/scans/:id/project-evidence',async(req,res)=>{
+    const service=projects(req),scanId=z.uuid().parse(req.params.id),row=await options.store.get(identity(res),scanId);
+    if(!row){res.status(404).json({error:'Scan not found'});return;}
+    const evidence=await service.evidence(identity(res).ownerId,scanId,row.report);
+    if(!evidence){res.status(404).json({error:'No verified project evidence for this scan'});return;}
+    res.json({evidence,qualification:'Seven project-backed categories are not yet qualified'});
+  });
   app.get('/api/blockchain/ledger', async (req, res) => {
     const { before } = z.object({ before: z.coerce.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional() }).strict().parse(req.query);
     res.json(options.anchors ? await options.anchors.ledger(before) : { result: 'disabled', message: options.anchorWarning ?? 'Local blockchain anchoring is disabled. Enable it and restart the API.', entries: [] });
@@ -86,6 +115,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     for (let offset = 0; offset < ids.length; offset += 100) {
       const batch = ids.slice(offset, offset + 100);
       await options.anchors?.cancelScans(identity(res).ownerId, batch);
+      await options.projects?.forget(identity(res).ownerId,batch);
       deletedScans += await options.store.removeScans(identity(res), batch);
     }
     res.json({ deletedScans });
@@ -211,11 +241,13 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const scanId = z.uuid().parse(req.params.id);
     if (!await options.store.get(identity(res), scanId)) { res.status(404).json({ error: 'Scan not found' }); return; }
     await options.anchors?.cancel(identity(res).ownerId, scanId);
+    await options.projects?.forget(identity(res).ownerId,[scanId]);
     if (!await options.store.remove(identity(res), z.uuid().parse(req.params.id))) { res.status(404).json({ error: 'Scan not found' }); return; } res.sendStatus(204);
   });
   app.use('/api', (_req, res) => { res.status(404).json({ error: 'Endpoint not found' }); });
   if (options.dashboardDir) app.use(express.static(resolve(options.dashboardDir)));
   app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    if (error instanceof ProjectError) {res.status(error.status).json({error:error.message});return;}
     if (error instanceof InsightSizeError) { res.status(413).json({ error: error.message, code: 'INSIGHTS_TOO_LARGE', limitBytes: insightByteLimit, reportBytes: error.bytes }); return; }
     if (error instanceof z.ZodError) { res.status(400).json({ error: 'Invalid request payload', fields: error.issues.map(i => ({ path: i.path.join('.'), message: i.message })) }); return; }
     if (error instanceof ConflictError) { res.status(409).json({ error: error.message }); return; }

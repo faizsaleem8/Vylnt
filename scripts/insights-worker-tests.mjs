@@ -5,15 +5,24 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve('.local/browsers');
+const channel = process.env.VYLNT_BROWSER_CHANNEL ?? 'chromium';
+if (!['chromium', 'msedge'].includes(channel)) throw new Error('Supported test channels: chromium or msedge');
 await mkdir('.local', { recursive: true });
 const modulePath = resolve('.local/worker-fixture.mjs');
-await build({ stdin: { contents: "export { createReport } from './packages/core'; export { assertReportSize, reportStorageBytes } from './packages/core/report-size';", resolveDir: process.cwd() }, bundle: true, outfile: modulePath, platform: 'node', format: 'esm' });
-const { createReport, assertReportSize, reportStorageBytes } = await import(pathToFileURL(modulePath).href);
+await build({ stdin: { contents: "export { createReport } from './packages/core'; export { assertReportSize, reportStorageBytes, reportByteLimit } from './packages/core/report-size';", resolveDir: process.cwd() }, bundle: true, outfile: modulePath, platform: 'node', format: 'esm' });
+const { createReport, assertReportSize, reportStorageBytes, reportByteLimit } = await import(pathToFileURL(modulePath).href);
 const report = createReport('00000000-0000-4000-8000-000000000099', { url: 'https://large.test/', scannedAt: '2026-10-21T00:00:00Z', headers: {}, domCollected: true,
   cookies: Array.from({ length: 30 }, (_, i) => ({ name: `session_${i}`, secure: false, httpOnly: false, session: true, sameSite: 'no_restriction' })),
   resources: Array.from({ length: 150 }, (_, i) => ({ url: `http://resource.test/${i}`, type: i % 2 ? 'script' : 'image', outcome: 'failed' })),
   scripts: Array.from({ length: 75 }, (_, i) => ({ url: `https://script.test/${i}.js`, integrity: false, scriptType: i % 2 ? 'module' : 'classic', async: Boolean(i % 3), defer: false })) });
 assertReportSize(report);
+// Largest accepted fixture for this shape; use valid URL paths, not extra fields.
+const padded = length => createReport(report.scanId, { ...report.observation, resources: report.observation.resources.map(r => ({ ...r, url: r.url + '/' + 'a'.repeat(length) })) });
+let low = 0, high = 1800;
+while (low < high) { const mid = Math.ceil((low + high) / 2); if (reportStorageBytes(padded(mid)) <= reportByteLimit) low = mid; else high = mid - 1; }
+const nearLimit = padded(low);
+assertReportSize(nearLimit);
+assert.ok(reportStorageBytes(nearLimit) > reportByteLimit * .99, 'Fixture exercises the accepted storage boundary');
 const workerFile = (await readdir('dist/dashboard/assets')).find(f => /^insight-worker-.*\.js$/.test(f));
 assert.ok(workerFile, 'Build the dashboard first');
 const source = await readFile(`dist/dashboard/assets/${workerFile}`);
@@ -25,7 +34,7 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const { chromium } = await import('playwright');
 let browser;
 try {
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ channel, headless: true });
   const context = await browser.newContext(), page = await context.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const result = await page.evaluate(async report => {
@@ -54,7 +63,22 @@ try {
     return { obsoleteMessages, response };
   }, report);
   assert.equal(lifecycle.obsoleteMessages, 0); assert.ok(lifecycle.response.error);
-  const evidence = { findings: report.findings.length, bytes: reportStorageBytes(report), issues: result.analysis.analysis.issues.length, durationMs: result.durationMs, mainThreadMaxGapMs: result.maxGap, controlTicks: result.ticks, obsoleteMessages: lifecycle.obsoleteMessages, errorsHandled: true, scope: 'Local automated Chromium; not a physical low-end-device certification' };
-  await mkdir('test-results', { recursive: true }); await writeFile('test-results/insights-worker.json', JSON.stringify(evidence, null, 2));
+  const boundary = await page.evaluate(async report => {
+    const worker = new Worker('/worker.js', { type: 'module' }), start = performance.now();
+    try {
+      const response = await new Promise((accept, reject) => {
+        const timer = setTimeout(() => reject(new Error('Boundary inference timed out')), 30000);
+        worker.onmessage = e => { clearTimeout(timer); accept(e.data); };
+        worker.onerror = e => { clearTimeout(timer); reject(new Error(e.message)); };
+        worker.postMessage(report);
+      });
+      return { response, durationMs: performance.now() - start };
+    } finally { worker.terminate(); }
+  }, nearLimit);
+  assert.ok(!boundary.response.error);
+  assert.equal(boundary.response.analysis.issues.reduce((sum, i) => sum + i.findingIds.length, 0), nearLimit.findings.length);
+  const evidence = { channel, browserVersion: browser.version(), findings: report.findings.length, bytes: reportStorageBytes(report), issues: result.analysis.analysis.issues.length, durationMs: result.durationMs, mainThreadMaxGapMs: result.maxGap, controlTicks: result.ticks, obsoleteMessages: lifecycle.obsoleteMessages, errorsHandled: true, boundary: { bytes: reportStorageBytes(nearLimit), durationMs: boundary.durationMs, findings: nearLimit.findings.length }, scope: `Local automated ${channel}; no native side-panel, screen-reader or physical low-end-device certification` };
+  await mkdir('test-results', { recursive: true }); await writeFile(`test-results/insights-worker-${channel}.json`, JSON.stringify(evidence, null, 2));
+  if (channel === 'chromium') await writeFile('test-results/insights-worker.json', JSON.stringify(evidence, null, 2));
   console.log('PASS worker stress, interaction, termination and malformed-input handling:', JSON.stringify(evidence));
 } finally { await browser?.close(); await new Promise(r => server.close(r)); }

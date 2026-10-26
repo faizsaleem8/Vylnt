@@ -29,7 +29,7 @@ beforeEach(async () => {
     runtime: { id: 'extension', getURL: (p: string) => `chrome-extension://extension/${p}`, onInstalled: event('installed'), onStartup: event('startup'), onMessage: event('message') },
     permissions: { contains: async () => true, getAll: async () => ({ origins: ['https://example.test/*'] }), onAdded: event('added'), onRemoved: event('removed') },
     scripting: { unregisterContentScripts: async () => {}, registerContentScripts: async () => {} },
-    webRequest: { onBeforeRequest: event('request'), onHeadersReceived: event('headers') },
+    webRequest: { onBeforeRequest: event('request'), onHeadersReceived: event('headers'), onCompleted: event('completed'), onErrorOccurred: event('failed'), onBeforeRedirect: event('redirect') },
     webNavigation: { onCommitted: event('committed'), onHistoryStateUpdated: event('historyState') },
     tabs: { onRemoved: event('removedTab'), get: async () => ({ url: 'https://example.test/' }), reload: vi.fn(), sendMessage: async () => {} },
     cookies: { getAll: async () => [{ name: 'session', value: 'secret-cookie-value', secure: false, httpOnly: false, sameSite: 'lax', session: true }] }
@@ -37,6 +37,67 @@ beforeEach(async () => {
   await import('../apps/extension/background');
 });
 describe('background lifecycle with Chrome API mocks', () => {
+  it('correlates completed/failed requests despite identical sanitized URLs and DOM refreshes', async () => {
+    await navigate();
+    const request = (requestId: string, query: string) => ({ tabId: 1, requestId, documentId: 'document-1', type: 'script', url: `https://cdn.test/script.js?token=${query}` });
+    const first = request('asset-a', 'secret-a'), second = request('asset-b', 'secret-b');
+    events.get('request')!(first); events.get('request')!(second);
+    await message({ type: 'DOM', scripts: [], resources: [{ url: first.url, type: 'script' }] }, { id: 'extension', tab: { id: 1 }, frameId: 0, documentId: 'document-1', url: 'https://example.test/' });
+    events.get('failed')!({ ...second, error: 'private failure detail' });
+    events.get('completed')!(first);
+    const state = await flush();
+    expect(state.scan.observation.resources.map((r: any) => r.outcome)).toEqual(['completed', 'failed', 'referenced']);
+    expect(JSON.stringify(session)).not.toMatch(/secret-a|secret-b|private failure/);
+    expect(JSON.stringify(state.scan)).not.toContain('asset-a');
+  });
+  it('does not infer terminal outcomes from missed, redirected, stale, paused or revoked requests', async () => {
+    await navigate();
+    const request = { tabId: 1, requestId: 'asset', documentId: 'document-1', type: 'script', url: 'https://cdn.test/a.js' };
+    events.get('completed')!(request);
+    expect((await flush()).scan.observation.resources).toHaveLength(0);
+    events.get('request')!(request);
+    events.get('completed')!({ ...request, url: 'https://cdn.test/redirected.js' });
+    events.get('completed')!({ ...request, documentId: 'old-document' });
+    expect((await flush()).scan.observation.resources[0].outcome).toBe('requested');
+    await message({ type: 'PAUSE', paused: true }); events.get('failed')!(request);
+    expect((await flush()).scan.observation.resources[0].outcome).toBe('requested');
+    await message({ type: 'PAUSE', paused: false });
+    vi.spyOn(chrome.permissions, 'contains').mockImplementation(async () => false);
+    events.get('completed')!(request);
+    expect((await flush()).scan.observation.resources[0].outcome).toBe('requested');
+  });
+  it('does not mistake a query-only redirect completion for the original request', async () => {
+    await navigate();
+    const request = { tabId: 1, requestId: 'redirected', documentId: 'document-1', type: 'script', url: 'https://cdn.test/a.js?token=one' };
+    events.get('request')!(request); events.get('redirect')!({ ...request, redirectUrl: 'https://cdn.test/a.js?token=two' });
+    events.get('request')!({ ...request, url: 'https://cdn.test/a.js?token=two' });
+    events.get('completed')!({ ...request, url: 'https://cdn.test/a.js?token=two' });
+    expect((await flush()).scan.observation.resources).toEqual([{ url: 'https://cdn.test/a.js', type: 'script', outcome: 'requested' }]);
+    expect(JSON.stringify(session)).not.toContain('token=');
+  });
+  it('caps per-request bookkeeping and retains it through SPA changes', async () => {
+    await navigate();
+    for (let i = 0; i < 301; i++) events.get('request')!({ tabId: 1, requestId: `asset-${i}`, documentId: 'document-1', type: 'script', url: `https://cdn.test/${i}.js` });
+    await flush();
+    expect(Object.keys(session['tab:1'].resourceRequests)).toHaveLength(300);
+    events.get('historyState')!({ tabId: 1, frameId: 0, documentId: 'document-1', url: 'https://example.test/next' });
+    events.get('completed')!({ tabId: 1, requestId: 'asset-0', documentId: 'document-1', type: 'script', url: 'https://cdn.test/0.js' });
+    expect((await flush()).scan.observation.resources[0].outcome).toBe('completed');
+    await navigate(1, 'new-main', 'new-document');
+    events.get('failed')!({ tabId: 1, requestId: 'asset-0', documentId: 'document-1', type: 'script', url: 'https://cdn.test/0.js' });
+    expect((await flush()).scan.observation.resources).toHaveLength(0);
+  });
+  it('restores pending correlation after service-worker restart without exporting request IDs', async () => {
+    await navigate();
+    const request = { tabId: 1, requestId: 'survives-restart', documentId: 'document-1', type: 'script', url: 'https://cdn.test/restart.js' };
+    events.get('request')!(request); await flush();
+    vi.resetModules(); await import('../apps/extension/background');
+    events.get('completed')!(request);
+    const state = await flush();
+    expect(state.scan.observation.resources[0].outcome).toBe('completed');
+    expect(JSON.stringify(state)).not.toContain('survives-restart');
+    expect(local.history).toBeUndefined();
+  });
   it('stops collection after host revocation and registers content scripts after re-grant', async () => {
     await navigate();
     const first = (await flush()).scan;

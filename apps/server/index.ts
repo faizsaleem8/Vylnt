@@ -5,6 +5,7 @@ import { readSupabaseConfig, readDeploymentConfig } from './config';
 import { readRateLimits } from './rate-limits';
 import { openRateBackend, readRateBackendConfig } from './shared-rate-limits';
 import { AnchorService } from './anchor';
+import { ProjectService } from './projects';
 const port = Number(process.env.PORT ?? 4318);
 const mode = (process.env.VYLNT_STORAGE ?? process.env.VYNLT_STORAGE) ?? 'local';
 const host = process.env.HOST ?? '127.0.0.1';
@@ -23,7 +24,10 @@ if (blockchainMode === 'local') {
   try { anchors = await AnchorService.open(); }
   catch { anchorWarning = 'Local blockchain setup is unavailable. Run chain:compile and chain:deploy, then restart the API.'; console.error(anchorWarning); }
 }
-const app = createApp({ auth, store, mode, supabase, rateLimits, anchors, anchorWarning, rateBackend: shared.backend, ...deployment, dashboardDir: 'dist/dashboard' });
+const projectMode=process.env.VYLNT_PROJECTS ?? 'off';
+if (!['off','local'].includes(projectMode) || (projectMode==='local' && !['127.0.0.1','localhost','::1'].includes(host))) throw Error('VYLNT_PROJECTS=local requires a loopback API host');
+const projects=projectMode==='local'?await ProjectService.open('.local/project-companion',store):undefined;
+const app = createApp({ auth, store, mode, supabase, rateLimits, anchors, anchorWarning, projects, rateBackend: shared.backend, ...deployment, dashboardDir: 'dist/dashboard' });
 const server = app.listen(port, host, () => console.log(`VYLNT dashboard and API: http://${host}:${port} (${mode} storage)`));
-server.on('error', () => { shared.close(); void anchors?.close(); });
-for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => server.close(async () => { shared.close(); await anchors?.close(); process.exit(0); }));
+server.on('error', () => { shared.close(); void anchors?.close(); void projects?.close(); });
+for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => server.close(async () => { shared.close(); await projects?.close(); await anchors?.close(); process.exit(0); }));

@@ -1,5 +1,16 @@
 # VYLNT performance measurements
 
+## 2026-10-27 ML-Q2 runtime checks
+
+The built Worker was exercised in disposable headless Chromium 156.0.8078.4 and installed Edge 156.0.4314.42 on this Windows machine. Both passed a 318-finding/196,705-byte report and a separate 523,855-byte accepted-report fixture (more than 99% of the 512 KiB storage bound), preserving all finding references. Cancellation and invalid-input handling passed.
+
+| Runtime | Typical inference | Near-limit inference | Maximum main-thread timer gap |
+|---|---:|---:|---:|
+| Chromium | 154 ms | 112 ms | 11.3 ms |
+| Edge | 250 ms | 125 ms | 12.2 ms |
+
+One local measurement per workload/runtime; these are not percentiles, peak memory, native extension accessibility, production capacity or model-quality measurements. The boundary workload increases metadata bytes, not unique model contexts. Ignored evidence: `test-results/insights-worker-chromium.json`, `insights-worker-msedge.json` and `scanner-acceptance/results.json`. The full Chromium extension also passed cache/restart and normal/6x-simulated CPU stress with bounded metadata; actual request completion/failure and query-collision handling were tested. No new live Supabase measurement was performed.
+
 Latest export split: the default PDF is full-data again (without generated recommendations or ML), while insights use a separate verified POST export. The benchmark currently calls the default full-data renderer; it does not measure insights verification or its combined API/ML/render cost. Historic concise-default and earlier full-template results below are retained as dated evidence, not current capacity guarantees.
 
 The subsequent concise-report change groups repeated observations and bounds previews in the default PDF. Older per-finding PDF page/latency/memory baselines below use the previous template and are not comparable performance claims for the new summary. The new synthetic 74-finding case renders four issue groups on three pages; no production-capacity or user-specific page-count claim follows. Native dashboard browser-print output is a separate rendering path.

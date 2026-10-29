@@ -16,3 +16,7 @@ scripts/ml-application-corpus.mjs text eol=lf
 scripts/ml-holdout-smoke.mjs text eol=lf
 packages/core/evidence-v3.ts text eol=lf
 apps/cli/scanner.ts text eol=crlf
+# Native source/licence pins are byte-bound across development platforms.
+ml/applications/native/tabinator.package-lock.json -text
+ml/applications/native/tabinator.LICENSE -text
+tests/native-tabinator-acceptance.ts text eol=lf

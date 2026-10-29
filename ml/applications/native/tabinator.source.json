@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:lennysh/tabinator",
+  "repository": "https://github.com/lennysh/tabinator",
+  "repositoryId": 1087821022,
+  "revision": "51e7cffa382da3d7c710cbfc0d136868c94eb119",
+  "license": "MIT",
+  "licenseGitBlob": "363777dd09a0ba8fd1f1b9d96cc6b78d4c2f12f0",
+  "dependencyLockSha256": "1a1291066833b75b3b6d12102a9bd427e0b6ee800a828666d2eab8e1857ddb4e",
+  "sourceSha256": {
+    "LICENSE": "44a3ab33a39450b9e3af3dde402fe5c2f0201ae5bd077e80e8cdb7d7aa551762",
+    "server.js": "cc2556ae936f480cef3531e56ff5efc5f4712fb897ff98a0149762dc5713a7f0",
+    "routes/auth.js": "50be3f4db11029b4c7a3ec844f9b13adfb42ef0020958bb260dde6368f55cb51",
+    "middleware/auth.js": "9fd7727e416c455625a6b5eca1df6c601156258a704770c1a40ee117f261cc9a",
+    "database/init.js": "21de132b7ac8168a244bc9f07d2efc3eab276d55ddd2126cbee545cb923e3f83",
+    "database/schema.sql": "bc090f0ab60331e56b2096919cb854b6fb8c68539e981e6b9aa7634bce901e33"
+  },
+  "scope": "Disposable native SQLite/session authentication and protected bookmark operation. Not a frozen eligible corpus or holdout record. Default/readable response profiles are one family.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact upstream Git blobs; disable checkout newline conversion."
+}

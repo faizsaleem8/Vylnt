@@ -4,11 +4,12 @@ import { canonicalJson, contentHash } from './integrity';
 import { prepareEvidenceContexts3, evidenceFeatureNames3 } from './evidence-v3';
 import { contextRequiresReview } from './evidence-context';
 import { prepareEvidenceContexts } from './evidence-context';
+import { framePolicyScope } from './frame-policy-scope';
 import type { AssessmentState } from './insight-contracts';
 
 export const projectRules = ['HDR-001', 'HDR-002', 'HDR-003', 'CK-001', 'CK-002', 'CK-003', 'NET-001'] as const;
 export const projectEvidenceVersion = 'vylnt-evidence-v4' as const;
-export const projectPolicy = 'vylnt-project-assessment-v1' as const;
+export const projectPolicy = 'vylnt-project-assessment-v3' as const;
 export const projectFactNames = [
   'tlsValidated', 'responseChainComplete', 'hstsSyntaxSupported', 'hstsPositive', 'hstsPreloadConfirmed', 'hstsApplicable',
   'framePolicyEnforced', 'frameAncestorsRestricted', 'embeddingPublicVerified', 'sensitiveActionVerified',
@@ -24,10 +25,12 @@ export const projectInspectionSchema=z.object({version:z.literal('vylnt-express-
 const factSchema = z.object({ value: z.boolean(), source: z.enum(['response', 'browser', 'static', 'functional']),
   coverage: z.enum(['complete', 'partial']), witnessHash: digest }).strict();
 export const projectEvidenceSchema = z.object({
-  version: z.literal(projectEvidenceVersion), policy: z.literal(projectPolicy),
+  version: z.literal(projectEvidenceVersion), policy: z.enum(['vylnt-project-assessment-v1','vylnt-project-assessment-v2',projectPolicy]),
   runId: z.string().uuid(), scanId:z.string().uuid(), commit: z.string().regex(/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/),
   configHash: digest, adapterHash: digest, originalScanHash: digest,
+  ownerTag:digest.optional(),
   inspection:projectInspectionSchema.optional(),
+  collectionKind:z.enum(['application','mechanism-fixture']).optional(),
   targets: z.array(z.object({ findingId: z.string().min(1).max(8192), category: z.enum(projectRules),
     facts: z.partialRecord(z.enum(projectFactNames), factSchema) }).strict()).max(1500),
 }).strict().superRefine((evidence, ctx) => {
@@ -48,6 +51,8 @@ export const sealedProjectEvidenceSchema = z.object({ version: z.literal('vylnt-
 }).strict();
 export type SealedProjectEvidence = z.infer<typeof sealedProjectEvidenceSchema>;
 export interface ProjectPublicKey { keyId: string; spki: string }
+/** Pseudonymous report authorization metadata; never a model feature. */
+export const projectOwnerTag=(keyId:string,ownerId:string)=>contentHash({version:'vylnt-project-owner-v1',keyId,ownerId});
 
 const decode = (value: string) => Uint8Array.from(atob(value), c => c.charCodeAt(0));
 /** Keys must come from the trusted installation, never the uploaded envelope. */
@@ -81,11 +86,26 @@ export function prepareProjectContexts(report: Report, evidence: ProjectEvidence
     const context = base(finding), target = evidence.targets.find(t => t.findingId === finding.id && t.category === finding.ruleId);
     const facts = target?.facts ?? {};
     const value = (name: ProjectFactName) => facts[name]?.coverage === 'complete' ? Number(facts[name]!.value) : -1;
-    const required = requirements[finding.ruleId as keyof typeof requirements];
+    // v1 is retained for archived seals. v2 can use executed response-policy
+    // protection without inventing public-purpose or sensitivity assertions.
+    const frameScope=finding.ruleId==='HDR-002'?framePolicyScope(report.observation.headers?.['content-security-policy'],report.observation.url):undefined;
+    const ownAncestorScope=frameScope?.supported&&frameScope.origins.every(origin=>origin===new URL(report.observation.url).origin);
+    const observedFramePolicy=evidence.policy!=='vylnt-project-assessment-v1'&&finding.ruleId==='HDR-002'&&ownAncestorScope&&report.observation.cspEvidenceComplete===true
+      &&['framePolicyEnforced','frameAncestorsRestricted'].every(n=>facts[n as ProjectFactName]?.source==='browser'&&value(n as ProjectFactName)===1)
+      &&facts.framePolicyEnforced!.witnessHash===facts.frameAncestorsRestricted!.witnessHash;
+    const required = observedFramePolicy?['framePolicyEnforced','frameAncestorsRestricted'] as ProjectFactName[]:requirements[finding.ruleId as keyof typeof requirements];
     const incomplete = !required || required.some(n => value(n) === -1);
     const contradictory = (value('cookieAuthDependency') === 1 && value('cookiePreferenceVerified') === 1)
       || (value('embeddingPublicVerified') === 1 && value('sensitiveActionVerified') === 1);
-    const requiresReview = evidence.inspection?.framework !== 'express' || evidence.inspection.coverage !== 'complete' || contextRequiresReview(report, legacy(finding)) || incomplete || contradictory
+    // v3 permits positive authentication evidence despite a partial syntax
+    // inventory. This never supports contextual de-emphasis or asserts route completeness.
+    const causalAuthentication=evidence.policy===projectPolicy&&['CK-001','CK-002'].includes(finding.ruleId)
+      &&facts.cookieAuthDependency?.source==='functional'&&value('cookieAuthDependency')===1
+      &&facts.cookiePreferenceVerified?.source==='functional'&&value('cookiePreferenceVerified')===0
+      &&facts.cookieAuthDependency.witnessHash===facts.cookiePreferenceVerified.witnessHash
+      &&(finding.ruleId==='CK-001'?context.facts.secure===false:context.facts.httpOnly===false&&value('cookieJsAccessRequired')===0);
+    const requiresReview = evidence.inspection?.framework !== 'express' || (evidence.inspection.coverage !== 'complete'&&!causalAuthentication) || contextRequiresReview(report, legacy(finding)) || incomplete || contradictory
+      || (evidence.policy===projectPolicy&&finding.ruleId==='CK-002'&&value('cookieAuthDependency')===1&&value('cookieJsAccessRequired')===1)
       || (finding.ruleId === 'HDR-001' && (value('tlsValidated') !== 1 || value('hstsSyntaxSupported') !== 1 || value('responseChainComplete') !== 1 || value('hstsApplicable') !== 1))
       || (finding.ruleId === 'CK-003' && value('stateChangingRoutesCovered') !== 1)
       || (finding.ruleId === 'NET-001' && value('requestChainComplete') !== 1);

@@ -13,6 +13,29 @@ const scan=(headers:Record<string,string>={})=>createReport(crypto.randomUUID(),
 const binding=()=>({runId:crypto.randomUUID(),commit:'a'.repeat(40),configHash:'b'.repeat(64),adapterHash:'c'.repeat(64)});
 const fact=(value:boolean,source:ProjectFact['source']='browser'):ProjectFact=>({value,source,coverage:'complete',witnessHash:'d'.repeat(64)});
 describe('project evidence v4 trust and uncertainty',()=>{
+  it('uses v3 positive causal authentication with partial Express inventory without allowing de-emphasis',async()=>{
+    const report=createReport(crypto.randomUUID(),{...scan().observation,cookies:[{name:'session',secure:false,httpOnly:false,sameSite:'lax',session:true}]}),evidence=await collectResponseFacts(report,binding(),true);
+    evidence.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'partial',sourceHashes:[],headerOperations:0,cookieOperations:0,sessionMiddlewareRegistrations:0};
+    for(const target of evidence.targets.filter(t=>['CK-001','CK-002'].includes(t.category))){
+      target.facts.cookieAuthDependency=fact(true,'functional');target.facts.cookiePreferenceVerified=fact(false,'functional');
+      target.facts.cookieJsAccessObserved=fact(false,'functional');target.facts.cookieJsAccessRequired=fact(false,'functional');
+    }
+    const prepare=prepareProjectContexts(report,evidence);
+    for(const rule of ['CK-001','CK-002']){
+      const finding=report.findings.find(f=>f.ruleId===rule)!,context=prepare(finding);expect(context.requiresReview).toBe(false);
+      expect(guardProjectAssessment(context,finding,'change-warranted')).toBe('change-warranted');
+      expect(guardProjectAssessment(context,{...finding,severity:'low'},'contextual')).toBe('needs-review');
+      for(const policy of ['vylnt-project-assessment-v1','vylnt-project-assessment-v2'] as const)expect(prepareProjectContexts(report,{...evidence,policy})(finding).requiresReview).toBe(true);
+    }
+    const finding=report.findings.find(f=>f.ruleId==='CK-002')!,changed=structuredClone(evidence),target=changed.targets.find(t=>t.category==='CK-002')!;
+    target.facts.cookieJsAccessRequired=fact(true,'functional');target.facts.cookieJsAccessObserved=fact(true,'functional');
+    expect(prepareProjectContexts(report,changed)(finding).requiresReview).toBe(true);
+    changed.inspection!.coverage='complete';expect(prepareProjectContexts(report,changed)(finding).requiresReview).toBe(true);
+    const mismatch=structuredClone(evidence);mismatch.targets.find(t=>t.category==='CK-002')!.facts.cookiePreferenceVerified!.witnessHash='e'.repeat(64);
+    expect(prepareProjectContexts(report,mismatch)(finding).requiresReview).toBe(true);
+    expect(prepareProjectContexts(report,{...evidence,inspection:{...evidence.inspection,framework:'unsupported'}})(finding).requiresReview).toBe(true);
+    expect(evidence.inspection.coverage).toBe('partial');
+  });
   it('preserves unknown application purpose, redirect coverage and invalid TLS as review',async()=>{
     const report=scan(),evidence=await collectResponseFacts(report,binding(),false),context=prepareProjectContexts(report,evidence);
     expect(report.findings.every(f=>context(f).requiresReview)).toBe(true);
@@ -29,7 +52,7 @@ describe('project evidence v4 trust and uncertainty',()=>{
   it('distinguishes relevant evidence and ignores run identifiers',async()=>{
     const report=scan(),evidence=await collectResponseFacts(report,binding(),true),finding=report.findings.find(f=>f.ruleId==='HDR-001')!;
     const first=prepareProjectContexts(report,evidence)(finding);
-    const other=structuredClone(evidence);other.runId=crypto.randomUUID();other.commit='f'.repeat(40);other.adapterHash='e'.repeat(64);
+    const other=structuredClone(evidence);other.runId=crypto.randomUUID();other.commit='f'.repeat(40);other.adapterHash='e'.repeat(64);other.ownerTag='a'.repeat(64);
     other.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'complete',sourceHashes:['a'.repeat(64)],headerOperations:1,cookieOperations:0,sessionMiddlewareRegistrations:0};
     expect(prepareProjectContexts(report,other)(finding).sequence).toEqual(first.sequence);
     other.targets.find(t=>t.category==='HDR-001')!.facts.responseChainComplete=fact(true);

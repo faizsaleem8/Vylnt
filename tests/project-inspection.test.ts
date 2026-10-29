@@ -23,6 +23,25 @@ it('inventories explicit Express syntax without persisting values, source, filen
 it('does not treat similarly named arbitrary code as an Express response adapter',async()=>{
   expect(await inspect("const app=factory();app.get('/',(req,res)=>res.cookie('session','value'));" )).toMatchObject({framework:'unsupported',cookieOperations:0});
 });
+it('recognizes a bounded exported Express initializer while retaining partial inventory coverage',async()=>{
+  const result=await inspect("var express=require('express');var session=require('express-session');var app;module.exports.initialize=function(config){app=express();app.use(session({secret:'PRIVATE'}));app.get('/',(req,res)=>res.cookie('session','PRIVATE_VALUE'));};module.exports.getInstance=function(){if(!app)throw Error('not initialized');return app;};");
+  expect(result).toMatchObject({framework:'express',coverage:'partial',cookieOperations:1,sessionMiddlewareRegistrations:1});expect(JSON.stringify(result)).not.toMatch(/PRIVATE|initialize|session\('/);
+});
+it.each([
+    "var express=require('express');var app;exports.init=function(express){app=express();};",
+    "var express=require('express');var app;exports.init=function(){var express=other;app=express();};",
+    "var express=require('express');var app;exports.init=function(){app=express();app=other();};",
+    "var express=require('express');var app;exports.init=function(){if(enabled)app=express();};",
+    "var express=require('express');var app;express=other;exports.init=function(){app=express();};",
+    "var express=require('express');var app;exports.init=function(){app=express();};app++;",
+    "var express=require('express');var express=other;var app;exports.init=function(){app=express();};",
+    "var express=require('express');var {express}=other;var app;exports.init=function(){app=express();};",
+    "var require=other;var express=require('express');var app;exports.init=function(){app=express();};",
+    "var express=require('express');require=other;var app;exports.init=function(){app=express();};",
+    "var express=require('express');var module={exports:{}};var app;module.exports.init=function(){app=express();};",
+  ])('does not resolve shadowed, reassigned or conditional exported initializer %#',async source=>{
+  expect((await inspect(source)).framework).toBe('unsupported');
+});
 it('marks nested scopes and oversized files incomplete instead of fabricating static resolution',async()=>{
   expect(await inspect("const express=require('express');const app=express();app.get('/',(req,res)=>{function another(res){res.cookie('name','value');}});")).toMatchObject({framework:'express',coverage:'partial',cookieOperations:0});
   expect(await inspect('//'+ 'x'.repeat(65536))).toMatchObject({framework:'unsupported',coverage:'partial',sourceHashes:[]});

@@ -1,0 +1,15 @@
+import { build } from 'esbuild';
+import { mkdir,writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { spawn } from 'node:child_process';
+await mkdir('.local',{recursive:true});
+const modulePath=resolve('.local/project-feature-contract.mjs');
+await build({entryPoints:['packages/core/project-evidence.ts'],outfile:modulePath,bundle:true,platform:'node',format:'esm',packages:'external'});
+const {evidenceFeatureNames4}=await import(pathToFileURL(modulePath).href);
+const features=resolve('.local/project-feature-contract.json');
+await writeFile(features,JSON.stringify(evidenceFeatureNames4));
+const child=spawn(process.env.VYLNT_PYTHON??'python',['-B','ml/project_candidate.py',...process.argv.slice(2),'--features',features],{stdio:'inherit',windowsHide:true});
+child.on('error',()=>{console.error('Python runtime unavailable. Set VYLNT_PYTHON to the installed ML runtime.');process.exitCode=2;});
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>child.kill(signal));
+child.on('exit',code=>{process.exitCode=code??2;});

@@ -6,10 +6,13 @@ import { scanProjectPage } from '../apps/cli/project-scanner';
 import { mergeBrowserMeasurement } from '../apps/cli/project-probes';
 import { collectResponseFacts } from '../packages/ml/project-policy-facts';
 import { contentHash } from '../packages/core/integrity';
-import { measureAuthenticationCookies,mergeCookieDependency } from '../apps/cli/project-functional';
+import { measureAuthenticationCookies,mergeAuthenticationRole } from '../apps/cli/project-functional';
 
 // These are mechanism acceptance fixtures, not independent corpus families.
-let upgradeRequests = 0, workerRequests = 0;
+let upgradeRequests = 0, workerRequests = 0, outsideRequests = 0;
+const outside=createServer((_request,response)=>{outsideRequests++;response.end('outside');});
+await new Promise<void>(done=>outside.listen(0,'127.0.0.1',done));
+const outsideOrigin='http://127.0.0.1:'+(outside.address() as {port:number}).port;
 const server = createServer((request,response) => {
   const url = new URL(request.url!, 'http://localhost');
   if(url.pathname === '/resource') {
@@ -20,6 +23,7 @@ const server = createServer((request,response) => {
   if(url.pathname === '/redirect') { response.writeHead(302,{location:'/open?private_query=do-not-store'});response.end();return; }
   if(url.pathname === '/external') { response.writeHead(302,{location:'https://example.invalid/'});response.end();return; }
   if(url.pathname === '/slow') return;
+  if(url.pathname === '/auth-redirect') {response.writeHead(302,{location:outsideOrigin});response.end();return;}
   if(url.pathname === '/auth-probe') {response.setHeader('Content-Type','text/html');response.end((request.headers.cookie??'').split(';').some(c=>c.trim()==='session=private-cookie-value')?'<form id="native-authenticated"></form>':'<form id="native-anonymous"></form>');return;}
   if(url.pathname === '/enforced') response.setHeader('Content-Security-Policy','script-src https:');
   if(url.pathname === '/report-only') response.setHeader('Content-Security-Policy-Report-Only',"script-src 'none'");
@@ -45,7 +49,7 @@ try {
   for(const [path,expected] of Object.entries({'/open':false,'/enforced':true,'/report-only':false,'/meta':true,'/trusted-types':undefined,'/redirect':false,'/probe-navigate':undefined})) {
     const {report,measurement}=await scanProjectPage(origin+path,{allowedLocalOrigins:[origin],requireComplete:true,channel});
     assert.equal(measurement.cspProbeBlocked?.value,expected,path);
-    assert.equal(measurement.responseChainComplete.value,true);
+    assert.equal(measurement.responseChainComplete.value,path!=='/probe-navigate','Navigation during the probe cannot retain complete coverage');
     assert.equal(measurement.hstsApplicable?.value,false,'IP hosts cannot establish HSTS applicability');
     assert.equal(measurement.originalScanHash,await contentHash(report),'probe must not mutate the captured raw report');
     assert.equal(measurement.scanId,report.scanId);
@@ -75,8 +79,12 @@ try {
     }});
     assert.ok(check.targets.length>0);assert.ok(check.targets.every(t=>report.findings.find(f=>f.id===t.findingId)?.evidence.cookieName==='session'));
     assert.ok(!JSON.stringify(check).includes('private-cookie-value'));
-    const evidence=await collectResponseFacts(report,{runId:randomUUID(),commit:'a'.repeat(40),configHash:'b'.repeat(64),adapterHash:'c'.repeat(64)},false);
-    assert.ok(mergeCookieDependency(evidence,check).targets.some(t=>t.facts.cookieAuthDependency?.value===true));
+    const evidence=await collectResponseFacts(report,{runId:randomUUID(),commit:'a'.repeat(40),configHash:'b'.repeat(64),adapterHash:'a'.repeat(64)},false);
+    assert.ok(mergeAuthenticationRole(evidence,check).targets.some(t=>t.facts.cookieAuthDependency?.value===true&&t.facts.cookiePreferenceVerified?.value===false));
+    const redirect=await measureAuthenticationCookies(context,report,{identityHash:'a'.repeat(64),check:async page=>{
+      await page.goto(origin+'/auth-redirect');return 'authenticated';
+    }});
+    assert.equal(redirect.targets.length,0);assert.equal(outsideRequests,0,'native authentication redirects must not reach an unapproved loopback service');
     report.findings.length=0; // A trusted hook receives a copy, not mutable raw report state.
   }}});
   assert.ok(native.report.findings.length>0);assert.equal(native.measurement.originalScanHash,await contentHash(native.report));
@@ -89,7 +97,7 @@ try {
   assert.equal(workerRequests,0,'no service worker script was fetched');
   await mkdir('test-results/project-browser',{recursive:true});
   await writeFile(`test-results/project-browser/${channel}.json`,JSON.stringify({version:1,channel,results,elapsedMs:Date.now()-start,
-    tests:['CSP enforced/report-only/meta/Trusted Types','request identity','metadata privacy','same-scan binding','raw report immutability','loopback isolation','WebSocket/service worker blocking','cancellation','native cookie removal/restoration','unrelated cookie remains unknown','adapter cancellation/immutable report'],
+    tests:['CSP enforced/report-only/meta/Trusted Types','request identity','metadata privacy','same-scan binding','raw report immutability','loopback isolation','WebSocket/service worker blocking','cancellation','native cookie removal/restoration and issued authentication role','native authentication redirect boundary','unrelated cookie remains unknown','adapter cancellation/immutable report'],
     scope:'Mechanism fixtures only; no training examples or qualification predictions.'},null,2));
   console.log(`Project browser acceptance passed (${channel}).`);
-} finally {server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+} finally {server.closeAllConnections();outside.closeAllConnections();await Promise.all([new Promise<void>(done=>server.close(()=>done())),new Promise<void>(done=>outside.close(()=>done()))]);}

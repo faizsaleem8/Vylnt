@@ -46,9 +46,9 @@ if (Number(process.versions.node.split('.')[0]) < 24) {
   } finally { provider.destroy(); }
 } else if (command === 'verify') {
   const { verifyExport } = await import('../dist/server/anchor.js');
-  const [reportFile, proofFile] = args;
-  if (!reportFile || !proofFile) throw new Error('Usage: npm run chain:verify -- report.json proof.json');
-  const result = await verifyExport(JSON.parse(await readFile(resolve(reportFile), 'utf8')), JSON.parse(await readFile(resolve(proofFile), 'utf8')), (process.env.VYLNT_CHAIN_DEPLOYMENT ?? process.env.VYNLT_CHAIN_DEPLOYMENT) ?? '.local/blockchain/deployment.json');
+  const [reportFile, proofFile,projectKeysFile] = args;
+  if (!reportFile || !proofFile) throw new Error('Usage: npm run chain:verify -- report.json proof.json [trusted-project-public-keys.json]');
+  const result = await verifyExport(JSON.parse(await readFile(resolve(reportFile), 'utf8')), JSON.parse(await readFile(resolve(proofFile), 'utf8')), (process.env.VYLNT_CHAIN_DEPLOYMENT ?? process.env.VYNLT_CHAIN_DEPLOYMENT) ?? '.local/blockchain/deployment.json',projectKeysFile);
   console.log(JSON.stringify(result, null, 2));
   if (result.result !== 'matching') process.exitCode = 1;
 } else { throw new Error('Expected node, compile, deploy or verify'); }

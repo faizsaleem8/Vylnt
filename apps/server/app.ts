@@ -9,6 +9,7 @@ import type { PublicSupabaseConfig } from './config';
 import { createRateLimits, defaultRateLimits, type RateLimits } from './rate-limits';
 import { generatePdf, PdfUnavailableError } from './pdf';
 import { freezeInsights, contentHash, verifyFrozenInsights, InsightSizeError, insightByteLimit } from '../../packages/ml/frozen-insights';
+import { readArchivedProjectKeys } from './project-signing';
 import { assertReportSize, ReportSizeError, reportByteLimit, submissionSizeMessage } from '../../packages/core/report-size';
 import { RateBackendUnavailable, type RateBackend } from './shared-rate-limits';
 import type { AnchorService } from './anchor';
@@ -20,6 +21,8 @@ const paging = (query: express.Request['query']) => ({
 });
 export function createApp(options: { store: Store; auth: Authenticator; dashboardDir?: string; mode?: string; origins?: string[]; supabase?: PublicSupabaseConfig; rateLimits?: RateLimits; rateBackend?: RateBackend; trustedProxies?: string[]; renderPdf?: typeof generatePdf; anchors?: AnchorService; anchorWarning?: string; projects?: ProjectService }) {
   const app = express(); app.disable('x-powered-by');
+  const reportKeys=async(stored:Parameters<typeof verifyFrozenInsights>[0])=>stored.content.version==='vylnt-frozen-insights-v2'?(options.projects?.signer.trustedKeys??await readArchivedProjectKeys()):[];
+  const verifySaved=async(stored:Parameters<typeof verifyFrozenInsights>[0],ownerId:string)=>verifyFrozenInsights(stored,await reportKeys(stored),ownerId);
   app.set('trust proxy', options.trustedProxies?.length ? options.trustedProxies : false);
   const limits = createRateLimits(options.rateLimits ?? defaultRateLimits, options.rateBackend);
   app.use(helmet({ contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null,
@@ -133,11 +136,14 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const row = await options.store.get(identity(res), z.uuid().parse(req.params.id));
     if (!row) { res.status(404).json({ error: 'Scan not found' }); return; }
     const supplied = z.object({ analysisHash: z.string().regex(/^[0-9a-f]{64}$/) }).strict().parse(req.body);
-    const content = await freezeInsights(row.report);
+    const seal=await options.projects?.reportEvidence(identity(res).ownerId,row.report.scanId,row.report);
+    if(!seal&&await options.projects?.hasEvidence(identity(res).ownerId,row.report.scanId)){res.status(409).json({error:'Saved project provenance is missing, changed or untrusted. Run the project again before saving insights.'});return;}
+    const keys=seal?options.projects!.signer.trustedKeys:[];
+    const content = await freezeInsights(row.report,seal?{seal,keys}:undefined);
     if (await contentHash(content.analysis) !== supplied.analysisHash) { res.status(409).json({ error: 'Analysis, evidence or policy changed. Refresh the scan before saving insights.' }); return; }
-    const result = await options.store.putInsight(identity(res), content);
+    const result = await options.store.putInsight(identity(res), content,keys);
     if (options.anchors) {
-      try { await options.anchors.enqueue(identity(res).ownerId, result.report); }
+      try { await options.anchors.enqueue(identity(res).ownerId, result.report,keys); }
       catch { res.set('X-VYLNT-Anchor-Warning', 'Report saved; anchoring could not be queued. Save this version again to retry.'); }
     } else if (options.anchorWarning) res.set('X-VYLNT-Anchor-Warning', options.anchorWarning);
     res.status(result.created ? 201 : 200).json(result.report);
@@ -152,7 +158,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const stored = await options.store.getInsight(identity(res), z.string().regex(/^[0-9a-f]{64}$/).parse(id));
     if (!stored) { res.status(404).json({ error: 'Insights report not found' }); return; }
     const source = await options.store.get(identity(res), stored.content.originalScan.scanId);
-    if (!await verifyFrozenInsights(stored) || !source || source.hash !== stored.content.originalScanHash || reportHash(source.report) !== source.hash) {
+    if (!await verifySaved(stored,identity(res).ownerId) || !source || source.hash !== stored.content.originalScanHash || reportHash(source.report) !== source.hash) {
       res.status(409).json({ result: 'content-mismatch', error: 'Frozen report or source integrity verification failed.' }); return;
     }
     return stored;
@@ -170,14 +176,14 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const stored = await options.store.getInsight(identity(res), uploaded.id);
     if (!stored) { res.json({ result: 'not-found', message: 'No saved insights report with this ID is available in your account. Tampering cannot be determined.' }); return; }
     const source = await options.store.get(identity(res), stored.content.originalScan.scanId);
-    if (!await verifyFrozenInsights(stored) || !source || source.hash !== stored.content.originalScanHash || reportHash(source.report) !== source.hash) {
+    if (!await verifySaved(stored,identity(res).ownerId) || !source || source.hash !== stored.content.originalScanHash || reportHash(source.report) !== source.hash) {
       res.json({ result: 'verification-unavailable', message: 'The saved reference report or its source could not be verified. The uploaded file cannot be judged against it.' }); return;
     }
     const uploadedHash = await contentHash(uploaded.content);
     if (uploaded.id !== uploaded.hash || uploadedHash !== uploaded.hash || uploadedHash !== stored.hash) {
       res.json({ result: 'content-mismatch', contentMatches: false, uploadedHash, savedHash: stored.hash, message: 'Report content mismatch: this file has been altered or corrupted and does not match the saved report.' }); return;
     }
-    const anchor = options.anchors ? await options.anchors.verify(identity(res).ownerId, stored) : { result: 'verification-unavailable', message: options.anchorWarning ?? 'Local blockchain anchoring is disabled.' };
+    const anchor = options.anchors ? await options.anchors.verify(identity(res).ownerId, stored,await reportKeys(stored)) : { result: 'verification-unavailable', message: options.anchorWarning ?? 'Local blockchain anchoring is disabled.' };
     res.json({ ...anchor, contentMatches: true, uploadedHash, savedHash: stored.hash });
   });
   app.get('/api/insight-reports/:id/anchor', async (req, res) => {
@@ -188,11 +194,11 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     z.object({}).strict().parse(req.body ?? {});
     const stored = await ownedInsight(req.params.id, res); if (!stored) return;
     if (!options.anchors) { res.status(503).json({ error: options.anchorWarning ?? 'Local blockchain anchoring is disabled.' }); return; }
-    res.json(await options.anchors.retry(identity(res).ownerId, stored));
+    res.json(await options.anchors.retry(identity(res).ownerId, stored,await reportKeys(stored)));
   });
   app.get('/api/insight-reports/:id/verify', async (req, res) => {
     const stored = await ownedInsight(req.params.id, res); if (!stored) return;
-    res.json(options.anchors ? await options.anchors.verify(identity(res).ownerId, stored) : { result: 'verification-unavailable', message: options.anchorWarning ?? 'Local blockchain anchoring is disabled.' });
+    res.json(options.anchors ? await options.anchors.verify(identity(res).ownerId, stored,await reportKeys(stored)) : { result: 'verification-unavailable', message: options.anchorWarning ?? 'Local blockchain anchoring is disabled.' });
   });
   app.get('/api/insight-reports/:id/anchor-proof.json', async (req, res) => {
     const stored = await ownedInsight(req.params.id, res); if (!stored) return;
@@ -205,7 +211,7 @@ export function createApp(options: { store: Store; auth: Authenticator; dashboar
     const format = z.enum(['json', 'pdf']).parse(req.params.format ?? 'json');
     const stored = await options.store.getInsight(identity(res), id);
     if (!stored) { res.status(404).json({ error: 'Insights report not found' }); return; }
-    if (!await verifyFrozenInsights(stored)) { res.status(409).json({ error: 'Frozen report integrity or supported decision policy verification failed.' }); return; }
+    if (!await verifySaved(stored,identity(res).ownerId)) { res.status(409).json({ error: 'Frozen report integrity or supported decision policy verification failed.' }); return; }
     const source = await options.store.get(identity(res), stored.content.originalScan.scanId);
     if (!source || source.hash !== stored.content.originalScanHash) { res.status(409).json({ error: 'Original scan verification failed.' }); return; }
     if (format === 'json') { res.attachment(`vylnt-insights-${id}.json`).json(stored); return; }

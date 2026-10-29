@@ -22,7 +22,7 @@ export function parseHsts(value: string | undefined): { supported: boolean; posi
 }
 
 /** Deliberately narrow policy facts, not a full CSP evaluator or execution oracle. */
-function restrictedSources(policy: string, directiveNames: string[]): boolean | undefined {
+function restrictedSources(policy: string, directiveNames: string[],scriptTokens=false): boolean | undefined {
   if(policy.length>=8192 || /[^\x09\x20-\x7e]/.test(policy))return;
   const directives = new Map<string,string[]>();
   for (const part of policy.split(';')) {
@@ -35,8 +35,15 @@ function restrictedSources(policy: string, directiveNames: string[]): boolean | 
   if (values.length === 1 && values[0] === "'none'") return true;
   if (!values.length || values.includes("'none'")) return;
   if (values.some(v=>['*',"'unsafe-inline'","'unsafe-eval'",'http:','https:','data:'].includes(v))) return false;
-  if (!values.every(v=>{if(v==="'self'")return true;if(!/^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?\/?$/i.test(v))return false;try{new URL(v);return true;}catch{return false;}})) return;
+  if (!values.every(v=>{if(v==="'self'")return true;if(scriptTokens){const token=/^'(nonce|sha256|sha384|sha512)-([A-Za-z0-9+/_-]+={0,2})'$/.exec(v);if(token){try{const bytes=atob(token[2].replaceAll('-','+').replaceAll('_','/')).length;return token[1]==='nonce'?bytes>=16&&bytes<=128:bytes===Number(token[1].slice(3))/8;}catch{return false;}}}if(!/^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?\/?$/i.test(v))return false;try{new URL(v);return true;}catch{return false;}})) return;
   return true;
+}
+export function parseScriptPolicySources(policy:string){return restrictedSources(policy,['script-src-elem','script-src','default-src'],true);}
+/** Only the effective script directive; style nonces do not establish script intent. */
+export function scriptPolicyUsesNonce(policy:string){
+  const directives=new Map<string,string[]>();for(const raw of policy.split(';')){const [name,...values]=raw.trim().split(/\s+/);if(name&&!directives.has(name.toLowerCase()))directives.set(name.toLowerCase(),values);}
+  const selected=['script-src-elem','script-src','default-src'].map(n=>directives.get(n)).find(v=>v!==undefined);
+  return selected?.some(v=>v.startsWith("'nonce-"))??false;
 }
 
 export async function collectResponseFacts(report: Report, binding: Pick<ProjectEvidence,'runId'|'commit'|'configHash'|'adapterHash'>, tlsValidated: boolean): Promise<ProjectEvidence> {
@@ -53,7 +60,7 @@ export async function collectResponseFacts(report: Report, binding: Pick<Project
     if (h && ['HDR-002','HDR-003'].includes(f.ruleId)) {
       const csp = h['content-security-policy'];
       if ((csp === undefined || report.observation.cspEvidenceComplete === true) && (csp?.split(',').length??0)<=16) {
-        const decisions = csp?.split(',').map(p=>restrictedSources(p, f.ruleId === 'HDR-002' ? ['frame-ancestors'] : ['script-src-elem','script-src','default-src'])) ?? [false];
+        const decisions = csp?.split(',').map(p=>f.ruleId==='HDR-003'?parseScriptPolicySources(p):restrictedSources(p,['frame-ancestors'])) ?? [false];
         const restricted = decisions.includes(true) ? true : decisions.includes(undefined) ? undefined : false;
         if (f.ruleId === 'HDR-003') { facts.scriptPolicyEnforced = fact(Boolean(csp)); if (restricted !== undefined) facts.scriptSourcesRestricted = fact(restricted); }
         else {

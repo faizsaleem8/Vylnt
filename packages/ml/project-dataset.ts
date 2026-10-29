@@ -2,7 +2,7 @@ import { createHash, createHmac } from 'node:crypto';
 import { z } from 'zod';
 import { canonicalJson } from '../core/integrity';
 import { parseSubmission } from '../core/validation';
-import { evidenceFeatureNames4, prepareProjectContexts, projectRules, verifyProjectEvidence, type ProjectPublicKey } from '../core/project-evidence';
+import { evidenceFeatureNames4, prepareProjectContexts, guardProjectAssessment, projectRules, verifyProjectEvidence, type ProjectPublicKey } from '../core/project-evidence';
 
 const digest = z.string().regex(/^[a-f0-9]{64}$/), commit = z.string().regex(/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/);
 const sha = (value: unknown) => createHash('sha256').update(canonicalJson(value)).digest('hex');
@@ -25,17 +25,25 @@ export const projectOracleSchema = z.object({version:z.literal('vylnt-project-or
   harnessHash:digest,sourceLockHash:digest,oracleHash:digest,scenarioHash:digest,category:z.enum(projectRules),findingId:z.string(),
   label,passed:z.literal(true),
 }).strict();
-type SourceLock = z.infer<typeof projectSourceLockSchema>;
+export const projectHoldoutSourceLockSchema=projectSourceLockSchema.extend({version:z.literal('vylnt-project-holdout-sources-v1'),
+  families:z.array(projectSourceLockSchema.shape.families.element.extend({partition:z.literal('holdout')})).max(12)});
 type Exposure = {families:string[];variants:string[]};
 type Input = {report:unknown;seal:unknown;oracle:unknown};
 type Row = {family:string;variant:string;sequence:number[][];category:typeof projectRules[number];severity:string;
-  label:z.infer<typeof label>;uncertain:boolean;evidenceRecord:string;scenario:string};
+  label:z.infer<typeof label>;uncertain:boolean;evidenceRecord:string;scenario:string;contextualAllowed?:boolean;evidenceRequiresReview?:boolean};
 
 /** Developer-only preparation. Labels/oracles never enter the numeric tensor.
  * Source independence and oracle correctness still require checked source manifests;
  * hashes verify identity, not the truth of a developer's scenario specification. */
 export async function prepareProjectData(inputs: Input[], source: unknown, exposure: Exposure, secret: string, trustedKeys: readonly ProjectPublicKey[]) {
-  const lock=projectSourceLockSchema.parse(source);
+  return prepareProjectInputs(inputs,source,exposure,secret,trustedKeys,'development');
+}
+/** Separate source lock/partition; never appends holdout rows to development. */
+export async function prepareProjectHoldout(inputs: Input[], source: unknown, exposure: Exposure, secret: string, trustedKeys: readonly ProjectPublicKey[]) {
+  return prepareProjectInputs(inputs,source,exposure,secret,trustedKeys,'holdout');
+}
+async function prepareProjectInputs(inputs:Input[],source:unknown,exposure:Exposure,secret:string,trustedKeys:readonly ProjectPublicKey[],mode:'development'|'holdout'){
+  const lock=mode==='development'?projectSourceLockSchema.parse(source):projectHoldoutSourceLockSchema.parse(source);
   if(inputs.length>50000)throw Error('Project dataset input budget exceeded');
   if(secret.length<32)throw Error('Use the existing private family key (at least 32 characters)');
   for(const list of [exposure.families,exposure.variants]) if(!Array.isArray(list)||list.some(v=>!digest.safeParse(v).success))throw Error('Invalid exposure registry');
@@ -68,6 +76,7 @@ export async function prepareProjectData(inputs: Input[], source: unknown, expos
     const sealed=await verifyProjectEvidence(input.seal,report,trustedKeys);
     if(!sealed)throw Error('Invalid project provenance signature or scan binding');
     const evidence=sealed.evidence,family=lock.families.find(f=>f.familyId===oracle.familyId);
+    if(evidence.collectionKind==='mechanism-fixture')throw Error('Mechanism fixtures cannot enter the application development corpus');
     if(!family)throw Error('Application is absent from frozen source selection');
     const revision=family.revisions.find(r=>r.commit===evidence.commit);
     if(!revision || !evidence.inspection || sha([...revision.sourceHashes].sort())!==sha([...evidence.inspection.sourceHashes].sort()))throw Error('Source revision or inspection mismatch');
@@ -82,7 +91,8 @@ export async function prepareProjectData(inputs: Input[], source: unknown, expos
     const key=canonicalJson([opaque,variant,oracle.label,context.requiresReview]);
     if(seen.has(key)){rejected.push({reason:'repeated-context',family:opaque,variant,record});continue;}seen.add(key);
     rows.push({family:opaque,variant,sequence:context.sequence,category:oracle.category,severity:finding.severity,
-      label:oracle.label,uncertain:context.requiresReview||oracle.label==='needs-review',evidenceRecord:record,scenario:oracle.scenarioHash});
+      label:oracle.label,uncertain:context.requiresReview||oracle.label==='needs-review',evidenceRecord:record,scenario:oracle.scenarioHash,
+      ...(mode==='holdout'?{contextualAllowed:guardProjectAssessment(context,finding,'contextual')==='contextual',evidenceRequiresReview:context.requiresReview}:{})});
   }
   const assignments=Object.fromEntries(lock.families.map(f=>[familyHash(f.familyId),f.partition]));
   const groups=new Map<string,Row[]>();for(const row of rows){const group=groups.get(row.variant)??[];group.push(row);groups.set(row.variant,group);}
@@ -102,8 +112,8 @@ export async function prepareProjectData(inputs: Input[], source: unknown, expos
   const train=lock.families.filter(f=>f.partition==='train').length,validation=lock.families.filter(f=>f.partition==='validation').length;
   const ready=train===8&&validation===4&&Object.values(categories).every(c=>c.ready);
   const dataset={schemaVersion:'vylnt-evidence-v4',featureNames:[...evidenceFeatureNames4],sourceLockHash:sha(lock),examples:rows};
-  return {dataset,split:{version:'vylnt-project-development-split-v1',sourceLockHash:sha(lock),families:assignments},rejected,
-    audit:{version:'vylnt-project-development-audit-v1',datasetHash:sha(dataset),ready,trainFamilies:train,validationFamilies:validation,
+  return {dataset,split:{version:mode==='development'?'vylnt-project-development-split-v1':'vylnt-project-holdout-split-v1',sourceLockHash:sha(lock),families:assignments},rejected,
+    audit:{version:mode==='development'?'vylnt-project-development-audit-v1':'vylnt-project-holdout-audit-v1',datasetHash:sha(dataset),ready:mode==='development'?ready:false,trainFamilies:train,validationFamilies:validation,
       conflictingOrUnknownVariants:conflicts.size,crossPartitionVariants:crossPartition.size,categories,
       qualification:false,testPredictions:0,limitations:['Readiness is not qualification.','Independent source suitability and native functional coverage must be established before fitting.','Shared train/validation inputs are excluded from eligibility; all records are retained.']}};
 }

@@ -2,6 +2,24 @@
 
 This development increment exercises a real upstream application. It does not qualify a category or create a twelve-family dataset.
 
+2026-10-29 authentication-role increment: adapter identity v7 also binds the syntax inspector. Issued authentication dependency excludes a solely non-sensitive preference role for CK-001/CK-002; the default and readable-cookie profiles audit complete positive-input counts. Bounded recognition of the native exported initializer always retains partial coverage. Policy v3 supports this positive-only path; contextual authentication and JS-required authentication stay review-only. Current validation is recorded in PLAN.md and `ML_AUTHENTICATION_EVIDENCE.md`. Native profiles remain one exposed family, not an eligible corpus.
+
+2026-10-29 framing-policy regression: native adapter identity v6 additionally binds the new frame-policy producer, scope parser and assessment contract. The existing missing-policy native check retains unknown purpose; it is not relabelled as a positive restricting-policy example. Results are recorded in PLAN.md.
+
+2026-10-29 resource-observer regression: adapter identity v5 additionally binds collector, resource-observer and response-stage redirect-guard hashes. The native HTTP application retains its existing checks; it is not an HTTPS NET-001 training profile. Results and limitations are in PLAN.md and `ML_RESOURCE_COMPATIBILITY.md`.
+
+2026-10-29 meta-policy extension: the native harness binds both the timing-producer and policy-parser source hashes in its adapter identity. The existing no-CSP enhanced-editor check is retained under the first-statement observer. Meta-specific positive/unknown cases are separate mechanism fixtures; Jingo is not relabelled or multiplied into new families. Validation and boundaries are in `ML_META_POLICY.md` and PLAN.md.
+
+2026-10-29 explicit-GET increment: existing native commands also exercise the pinned revert route using empty-field GET forms and same-site/cross-site/anonymous/repeated controls. The adapter independently reads disposable file content, the Git index and HEAD. A file/index restore without a new commit remains a partial result (`unknown`), with boolean readbacks retained separately. This does not establish a completed revert, whole-route coverage or cross-site necessity. Native Lax GET transmission is not treated like POST omission. See `ML_CROSS_SITE_EVIDENCE.md` and PLAN.md for results.
+
+2026-10-29 document-operation iteration: existing native/cross-site commands now include content editing and deletion alongside creation. Explicit `_method=PUT/DELETE` forms exercise the pinned middleware; Git HEAD and exact filesystem state independently establish each operation. Disposable reset documents stay inside the temporary wiki. Mutating GET revert and other routes remain untested, so application coverage stays partial. The controlled cookie profile is the same source family and supplies no independent training count. See `ML_CROSS_SITE_EVIDENCE.md`.
+
+2026-10-29 cross-site extension: forms from 127.0.0.2 submitted to the disposable 127.0.0.1 wiki. Native cookie omission/HTTP 500 stays unknown. A labelled SameSite=None/Secure response profile sent the cookie and repeatedly created a committed page in Chromium/Edge. Upstream application/authentication code is unchanged; this adds no family. Route-wide protection and cross-site necessity remain unknown. See `ML_CROSS_SITE_EVIDENCE.md` for commands and normalization limits.
+
+2026-10-28 framing extension: the authenticated new-page form loaded under synthetic same-origin and different-origin parents in Chromium and Edge, with repeated cross-origin agreement. The original source, target headers and login state were preserved; the existing bound cosmetic font fallback was used. These observations remain separate from signed model facts and supply no public-embedding/sensitivity label. Different ports are not distinct-site CSRF checks. See `ML_FRAMING_EVIDENCE.md` for limits and commands.
+
+2026-10-28 script-compatibility extension: the pinned native enhanced editor passed normal / JavaScript-disabled / restored controls in Chromium and Edge. The unapproved inline probe executed under the native missing CSP; no protection was inferred. Evidence binds the scan, adapter, response-policy metadata and live script-attribute digest, then uses the existing signing path. The check covers the enhanced editor, not alternative textarea editing or every route. The cosmetic font fallback is identical in each phase. See `ML_SCRIPT_COMPATIBILITY.md`; broader regressions are recorded in PLAN.md. The existing anonymous-write HTTP 500 remains review-only.
+
 ## Pinned Jingo prototype
 
 Source: `claudioc/jingo`, commit `10079c22d6cb66cfa0e7a91742c631fa0a153bd4`. The MIT licence, source identity and dependency lock are retained under `ml/applications/native/`. Jingo is now development-exposed and must not be selected for a future fresh holdout. No model prediction was used to select it.
@@ -42,6 +60,8 @@ Validation on 2026-10-27: the native interaction/privacy/signature checks passed
 
 ## Remaining evidence work
 
-This proves one scoped native authentication dependency. It does not establish preference purpose, necessity of JavaScript cookie access, cross-site necessity, complete CSRF protection, TLS/HSTS applicability, public embedding intent, required script compatibility or resource upgrades. The current generic Express syntax inspector does not support Jingo's factory initialization; the prototype does not override that limitation or make an assessment confident.
+2026-10-28: the harness adds scoped HttpOnly intervention checks for the native editor and a separate controlled readable-cookie response profile. Both profiles retain the same upstream family and use an explicit offline cosmetic-font fallback during the probe. Source login/session/editor scripts are unchanged. Details, limits and commands are in `ML_COOKIE_ACCESS.md`; these results do not qualify CK-002 or establish JavaScript requirements across the application.
+
+The original prototype proved one scoped native authentication dependency. Later bounded controls are described above and in the linked component documents. The syntax inspector now recognizes the exported initializer while retaining partial coverage. None of these checks establishes complete application coverage, an independent application family, or model qualification.
 
 Further work still requires all seven positive/contextual/unknown scenario sets, independent development families and fixed assignments, a separately fitted candidate, untouched held-out applications, original qualification targets and qualified Worker/API/frozen-report integration. Existing JS-002 artifacts remain unchanged.

@@ -17,7 +17,7 @@ export function VerifyReport({ api }: { api: <T>(path: string, init?: RequestIni
       let value: unknown;
       try { value = JSON.parse(await file.text()); } catch { throw new Error('This file is not valid JSON. Choose a downloaded insights JSON report.'); }
       if (request.signal.aborted) return;
-      if (!value || typeof value !== 'object' || (!('scanId' in value) && (!('content' in value) || (value as {content?: {version?: string}}).content?.version !== 'vynlt-frozen-insights-v1'))) throw new Error('Choose a VYLNT Export JSON or Download insights JSON file. PDF files are not supported by this checker.');
+      if (!value || typeof value !== 'object' || (!('scanId' in value) && (!('content' in value) || !['vynlt-frozen-insights-v1','vylnt-frozen-insights-v2'].includes((value as {content?: {version?: string}}).content?.version??'')))) throw new Error('Choose a VYLNT Export JSON or Download insights JSON file. PDF files are not supported by this checker.');
       const checked = await api<ReportFileVerification>('/reports/verify-upload', { method: 'POST', body: JSON.stringify(value), signal: request.signal });
       if (!request.signal.aborted) setResult(checked);
     } catch (cause) { if (!request.signal.aborted) setError(cause instanceof Error ? cause.message : 'Verification unavailable. Retry when the API is connected.'); }

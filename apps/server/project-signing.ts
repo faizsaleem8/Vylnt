@@ -9,6 +9,14 @@ import { randomUUID } from 'node:crypto';
 
 const keySchema = z.object({version:z.literal(1),privateKey:z.string().max(4096),spki:z.string().max(256),keyId:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 const publicKeysSchema=z.array(z.object({spki:z.string().max(256),keyId:z.string().regex(/^[a-f0-9]{64}$/)}).strict()).max(32);
+/** Read only: verification must never generate or replace a signing identity. */
+export async function readArchivedProjectKeys(path='.local/project-companion/trusted-public-keys.json'):Promise<ProjectPublicKey[]>{
+  let keys:ProjectPublicKey[];
+  try{keys=publicKeysSchema.parse(JSON.parse(await readFile(path,'utf8')));}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return [];throw Error('Project public-key archive is unavailable or malformed');}
+  if(new Set(keys.map(k=>k.keyId)).size!==keys.length)throw Error('Repeated archived project key');
+  for(const key of keys)if(key.keyId!==await contentHash({algorithm:'Ed25519',spki:key.spki})||createPublicKey({key:Buffer.from(key.spki,'base64'),format:'der',type:'spki'}).asymmetricKeyType!=='ed25519')throw Error('Invalid archived project key');
+  return keys;
+}
 export class ProjectSigner {
   private constructor(private data: z.infer<typeof keySchema>,readonly trustedKeys:readonly ProjectPublicKey[]) {}
   static async open(root: string) {

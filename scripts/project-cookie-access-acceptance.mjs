@@ -1,0 +1,10 @@
+import { build } from 'esbuild';
+import { mkdir } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { resolve } from 'node:path';
+process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.local/browsers');
+await mkdir('.local',{recursive:true});
+await build({entryPoints:['tests/project-cookie-access-acceptance.ts'],outfile:'.local/project-cookie-access-acceptance.mjs',bundle:true,platform:'node',format:'esm',packages:'external',target:'node20'});
+const child=spawn(process.execPath,['.local/project-cookie-access-acceptance.mjs'],{stdio:'inherit',windowsHide:true});
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>child.kill(signal));
+child.on('exit',code=>process.exitCode=code??2);

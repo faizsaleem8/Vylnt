@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { assertReportSize, ReportSizeError } from '../../packages/core/report-size';
 import type { Report } from '../../packages/core';
 import type { InsightReport, StoredInsightReport } from '../../packages/core/insight-contracts';
+import type { ProjectPublicKey } from '../../packages/core/project-evidence';
 import { contentHash, insightByteLimit, InsightSizeError, verifyFrozenInsights } from '../../packages/ml/frozen-insights';
 import { reportStorageBytes } from '../../packages/core/report-size';
 import { canonicalJson } from '../../packages/core/integrity';
@@ -16,7 +17,7 @@ export interface StoredScan { report: Report; hash: string; receivedAt: string; 
 export interface Store {
   siteScanIds(identity: Identity, origin: string): Promise<string[]>;
   removeScans(identity: Identity, ids: string[]): Promise<number>;
-  putInsight(identity: Identity, content: InsightReport): Promise<{ report: StoredInsightReport; created: boolean }>;
+  putInsight(identity: Identity, content: InsightReport, keys?:readonly ProjectPublicKey[]): Promise<{ report: StoredInsightReport; created: boolean }>;
   getInsight(identity: Identity, id: string): Promise<StoredInsightReport | undefined>;
   listInsights(identity: Identity, scanId: string): Promise<StoredInsightReport[]>;
   listPage(identity: Identity, paging: PageRequest): Promise<ScanPage>;
@@ -59,13 +60,13 @@ export class FileStore implements Store {
   private sorted(data: FileData, identity: Identity) {
     return [...(data.owners[identity.ownerId] ?? [])].sort((a, b) => Date.parse(b.report.observation.scannedAt) - Date.parse(a.report.observation.scannedAt) || b.report.scanId.localeCompare(a.report.scanId));
   }
-  putInsight(identity: Identity, content: InsightReport) {
+  putInsight(identity: Identity, content: InsightReport, keys:readonly ProjectPublicKey[]=[]) {
     return this.transaction(async data => {
       const source = data.owners[identity.ownerId]?.find(s => s.report.scanId === content.originalScan.scanId);
       if (!source || source.hash !== content.originalScanHash) throw new ConflictError('Source scan changed or was deleted.');
       const bytes = reportStorageBytes(content); if (bytes > insightByteLimit) throw new InsightSizeError(bytes);
       const hash = await contentHash(content), row: StoredInsightReport = { id: hash, hash, content, createdAt: new Date().toISOString() };
-      if (!await verifyFrozenInsights(row)) throw new ConflictError('Insights do not match trusted evidence and templates.');
+      if (!await verifyFrozenInsights(row,keys,identity.ownerId)) throw new ConflictError('Insights do not match trusted evidence and templates.');
       const rows = (data.insights ??= {})[identity.ownerId] ??= [];
       const existing = rows.find(r => r.id === hash);
       if (existing) return { report: existing, created: false };
@@ -147,8 +148,8 @@ export class SupabaseStore implements Store {
     const response = await fetch(`${this.url}/rest/v1/${path}`, { ...init, signal: AbortSignal.timeout(10000),
       headers: { apikey: this.anonKey, Authorization: `Bearer ${identity.token}`, 'Content-Type': 'application/json', ...init.headers } });
     if (!response.ok) {
-      if (path.startsWith('insight_reports') || path === 'rpc/finalize_insight_report') {
-        if (response.status === 404) throw new MigrationRequiredError('005_insight_reports.sql');
+      if (path.startsWith('insight_reports') || path === 'rpc/finalize_insight_report'||path==='rpc/finalize_project_insight_report') {
+        if (response.status === 404) throw new MigrationRequiredError(path==='rpc/finalize_project_insight_report'?'006_project_insight_reports.sql':'005_insight_reports.sql');
         if (response.status === 413) throw new InsightSizeError(insightByteLimit + 1);
       }
       if (path === 'rpc/ingest_scan' && response.status === 413) throw new ReportSizeError();
@@ -164,11 +165,12 @@ export class SupabaseStore implements Store {
   }
   private map(row: any): StoredScan { return { report: row.report, hash: row.report_hash, receivedAt: row.received_at, feedback: (row.feedback ?? []).map((f: any) => ({ findingId: f.finding_id, verdict: f.verdict, notes: f.notes, updatedAt: f.updated_at })) }; }
   private mapInsight(row: any): StoredInsightReport { return { id: row.report_id, hash: row.report_id, createdAt: row.created_at, content: row.content }; }
-  async putInsight(identity: Identity, content: InsightReport) {
+  async putInsight(identity: Identity, content: InsightReport, keys:readonly ProjectPublicKey[]=[]) {
     const bytes = reportStorageBytes(content); if (bytes > insightByteLimit) throw new InsightSizeError(bytes);
     const hash = await contentHash(content);
-    if (!await verifyFrozenInsights({ id: hash, hash, createdAt: '', content })) throw new ConflictError('Insights do not match trusted evidence and templates.');
-    const created = await this.request(identity, 'rpc/finalize_insight_report', { method: 'POST', body: JSON.stringify({ p_content: content, p_hash: hash }) });
+    if (!await verifyFrozenInsights({ id: hash, hash, createdAt: '', content },keys,identity.ownerId)) throw new ConflictError('Insights do not match trusted evidence and templates.');
+    const rpc=content.version==='vylnt-frozen-insights-v2'?'rpc/finalize_project_insight_report':'rpc/finalize_insight_report';
+    const created = await this.request(identity, rpc, { method: 'POST', body: JSON.stringify({ p_content: content, p_hash: hash }) });
     const report = await this.getInsight(identity, hash); if (!report) throw new ConflictError('Source scan changed or was deleted.');
     return { report, created: Boolean(created) };
   }

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import type { Store, Identity } from './store';
 import type { Report } from '../../packages/core';
 import { contentHash } from '../../packages/core/integrity';
-import { sealedProjectEvidenceSchema, verifyProjectEvidence, type SealedProjectEvidence } from '../../packages/core/project-evidence';
+import { sealedProjectEvidenceSchema, verifyProjectEvidence,projectOwnerTag, type SealedProjectEvidence } from '../../packages/core/project-evidence';
 import { collectResponseFacts } from '../../packages/ml/project-policy-facts';
 import { runGate } from '../cli/gate-runner';
 import { scanProjectPage } from '../cli/project-scanner';
@@ -88,6 +88,14 @@ export class ProjectService {
     if (!run) return;
     for (const candidate of run!.evidence) { const valid=await verifyProjectEvidence(candidate,report,this.signer.trustedKeys); if (valid) return valid; }
   }
+  async hasEvidence(ownerId:string,scanId:string){
+    await this.queue;
+    return this.state.runs.some(r=>r.ownerId===ownerId&&(r.scanIds.includes(scanId)||r.evidence.some(e=>e.evidence.scanId===scanId)));
+  }
+  async reportEvidence(ownerId:string,scanId:string,report:Report){
+    const seal=await this.evidence(ownerId,scanId,report);if(!seal)return;
+    return this.signer.seal({...seal.evidence,ownerTag:await projectOwnerTag(this.signer.publicKey.keyId,ownerId)});
+  }
   async start(identity: Identity, projectId: string, commit: string) {
     if (this.closing) throw new ProjectError('Project runner is shutting down',503);
     z.string().regex(/^(?:HEAD|[a-f0-9]{40}(?:[a-f0-9]{24})?)$/).parse(commit);
@@ -121,7 +129,8 @@ export class ProjectService {
         onScan:async context=>{
           signal.throwIfAborted();
           try {
-            let evidence=await collectResponseFacts(context.report,{runId:id,commit:context.commit,configHash:context.configHash,adapterHash},context.config.protocol==='https' && !context.config.ignoreHTTPSErrors);
+            // Only same-run browser transport receipts can establish TLS validation.
+            let evidence=await collectResponseFacts(context.report,{runId:id,commit:context.commit,configHash:context.configHash,adapterHash},false);
             const measurement=measurements.get(context.report.scanId);
             if(measurement){evidence=mergeBrowserMeasurement(evidence,measurement);measurements.delete(context.report.scanId);}
             evidence.inspection=inspection;

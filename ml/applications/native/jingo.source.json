@@ -3,10 +3,16 @@
   "role": "development-prototype-exposure",
   "familyId": "upstream:claudioc/jingo",
   "repository": "https://github.com/claudioc/jingo",
+  "repositoryId": 7468467,
   "revision": "10079c22d6cb66cfa0e7a91742c631fa0a153bd4",
   "license": "MIT",
   "licenseGitBlob": "418926dafa2e0b8d0f49444dc3d8fbef84e7af15",
   "dependencyLockSha256": "59677dff82858cf394b4a853eb2dd69b3a2f5270fff21ac0ba06d53d00e4b8ef",
+  "sourceSha256": {
+    "lib/app.js": "9766def5d2736daf8ab50fbe89b278194ac42ce7e53c0a27c1a7616e1b316013",
+    "lib/config.js": "63a210e1febd2394cdb82be2730ccbc643deea6b487736bc99381d3bc68bf37b",
+    "lib/models.js": "02431010c32353f09098f388c4303cdd4fc91e80aed153f27cb1c6816a258d90"
+  },
   "scope": "Disposable native local login, protected page access and cookie removal/restoration. Not an eligible corpus or holdout record.",
   "excludeFromFutureHoldout": true,
   "qualificationClaimed": false

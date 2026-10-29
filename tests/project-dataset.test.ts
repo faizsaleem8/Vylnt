@@ -7,7 +7,7 @@ import { ProjectSigner } from '../apps/server/project-signing';
 import { createReport } from '../packages/core';
 import { contentHash } from '../packages/core/integrity';
 import { collectResponseFacts } from '../packages/ml/project-policy-facts';
-import { prepareProjectData } from '../packages/ml/project-dataset';
+import { prepareProjectData,prepareProjectHoldout } from '../packages/ml/project-dataset';
 
 const secret='private-test-family-key-'.repeat(3),empty={families:[],variants:[]},dirs:string[]=[];
 afterEach(async()=>{for(const dir of dirs.splice(0))await rm(dir,{recursive:true,force:true});});
@@ -25,6 +25,19 @@ async function fixture(){
 }
 
 describe('project development data cannot substitute fixtures for qualification',()=>{
+  it('prepares signed holdout rows separately and derives safeguards from evidence only',async()=>{
+    const f=await fixture(),lock={...f.lock,version:'vylnt-project-holdout-sources-v1',families:f.lock.families.map(family=>({...family,partition:'holdout'}))};
+    f.input.oracle.sourceLockHash=await contentHash(lock);
+    const result=await prepareProjectHoldout([f.input],lock,empty,secret,f.signer.trustedKeys);
+    expect(result.split.version).toBe('vylnt-project-holdout-split-v1');expect(result.dataset.examples[0].evidenceRequiresReview).toBe(false);
+    expect(result.dataset.examples[0].contextualAllowed).toBe(false);expect(Object.values(result.split.families)).toEqual(['holdout']);
+    await expect(prepareProjectData([f.input],lock,empty,secret,f.signer.trustedKeys)).rejects.toThrow();
+    await expect(prepareProjectHoldout([f.input],f.lock,empty,secret,f.signer.trustedKeys)).rejects.toThrow();
+  });
+  it('rejects signed mechanism-reference evidence even with an application source declaration',async()=>{
+    const f=await fixture();f.evidence.collectionKind='mechanism-fixture';f.input.seal=f.signer.seal(f.evidence);f.input.oracle.evidenceHash=await contentHash(f.evidence);
+    await expect(prepareProjectData([f.input],f.lock,empty,secret,f.signer.trustedKeys)).rejects.toThrow(/Mechanism fixtures/);
+  });
   it('retains numeric metadata only, deduplicates repeated findings and reports deficits',async()=>{
     const f=await fixture(),result=await prepareProjectData([f.input,f.input],f.lock,empty,secret,f.signer.trustedKeys);
     expect(result.dataset.examples).toHaveLength(1);expect(result.rejected[0].reason).toBe('repeated-context');

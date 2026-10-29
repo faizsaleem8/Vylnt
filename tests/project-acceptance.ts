@@ -9,7 +9,7 @@ import { createApp } from '../apps/server/app';
 import { FileStore } from '../apps/server/store';
 import { ProjectService } from '../apps/server/projects';
 import { verifyProjectEvidence } from '../packages/core/project-evidence';
-import { freezeInsights } from '../packages/ml/frozen-insights';
+import { freezeInsights,verifyFrozenInsights } from '../packages/ml/frozen-insights';
 import { contentHash } from '../packages/core/integrity';
 
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.local/browsers');
@@ -54,14 +54,29 @@ try{
   assert.equal((await fetch(`${origin}/api/reports/${id}/pdf`,{headers})).status,200);
   const content=await freezeInsights((await store.get(owner,id))!.report);
   const frozen=await fetch(`${origin}/api/scans/${id}/insight-reports`,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({analysisHash:await contentHash(content.analysis)})});assert.ok([200,201].includes(frozen.status));
-  console.log('PASS: raw PDF and existing frozen report remain available; no v4 model promotion');
+  const snapshot=await frozen.json();assert.equal(snapshot.content.version,'vylnt-frozen-insights-v2');assert.equal(snapshot.content.project.assessment,'not-enabled');
+  assert.equal(snapshot.content.project.seal.evidence.commit,commit);assert.ok(await verifyFrozenInsights(snapshot,service.signer.trustedKeys));
+  const downloaded=await(await fetch(`${origin}/api/insight-reports/${snapshot.id}.json`,{headers})).json();assert.deepEqual(downloaded,snapshot);
+  const pdf=await fetch(`${origin}/api/insight-reports/${snapshot.id}.pdf`,{headers});assert.equal(pdf.status,200);
+  if(channel==='chromium')await writeFile('test-results/projects/frozen-project-v2.pdf',Buffer.from(await pdf.arrayBuffer()));
+  const changed=structuredClone(snapshot);changed.content.analysis.summary='Tampered project report';
+  const verification=await(await fetch(`${origin}/api/reports/verify-upload`,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(changed)})).json();assert.equal(verification.result,'content-mismatch');
+  assert.equal((await fetch(`${origin}/api/insight-reports/${snapshot.id}.json`,{headers})).status,200);
+  await page.getByRole('button',{name:'Verify report',exact:true}).click();
+  await page.getByLabel('Report JSON',{exact:true}).setInputFiles({name:'project-report.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(snapshot))});
+  await page.getByRole('button',{name:'Verify report',exact:true}).last().click();
+  await page.getByRole('heading',{name:'Verification unavailable',exact:true}).waitFor(); // Chain deliberately disabled; content still matches.
+  await page.getByLabel('Report JSON',{exact:true}).setInputFiles({name:'changed-project-report.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(changed))});
+  await page.getByRole('button',{name:'Verify report',exact:true}).last().click();
+  await page.getByRole('heading',{name:'Report has been altered or corrupted',exact:true}).waitFor();
+  console.log('PASS: raw PDF, frozen v2 JSON/PDF, signed project provenance and uploaded tamper detection; no v4 model promotion');
   await page.getByRole('button',{name:'Local projects',exact:true}).click();await page.getByRole('button',{name:'Scan project',exact:true}).click();await page.getByRole('button',{name:'Cancel run',exact:true}).click();await page.getByText('website · cancelled',{exact:true}).waitFor({timeout:30000});
   console.log('PASS: UI cancellation stops a newly started run');
   await browser.close();browser=undefined;await service.close();const restored=await ProjectService.open(journal,store);service=restored;
   const saved=(await store.get(owner,id))!;assert.ok(await restored.evidence(owner.ownerId,id,saved.report));
   console.log('PASS: API-service restart retains trusted provenance');
   assert.deepEqual(pageErrors,[]);
-  await writeFile(`test-results/projects/${channel}-result.json`,JSON.stringify({browser:channel,commit,checks:['pairing','exact-commit','signed-evidence','unsupported-fallback','raw-pdf','frozen-report','cancel','restart','keyboard-registration','responsive-width','poll-cancellation'],qualifiedCategoriesAdded:[]},null,2));
+  await writeFile(`test-results/projects/${channel}-result.json`,JSON.stringify({browser:channel,commit,checks:['pairing','exact-commit','signed-evidence','unsupported-fallback','raw-pdf','frozen-v2-JSON-PDF','trusted-project-provenance','uploaded-tamper-detection','cancel','restart','keyboard-registration','responsive-width','poll-cancellation'],qualifiedCategoriesAdded:[]},null,2));
 }finally{
   await browser?.close();await service?.close();if(server)await new Promise<void>((done,reject)=>server!.close(error=>error?reject(error):done()));
   if(resolve(root).startsWith(resolve('.local')+sep))await rm(root,{recursive:true,force:true,maxRetries:5,retryDelay:200});

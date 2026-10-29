@@ -12,6 +12,9 @@ import { createApp } from '../apps/server/app';
 import { FileStore } from '../apps/server/store';
 import { createReport } from '../packages/core';
 import { contentHash, freezeInsights } from '../packages/ml/frozen-insights';
+import {ProjectSigner} from '../apps/server/project-signing';
+import {collectResponseFacts} from '../packages/ml/project-policy-facts';
+import {projectOwnerTag} from '../packages/core/project-evidence';
 import type { StoredInsightReport } from '../packages/core/insight-contracts';
 import type { AnchorProof } from '../packages/core/anchor';
 import type { Server } from 'node:http';
@@ -304,6 +307,22 @@ try {
   await panel.screenshot({ path: join(dir, 'extension-anchor.png'), fullPage: true });
   await context.close(); context = undefined;
   pass('installed automated extension saved-version verification, accessibility and narrow layout');
+
+  const projectScan=scan('http://127.0.0.1/project-fixture');await store.put(owner,projectScan);
+  const projectKeys=await ProjectSigner.open(join(dir,'project-keys'));
+  const projectEvidence={...await collectResponseFacts(projectScan,{runId:randomUUID(),commit:'a'.repeat(40),configHash:'b'.repeat(64),adapterHash:'c'.repeat(64)},false),ownerTag:await projectOwnerTag(projectKeys.publicKey.keyId,owner.ownerId)};
+  const projectContent=await freezeInsights(projectScan,{seal:projectKeys.seal(projectEvidence),keys:projectKeys.trustedKeys});
+  const projectReport=(await store.putInsight(owner,projectContent,projectKeys.trustedKeys)).report;
+  await assert.rejects(service.enqueue('a',projectReport),/Untrusted/);
+  await assert.rejects(service.enqueue('b',projectReport,projectKeys.trustedKeys),/Untrusted/);
+  await service.enqueue('a',projectReport,projectKeys.trustedKeys);
+  await until(async()=>{await service!.tick();return(await service!.status('a',projectReport.id)).proof?.status==='confirmed';},'v2 project anchor');
+  assert.equal((await service.verify('a',projectReport,projectKeys.trustedKeys)).result,'matching');
+  const projectProof=(await service.status('a',projectReport.id)).proof!;
+  assert.equal((await verifyExport(projectReport,projectProof,config.manifest,join(dir,'project-keys/trusted-public-keys.json'))).result,'matching');
+  const alteredProject=structuredClone(projectReport);alteredProject.content.analysis.summary='Altered project report';
+  assert.equal((await verifyExport(alteredProject,projectProof,config.manifest,join(dir,'project-keys/trusted-public-keys.json'))).result,'content-mismatch');
+  pass('frozen v2 project digest mined and verified with trusted keys; altered export rejected');
 
   await stopNode();
   assert.equal((await (await fetch(origin + '/demo-api/ledger')).json()).result, 'unavailable');

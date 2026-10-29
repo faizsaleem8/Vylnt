@@ -7,6 +7,9 @@ import { replaceFile } from './replace-file';
 import type { StoredInsightReport } from '../../packages/core/insight-contracts';
 import type { AnchorProof, AnchorView, AnchorVerification, LedgerView, LedgerEntry, DemoLedgerView } from '../../packages/core/anchor';
 import { verifyFrozenInsights } from '../../packages/ml/frozen-insights';
+import {contentHash} from '../../packages/core/integrity';
+import type { ProjectPublicKey } from '../../packages/core/project-evidence';
+import { readArchivedProjectKeys } from './project-signing';
 
 export const anchorAbi = ['function writer() view returns(address)', 'function instanceId() view returns(bytes32)', 'function anchoredAt(bytes32) view returns(uint256)', 'function anchor(bytes32)', 'event Anchored(bytes32 indexed digest,uint256 blockNumber)'];
 const digest = z.string().regex(/^[0-9a-f]{64}$/);
@@ -55,11 +58,20 @@ export async function verifyAnchor(provider: JsonRpcProvider, d: Deployment, pro
     return { result: 'matching', message: 'Frozen JSON matches an anchor on this local blockchain. This does not establish scan truth or ML accuracy.', proof: { ...proof, status: 'confirmed', blockNumber: receipt.blockNumber, blockHash: receipt.blockHash } };
   } catch { return unavailable(); }
 }
-export async function verifyExport(report: StoredInsightReport, supplied: unknown, manifest: string): Promise<AnchorVerification> {
+export async function verifyExport(report: StoredInsightReport, supplied: unknown, manifest: string,projectKeysFile?:string): Promise<AnchorVerification> {
   try {
     const proof = proofSchema.parse(supplied);
+    try{
+      if(report.id!==report.hash||await contentHash(report.content)!==report.hash||proof.reportHash!==report.hash)return {result:'content-mismatch',message:'Exported report content or identity has changed.'};
+    }catch{return {result:'content-mismatch',message:'Exported report content is malformed or unsupported.'};}
+    let keys:readonly ProjectPublicKey[]=[];
+    if(report.content?.version==='vylnt-frozen-insights-v2'){
+      try{keys=await readArchivedProjectKeys(projectKeysFile);}catch{return unavailable('Trusted project public-key archive is unavailable.');}
+      const keyId=report.content.project?.seal.keyId;
+      if(!keys.some(k=>k.keyId===keyId))return unavailable('The project signing key is not in the trusted installation archive.');
+    }
     try {
-      if (!await verifyFrozenInsights(report) || proof.reportHash !== report.hash) return { result: 'content-mismatch', message: 'Exported report content or identity has changed.' };
+      if (!await verifyFrozenInsights(report,keys) || proof.reportHash !== report.hash) return { result: 'content-mismatch', message: 'Exported report content or identity has changed.' };
     } catch { return { result: 'content-mismatch', message: 'Exported report content is malformed or unsupported.' }; }
     const d = await deployment(manifest), provider = rpc(d.rpcUrl);
     try { return await verifyAnchor(provider, d, proof); } finally { provider.destroy(); }
@@ -94,8 +106,8 @@ export class AnchorService {
     await replaceFile(this.path + '.tmp', this.path);
   }
   private find(owner: string, id: string) { return this.jobs.find(j => j.owner === owner && j.proof.reportHash === id && j.proof.instanceId === this.d.instanceId); }
-  async enqueue(owner: string, report: StoredInsightReport): Promise<AnchorView> {
-    if (!await verifyFrozenInsights(report)) throw new Error('Untrusted report');
+  async enqueue(owner: string, report: StoredInsightReport,keys:readonly ProjectPublicKey[]=[]): Promise<AnchorView> {
+    if (!await verifyFrozenInsights(report,keys,owner)) throw new Error('Untrusted report');
     return this.serial(async () => {
       let job = this.find(owner, report.hash);
       if (!job) {
@@ -136,8 +148,8 @@ export class AnchorService {
       return { result: 'unavailable', message: 'The local node or configured deployment is unavailable or changed. Start the node; after a reset, redeploy and restart the API.', entries: [] };
     }
   }
-  async retry(owner: string, report: StoredInsightReport) {
-    await this.enqueue(owner, report);
+  async retry(owner: string, report: StoredInsightReport,keys:readonly ProjectPublicKey[]=[]) {
+    await this.enqueue(owner, report,keys);
     return this.serial(async () => {
       const j = this.find(owner, report.hash)!;
       if (j.proof.status === 'failed') { j.proof.status = j.raw ? 'submitted' : 'queued'; j.proof.attempts = 0; delete j.proof.error; delete j.nextAt; await this.save(); }
@@ -167,8 +179,8 @@ export class AnchorService {
     const selected = new Set(ids);
     return this.serial(async () => { this.jobs = this.jobs.filter(j => !(j.owner === owner && selected.has(j.scanId) && (j.proof.status === 'queued' || (j.proof.status === 'failed' && !j.raw)))); await this.save(); });
   }
-  async verify(owner: string, report: StoredInsightReport): Promise<AnchorVerification> {
-    if (!await verifyFrozenInsights(report)) return { result: 'content-mismatch', message: 'Frozen report content no longer matches trusted derivation.' };
+  async verify(owner: string, report: StoredInsightReport,keys:readonly ProjectPublicKey[]=[]): Promise<AnchorVerification> {
+    if (!await verifyFrozenInsights(report,keys,owner)) return { result: 'content-mismatch', message: 'Frozen report content no longer matches trusted derivation.' };
     const view = await this.status(owner, report.hash);
     if (!view.proof) return { result: 'not-anchored', message: 'This saved version has not been queued for anchoring.' };
     return verifyAnchor(this.provider, this.d, view.proof);

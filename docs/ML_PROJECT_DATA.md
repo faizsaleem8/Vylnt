@@ -2,7 +2,17 @@
 
 This is developer tooling for Stage C, not a user data-entry workflow or model qualification. It prepares evidence-v4 numeric inputs from signed companion scans and independent, developer-owned functional oracle records. No historical dataset, family key, model, evaluator or held-out result is overwritten.
 
+Earlier 2026-10-29 policy increment: v2 introduced executed framing-policy controls; current producers emit v3 as described below. V1/V2 remain readable with their original uncertainty rules. New source/oracle registrations must bind the actual assessment policy and updated harness; do not relabel old rows or reuse old registration identities for new semantics. Mechanism framing fixtures remain excluded from application counts. See `ML_FRAME_POLICY.md`.
+
+Fresh holdout preparation is a separate workflow in `ML_PROJECT_HOLDOUT.md`; it uses a distinct source-lock version/holdout partition and cannot be passed into development fitting. Both paths share signature, sanitization, source/oracle and overlap checks. The new producer code changes the preparation identity: existing registrations are retained and are not silently upgraded. Register a new preparation experiment where the new producer is required; do not rewrite old artifacts.
+
 ## Register before collecting
+
+Native acquisition now has a separate `ml:projects:seeds` workflow and category files, documented in `ML_NATIVE_DATASETS.md`. These are explicitly pre-cohort seed observations, not registered training inputs. Native labels are issued during new same-run controls; historical unlabelled prototypes are not rewritten. Current scope supplies measured CK-001/CK-002 positive seeds only; other observed findings remain uncertain. The two response profiles share an adapter identity and remain one family. Collection and type checking passed; PLAN.md records final counts and tests. An eligible 8/4 family source selection and independent contextual cases remain necessary before the registration/fitting commands below can run successfully.
+
+Frozen project reports additionally carry a signed pseudonymous `ownerTag`. It is report-authorization metadata and is excluded from numeric features; old sidecar signatures retain their original bytes. Report finalisation creates an authorized sealed copy without rewriting the collection sidecar. This does not create oracle labels, development examples or a new family. Source/harness/schema changes still require fresh preparation registration. See `ML_PROJECT_FROZEN_REPORTS.md`.
+
+Authentication-role producers now emit assessment policy v3 and functional measurement v2. V1/V2 evidence retains its original semantics. New registrations must bind the updated inspector, producer, policy and harness identities; do not relabel historical rows or overwrite registrations. The native Jingo profile still represents one development-exposed family, and mechanism fixtures remain ineligible. See `ML_AUTHENTICATION_EVIDENCE.md`.
 
 Keep the source lock, oracle outputs, scans, seals, source audits and manifests under ignored `.local/`. Preserve `.local/insights-dataset-key`; the command reads this existing key and never creates a replacement. The complete historical exposure registry remains required.
 
@@ -33,6 +43,10 @@ Readiness counts distinct numeric contexts, not repeated resources. Opposing lab
 Historical repositories that have moved/been renamed and shared native implementations require the source-independence audit in addition to canonical-name, repository-ID and hash checks. Schema-v4 numeric identities must be added to the complete exposure inventory before a future fresh holdout is selected. No external-holdout evaluator or release promotion is supplied by these preparation commands.
 
 ## Current measured status
+
+Candidate development commands are now available in `ML_PROJECT_CANDIDATE.md`. They recompute all seven categories' family/class/context readiness and refuse to register or fit this currently insufficient corpus. Numerical/export smoke tests do not supply real application examples or qualify a model.
+
+Cookie-purpose references carry signed `collectionKind: mechanism-fixture` metadata. Preparation rejects those records even when supplied with an application-family declaration; they cannot fill development counts. Existing sidecars without this optional provenance field retain their parsing/signature path. The new field is not a model input. Its rejection regression and the full 272-test/50-suite regression passed, alongside final Chromium/Edge reference acceptance, type checking and builds. See `ML_COOKIE_PURPOSE.md` for scope and limitations. No independent family, dataset, candidate or qualification was added.
 
 Latest native increment: 265 TypeScript tests/48 suites, Chromium/Edge collector mechanisms and native Jingo interaction/signature checks passed. Native cancellation removed the process and temporary data. The prototype's anonymous write returned 500 and remains `needs-review`; it supplies no eligible training record. Jingo is recorded as development-exposed in `ml/applications/native/jingo.source.json` and must be excluded from a future fresh holdout. Source locks, independent native oracles and all class/family gates are still required before fitting.
 

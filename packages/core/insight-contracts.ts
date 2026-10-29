@@ -1,4 +1,5 @@
 import type { Report, Severity } from './index';
+import type { SealedProjectEvidence } from './project-evidence';
 
 export const evidenceVersion = 'vynlt-evidence-v2' as const;
 export const insightVersion = 'vynlt-insights-v1' as const;
@@ -50,12 +51,17 @@ export interface InsightAnalysis {
   contextual: InsightAssessment[];
 }
 /** Frozen content has no export timestamp or mutable review notes. Identical content has one hash. */
-export interface InsightReport {
+export interface LegacyInsightReport {
   version: 'vynlt-frozen-insights-v1';
   originalScan: Report;
   originalScanHash: string;
   analysis: InsightAnalysis;
 }
+export interface ProjectInsightReport extends Omit<LegacyInsightReport,'version'> {
+  version:'vylnt-frozen-insights-v2';
+  project:{seal:SealedProjectEvidence;assessment:'not-enabled'};
+}
+export type InsightReport=LegacyInsightReport|ProjectInsightReport;
 export interface StoredInsightReport {
   id: string;
   hash: string;

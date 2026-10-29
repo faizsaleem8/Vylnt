@@ -1,4 +1,8 @@
 import { measureProjectBrowser } from './project-probes';
+import { observeMetaPolicy } from './project-meta-policy';
+import { observeResourceRequests } from './project-resource-function';
+import { guardProjectRedirects } from './project-redirect-guard';
+import { recordFramePolicySource } from './project-frame-policy';
 import type { Request, Page, BrowserContext } from 'playwright';
 import { randomUUID } from 'node:crypto';
 import { cookieMetadata, createReport, safeUrl, securityHeaders, cspEvidenceComplete, type Observation, type Resource } from '../../packages/core';
@@ -34,11 +38,13 @@ export async function scanProjectPage(target: string, options: { allowRemote?: b
   const browser = await chromium.launch({ channel: options.channel ?? 'chromium', headless: true });
   const abort = () => { void browser.close().catch(() => {}); };
   options.signal?.addEventListener('abort', abort);
+  let redirectGuard:Awaited<ReturnType<typeof guardProjectRedirects>>|undefined;
   try {
     options.signal?.throwIfAborted();
     const context = await browser.newContext({ ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false, serviceWorkers: 'block' });
     await context.routeWebSocket('**/*', socket => socket.close());
     const page = await context.newPage();
+    redirectGuard=await guardProjectRedirects(page,localOrigins!);
     // Request identity is retained in memory only: sanitized URL collisions must
     // not let one resource's completion overwrite another resource's failure.
     const resources = new Map<Request, Resource>();
@@ -61,6 +67,8 @@ export async function scanProjectPage(target: string, options: { allowRemote?: b
     });
     if(options.hooks?.prepare){await trustedHook(()=>options.hooks!.prepare!(page,context),30000,()=>browser.close(),options.signal);resources.clear();networkTruncated=false;}
     options.signal?.throwIfAborted();
+    const metaObservation=await observeMetaPolicy(page,target);
+    const resourceObservation=observeResourceRequests(page,target,localOrigins!,options.ignoreHTTPSErrors??false);
     const response = await page.goto(target, { waitUntil: 'load', timeout: 30000 });
     if (!response || response.status() >= 400) throw new Error(`Target navigation failed (${response?.status() ?? 'no response'})`);
     await page.waitForTimeout(options.waitMs ?? 300);
@@ -81,10 +89,13 @@ export async function scanProjectPage(target: string, options: { allowRemote?: b
     const observation: Observation = { url: safeUrl(page.url()), scannedAt: new Date().toISOString(),
       headers: securityHeaders(responseHeaders), cspEvidenceComplete: cspEvidenceComplete(responseHeaders), cookies, resources: [...resources.values(), ...dom.resources].slice(0, 600), scripts: dom.scripts, domCollected: true };
     const report = structuredClone(createReport(randomUUID(), observation));
-    const measurement = await measureProjectBrowser(page, response, report, localOrigins!);
+    await recordFramePolicySource(page,report);
+    await metaObservation.finish();
+    await resourceObservation.finish(report);
+    const measurement = await measureProjectBrowser(page, response, report, localOrigins!,{strictTls:!options.ignoreHTTPSErrors});
     if(options.hooks?.collected)await trustedHook(()=>options.hooks!.collected!(page,context,structuredClone(report)),240000,()=>browser.close(),options.signal);
     options.signal?.throwIfAborted();
     return {report, measurement};
-  } finally { options.signal?.removeEventListener('abort', abort); await browser.close(); }
+  } finally { options.signal?.removeEventListener('abort', abort); await redirectGuard?.close(); await browser.close(); }
 }
 

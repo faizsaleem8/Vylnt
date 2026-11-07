@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createReport } from '../packages/core';
 import { ProjectSigner } from '../apps/server/project-signing';
 import { collectResponseFacts, parseHsts } from '../packages/ml/project-policy-facts';
-import { projectEvidenceSchema, prepareProjectContexts, verifyProjectEvidence, guardProjectAssessment, projectRules, type ProjectFact, type ProjectFactName } from '../packages/core/project-evidence';
+import { invalidFixtureHsts, projectEvidenceSchema, prepareProjectContexts, verifyProjectEvidence, guardProjectAssessment, projectRules, projectTransportPolicy, projectHstsHostPolicy, projectHstsInvalidPolicy, projectHstsRetainedPolicy, projectProtectedCrossSitePolicy, type ProjectFact, type ProjectFactName } from '../packages/core/project-evidence';
 
 const dirs:string[]=[];
 afterEach(async()=>{for(const dir of dirs.splice(0))await rm(dir,{recursive:true,force:true});});
@@ -13,6 +13,89 @@ const scan=(headers:Record<string,string>={})=>createReport(crypto.randomUUID(),
 const binding=()=>({runId:crypto.randomUUID(),commit:'a'.repeat(40),configHash:'b'.repeat(64),adapterHash:'c'.repeat(64)});
 const fact=(value:boolean,source:ProjectFact['source']='browser'):ProjectFact=>({value,source,coverage:'complete',witnessHash:'d'.repeat(64)});
 describe('project evidence v4 trust and uncertainty',()=>{
+  it('requires scoped plaintext evidence before accepting an invalid HSTS directive',async()=>{
+    const report=createReport(crypto.randomUUID(),{...scan({'strict-transport-security':invalidFixtureHsts}).observation,url:'https://vylnt-resource.test:9443/api/nodes'});
+    const evidence=await collectResponseFacts(report,binding(),false);
+    evidence.policy=projectHstsInvalidPolicy;
+    evidence.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'partial',sourceHashes:['a'.repeat(64)],headerOperations:0,cookieOperations:0,sessionMiddlewareRegistrations:0};
+    const finding=report.findings.find(row=>row.ruleId==='HDR-001')!;
+    const target=evidence.targets.find(row=>row.findingId===finding.id)!;
+    Object.assign(target.facts,{tlsValidated:fact(true),hstsApplicable:fact(true),responseChainComplete:fact(true)});
+    expect(prepareProjectContexts(report,evidence)(finding).requiresReview).toBe(true);
+    target.facts.hstsPositive=fact(false);
+    expect(projectEvidenceSchema.safeParse(evidence).success).toBe(true);
+    expect(prepareProjectContexts(report,evidence)(finding).requiresReview).toBe(false);
+    expect(guardProjectAssessment(prepareProjectContexts(report,evidence)(finding),finding,'contextual')).toBe('needs-review');
+    const changed={...report,observation:{...report.observation,headers:{'strict-transport-security':'max-age=0'}}};
+    expect(prepareProjectContexts(changed,evidence)(finding).requiresReview).toBe(true);
+    const ineffective=prepareProjectContexts(report,evidence)(finding);
+    evidence.policy=projectHstsRetainedPolicy;
+    expect(projectEvidenceSchema.safeParse(evidence).success).toBe(false);
+    target.facts.hstsPositive=fact(true);
+    expect(projectEvidenceSchema.safeParse(evidence).success).toBe(true);
+    const retained=prepareProjectContexts(report,evidence)(finding);
+    expect(retained.sequence).not.toEqual(ineffective.sequence);
+    expect(guardProjectAssessment(retained,finding,'contextual')).toBe('contextual');
+    expect(prepareProjectContexts(changed,evidence)(finding).requiresReview).toBe(true);
+  });
+  it('requires scoped and complete browser evidence for an installed host HSTS policy',async()=>{
+    const report=createReport(crypto.randomUUID(),{...scan().observation,url:'https://vylnt-resource.test:9443/api/nodes'});
+    const evidence=await collectResponseFacts(report,binding(),false);
+    evidence.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'partial',sourceHashes:['a'.repeat(64)],headerOperations:0,cookieOperations:0,sessionMiddlewareRegistrations:0};
+    const finding=report.findings.find(row=>row.ruleId==='HDR-001')!;
+    const target=evidence.targets.find(row=>row.findingId===finding.id)!;
+    Object.assign(target.facts,{tlsValidated:fact(true),hstsApplicable:fact(true),responseChainComplete:fact(true),hstsPositive:fact(true)});
+    expect(projectEvidenceSchema.safeParse(evidence).success).toBe(false);
+    evidence.policy=projectHstsHostPolicy;
+    expect(projectEvidenceSchema.safeParse(evidence).success).toBe(true);
+    const decision=(candidate=report)=>guardProjectAssessment(prepareProjectContexts(candidate,evidence)(finding),finding,'contextual');
+    expect(decision()).toBe('contextual');
+    expect(prepareProjectContexts(report,evidence)(finding).facts.hstsPresent).toBe(false);
+    expect(decision({...report,observation:{...report.observation,headers:{'strict-transport-security':'max-age=0'}}})).toBe('needs-review');
+    expect(decision({...report,observation:{...report.observation,url:'https://127.0.0.1:9443/api/nodes'}})).toBe('needs-review');
+    target.facts.hstsPositive!.coverage='partial';
+    expect(projectEvidenceSchema.safeParse(evidence).success).toBe(false);
+    expect(decision()).toBe('needs-review');
+  });
+  it('requires complete and consistent native SameSite evidence for the pinned scope',async()=>{
+    const report=createReport(crypto.randomUUID(),{...scan().observation,url:'http://127.0.0.1:9000/api/auth/me',
+      cookies:[{name:'session',secure:true,httpOnly:true,sameSite:'no_restriction',session:true}]});
+    const evidence=await collectResponseFacts(report,{...binding(),commit:'1329edc008f284967517f6fb9af1f622900af7b2'},false);
+    evidence.policy=projectProtectedCrossSitePolicy;
+    evidence.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'partial',sourceHashes:['a'.repeat(64)],headerOperations:0,cookieOperations:0,sessionMiddlewareRegistrations:0};
+    const finding=report.findings.find(row=>row.ruleId==='CK-003')!;
+    const target=evidence.targets.find(row=>row.findingId===finding.id)!;
+    Object.assign(target.facts,{cookieAuthDependency:fact(true,'functional'),cookieCrossSiteRequired:fact(true,'functional'),
+      csrfChecksPassed:fact(true,'functional'),stateChangingRoutesCovered:fact(true,'functional')});
+    const assess=()=>guardProjectAssessment(prepareProjectContexts(report,evidence)(finding),finding,'contextual');
+    expect(assess()).toBe('contextual');
+    target.facts.stateChangingRoutesCovered!.coverage='partial';
+    expect(assess()).toBe('needs-review');
+    target.facts.stateChangingRoutesCovered!.coverage='complete';
+    target.facts.stateChangingRoutesCovered!.witnessHash='e'.repeat(64);
+    expect(assess()).toBe('needs-review');
+    target.facts.stateChangingRoutesCovered!.witnessHash='d'.repeat(64);
+    evidence.commit='a'.repeat(40);
+    expect(assess()).toBe('needs-review');
+  });
+  it('admits complete named upgrade evidence while retaining high-severity review',async()=>{
+    const url='https://vylnt-resource.test:8443/',asset='http://vylnt-resource.test:8443/editor.js';
+    const report=createReport(crypto.randomUUID(),{...scan({'content-security-policy':'upgrade-insecure-requests'}).observation,url,
+      resources:[{url:asset,type:'script',outcome:'referenced'}]});
+    const evidence=await collectResponseFacts(report,binding(),true);
+    evidence.policy=projectTransportPolicy;
+    evidence.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'partial',sourceHashes:['a'.repeat(64)],headerOperations:0,cookieOperations:0,sessionMiddlewareRegistrations:0};
+    const finding=report.findings.find(row=>row.ruleId==='NET-001')!;
+    const target=evidence.targets.find(row=>row.findingId===finding.id)!;
+    Object.assign(target.facts,{resourceTlsUpgradeObserved:fact(true,'functional'),resourceHttpTransferObserved:fact(false,'functional'),
+      resourceFunctionVerified:fact(true,'functional'),requestChainComplete:fact(true,'functional')});
+    const context=prepareProjectContexts(report,evidence)(finding);
+    expect(context.requiresReview).toBe(false);
+    expect(guardProjectAssessment(context,finding,'contextual')).toBe('needs-review');
+    expect(prepareProjectContexts({...report,observation:{...report.observation,headers:{}}},evidence)(finding).requiresReview).toBe(true);
+    target.facts.resourceTlsUpgradeObserved!.witnessHash='e'.repeat(64);
+    expect(prepareProjectContexts(report,evidence)(finding).requiresReview).toBe(true);
+  });
   it('uses v3 positive causal authentication with partial Express inventory without allowing de-emphasis',async()=>{
     const report=createReport(crypto.randomUUID(),{...scan().observation,cookies:[{name:'session',secure:false,httpOnly:false,sameSite:'lax',session:true}]}),evidence=await collectResponseFacts(report,binding(),true);
     evidence.inspection={version:'vylnt-express-inspection-v1',framework:'express',coverage:'partial',sourceHashes:[],headerOperations:0,cookieOperations:0,sessionMiddlewareRegistrations:0};

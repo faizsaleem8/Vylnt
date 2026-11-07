@@ -4,6 +4,50 @@ Implemented 2026-10-28. This is developer-owned Stage D tooling, not a qualified
 
 ## Registration and fitting
 
+The latest preparation is `.local/ml-q-material-datasets-006`. Candidate
+preflight credits **47 of 630 eligible examples** with all seven categories
+below their fitting gates. Five signed Yoyo cases extend the original family
+in validation, with the same twelve source roles. See the measured data and
+per-class gaps. [Dataset results](ML_REGISTERED_DATASETS.md)
+
+**7 November native-context continuation.** The earlier development preparation
+is `.local/ml-q-material-datasets-005`, with **42/630 eligible examples** and zero
+categories ready for fitting. It preserves eleven previous source roles and
+adds registered HomeInventory preference contexts in the replaced Notepad
+training slot. Each of Secure and HttpOnly has two contextual target variants
+in one family; contextual validation coverage is still absent. Candidate
+creation is refused. Actual copied-data checks retain the historical 18/38
+counts, reject forged readiness and verify that no candidate output is created.
+No remaining-category model was fitted or qualified. [Exact counts and source
+scope](ML_REGISTERED_DATASETS.md).
+
+**6 November counting correction.** New authenticated preparation
+`vylnt-native-prepared-v2` uses the user-approved material-context policy.
+`.local/ml-q-material-datasets-002` credits 38/630 cases, leaving all seven
+categories below fitting requirements. It recomputes the category projection in
+both TypeScript and Python and checks its registered implementation hashes.
+Within-family repeats are excluded; equal numeric inputs across independent
+families are audited and permitted. Unknown examples contribute no fitting
+weight, and supported conflicts abstain. LSTM and logistic fitting, scaler,
+validation checkpoint loss, temperature calibration and threshold selection
+apply equal-family weights within category/class. Calibration uses validation
+only. The grid, uncertain interval and quality thresholds remain unchanged.
+
+Legacy native-v1 preparation retains its stricter behavior and 18-case result.
+The sections below describing cross-partition exclusions apply to that legacy
+format. The material format is intentionally not accepted by the current strict
+holdout/release path. Family-clustered qualification and conflict-aware runtime
+abstention remain required before promotion. No real remaining-category model
+was fitted. [Current preparation and counts](ML_REGISTERED_DATASETS.md)
+
+Concurrent candidate commands now use separately created feature modules and
+JSON contracts and remove their own temporary command directories. Actual
+concurrent preflights preserve both protocols' results. Authenticated material
+reader tests, weighting/calibration tests and actual tampered-data refusal
+checks passed. Complete Python ML validation passed 72 tests.
+
+Current native acquisition (5 November): `.local/project-native-seeds-009` has twelve families/52 completed batches, with 67 repeated inputs removed. Actual preflight refuses fitting because this remains a seed aggregate, lacks eligible registered 8/4 assignments and does not meet any category's distinct class-count requirements. No real seven-category fit occurred. See `ML_NATIVE_TWELVE_FAMILIES.md`; twelve collected sources or generated category filenames do not establish training readiness. Earlier aggregates remain unchanged.
+
 `ml/project_candidate.py` reads the output of the existing signed-project preparation workflow. The Node wrapper generates the feature contract from the current TypeScript evidence-v4 extractor. Readiness is recomputed from the rows and frozen assignments, not accepted just because an audit says ready.
 
 Requirements before registration/fitting:
@@ -44,6 +88,8 @@ npm run ml:projects:parity -- .local/project-candidate-001 --browser msedge
 Each environment writes an exclusive record bound to the candidate/model and numeric/decision runtime source hashes. Browser checks use an isolated blank page with network requests blocked and close the browser afterward. Legacy version-1 fixtures can still receive numeric-only verification; their records explicitly say category decisions/logistic parity were not checked. They are not silently upgraded. Historical kernels, releases and saved report bytes remain unchanged.
 
 ## Validation and remaining gates
+
+2026-11-05: preflight now recognizes seed-audit v2 as well as v1. The parameterized Python command regression passed all preflight/register/fit refusal paths for both formats. Actual preflight against `.local/project-native-seeds-004` reports the unmet cohort/class gates and performs no fitting or predictions, even though the corpus now retains one contextual framing scenario. This is a compatibility/refusal change; any future candidate must register the current trainer identity rather than reuse historical registration bytes.
 
 Five Python tests passed: detailed deficits, duplicate/conflict/cross-partition exclusion, schema/dataset/test-partition tampering, refusal before fitting, and temporary optimizer/logistic/calibration/export/parity mechanics with immutable registration. The optimizer smoke mocks readiness inside the test only, uses synthetic temporary data and deletes its artifacts. It is not a real application candidate or eligible corpus. The real CLI keeps every readiness gate.
 

@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "role": "development-source-screening",
+  "selectedAt": "2026-11-05",
+  "selectionPolicy": "Pinned before execution/prediction by permissive licence, Node/Express and local storage/native functionality. Metadata is preliminary; verify the actual source. No candidate counts as a qualified family or supplies labels merely by inclusion.",
+  "modelPredictions": 0,
+  "candidates": [
+    {
+      "repository": "joesalaz/BookWise",
+      "repositoryId": 997802277,
+      "revision": "547203a025c28d809bc09c8bbd00992b81c032aa",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 1818,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "larsmikki/portal",
+      "repositoryId": 1232789690,
+      "revision": "90755ce5884e97eb86c8aea33ed3642dce977b11",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 624,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "fufu1209/personal-knowledge-manager",
+      "repositoryId": 1291300660,
+      "revision": "413d308c0b43b2a171dd945a29909a95b47904f0",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 147,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "egeyigit/fieldpoint",
+      "repositoryId": 1361716771,
+      "revision": "1329edc008f284967517f6fb9af1f622900af7b2",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 74,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "asdteke/HomeInventory",
+      "repositoryId": 1184688688,
+      "revision": "ffbdb191ac9eeb0d6e19a91db0c9fea4b476e49b",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 98961,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "stammig/yoyo-collection",
+      "repositoryId": 1268727987,
+      "revision": "94347ba9e181ae5d69eab83554e3c5b0dad3a47b",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 1209,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "JoshuaEngine7/StockBase",
+      "repositoryId": 1289674380,
+      "revision": "859234c5928774fceb9dcb4f119df55356475616",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 2472,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "afnan-nex/inventory_management",
+      "repositoryId": 1309296504,
+      "revision": "ee1d114a98612eaf9d424ca461e07b630195eb27",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 341,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "AIALRA-0/Wikiflow",
+      "repositoryId": 1111588612,
+      "revision": "c41f5ba323ff3bd931cc7396f13b801272253b77",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 29629,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "TimoM84/8star-links",
+      "repositoryId": 1383658359,
+      "revision": "b52d350eec54822d9d4039eaa4cbce833c0368dc",
+      "fork": false,
+      "isTemplate": false,
+      "license": "MIT",
+      "size": 552,
+      "defaultBranch": "main"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { afterEach,describe,it,expect } from 'vitest';
-import { mkdtemp,rm } from 'node:fs/promises';
+import { mkdtemp,rm,readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHmac } from 'node:crypto';
@@ -7,7 +7,7 @@ import { ProjectSigner } from '../apps/server/project-signing';
 import { createReport } from '../packages/core';
 import { contentHash } from '../packages/core/integrity';
 import { collectResponseFacts } from '../packages/ml/project-policy-facts';
-import { prepareProjectData,prepareProjectHoldout } from '../packages/ml/project-dataset';
+import { prepareProjectData,prepareProjectHoldout,prepareProjectMaterialData,prepareProjectMaterialHoldout } from '../packages/ml/project-dataset';
 
 const secret='private-test-family-key-'.repeat(3),empty={families:[],variants:[]},dirs:string[]=[];
 afterEach(async()=>{for(const dir of dirs.splice(0))await rm(dir,{recursive:true,force:true});});
@@ -97,4 +97,57 @@ describe('project development data cannot substitute fixtures for qualification'
     expect(result.dataset.examples).toHaveLength(2);expect(result.audit.crossPartitionVariants).toBe(1);
     expect(result.audit.categories['HDR-002'].partitions.train.classes['change-warranted'].contexts).toBe(0);
   });
+});
+
+
+it('counts independently verified material cases across families while legacy preparation still excludes numeric overlap',async()=>{
+  const a=await fixture(),b=await fixture();
+  b.evidence.commit='6'.repeat(40);b.evidence.adapterHash='7'.repeat(64);
+  b.evidence.inspection!.sourceHashes=['8'.repeat(64)];
+  const second={...b.lock.families[0],familyId:'upstream:second/native-app',repositoryId:456,repository:'https://github.com/second/native-app',
+    partition:'validation' as const,securityImplementationHashes:['9'.repeat(64)],adapterHash:b.evidence.adapterHash,
+    revisions:[{commit:b.evidence.commit,sourceHashes:b.evidence.inspection!.sourceHashes}]};
+  const lock={...a.lock,families:[a.lock.families[0],second]};
+  const firstInput={...a.input,oracle:{...a.input.oracle,sourceLockHash:await contentHash(lock)}};
+  const secondInput={report:b.report,seal:b.signer.seal(b.evidence),oracle:{...b.input.oracle,
+    familyId:second.familyId,commit:b.evidence.commit,adapterHash:b.evidence.adapterHash,evidenceHash:await contentHash(b.evidence),
+    sourceLockHash:await contentHash(lock),harnessHash:lock.harnessHash,oracleHash:second.oracleHash}};
+  const keys=[...a.signer.trustedKeys,...b.signer.trustedKeys];
+  const policy=JSON.parse(await readFile('ml/project_material_policy.json','utf8'));
+  const legacy=await prepareProjectData([firstInput,secondInput],lock,empty,secret,keys);
+  expect(legacy.audit.categories['HDR-002'].partitions.train.classes['change-warranted'].contexts).toBe(0);
+  const updated=await prepareProjectMaterialData([firstInput,secondInput,firstInput],lock,empty,secret,keys,policy);
+  expect(updated.audit.categories['HDR-002'].partitions.train.classes['change-warranted'].contexts).toBe(1);
+  expect(updated.audit.categories['HDR-002'].partitions.validation.classes['change-warranted'].contexts).toBe(1);
+  expect(updated.rejected.some(row=>row.reason==='repeated-context')).toBe(true);
+  expect(updated.audit.crossPartitionVariants).toBe(1);
+  expect(updated.audit.ready).toBe(false);
+  const exposed={families:[],variants:[updated.dataset.examples[0].variant]};
+  expect((await prepareProjectMaterialData([firstInput,secondInput],lock,exposed,secret,keys,policy)).dataset.examples).toHaveLength(2);
+  const unknown={...firstInput,oracle:{...firstInput.oracle,label:'needs-review' as const}};
+  const uncertain=await prepareProjectMaterialData([unknown,secondInput],lock,empty,secret,keys,policy);
+  expect(uncertain.audit.categories['HDR-002'].partitions.train.classes['change-warranted'].contexts).toBe(0);
+  expect(uncertain.audit.categories['HDR-002'].partitions.validation.classes['change-warranted'].contexts).toBe(1);
+  const conflicting={...secondInput,oracle:{...secondInput.oracle,label:'contextual' as const}};
+  const conflict=await prepareProjectMaterialData([firstInput,conflicting],lock,empty,secret,keys,policy);
+  expect(conflict.dataset.examples.every(row=>row.uncertain)).toBe(true);
+});
+
+it('accepts a supplemental adapter in material development under the original family and deduplicates repeated evidence',async()=>{
+  const f=await fixture(),adapterHash='9'.repeat(64);
+  const existingAdapters=Array.from({length:16},(_,index)=>index.toString(16).padStart(64,'0'));
+  const lock={...f.lock,families:f.lock.families.map(family=>({...family,additionalAdapterHashes:[...existingAdapters,adapterHash]}))};
+  const policy=JSON.parse(await readFile('ml/project_material_policy.json','utf8'));
+  const sourceLockHash=await contentHash(lock);
+  const first={...f.input,oracle:{...f.input.oracle,sourceLockHash}};
+  const evidence={...f.evidence,adapterHash};
+  const supplement={...first,seal:f.signer.seal(evidence),oracle:{...first.oracle,adapterHash,evidenceHash:await contentHash(evidence)}};
+  const prepared=await prepareProjectMaterialData([first,supplement],lock,empty,secret,f.signer.trustedKeys,policy);
+  expect(prepared.dataset.examples).toHaveLength(1);
+  expect(prepared.rejected[0].reason).toBe('repeated-context');
+  expect(Object.values(prepared.split.families)).toEqual(['train']);
+  await expect(prepareProjectData([supplement],lock,empty,secret,f.signer.trustedKeys)).rejects.toThrow(/binding/);
+  const holdout={...lock,version:'vylnt-project-holdout-sources-v1',families:lock.families.map(family=>({...family,partition:'holdout'}))};
+  const heldOut={...supplement,oracle:{...supplement.oracle,sourceLockHash:await contentHash(holdout)}};
+  await expect(prepareProjectMaterialHoldout([heldOut],holdout,empty,secret,f.signer.trustedKeys,policy)).rejects.toThrow(/binding/);
 });

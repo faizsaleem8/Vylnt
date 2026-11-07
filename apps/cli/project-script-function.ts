@@ -2,7 +2,7 @@ import type { BrowserContext,Page } from 'playwright';
 import { setMaxListeners } from 'node:events';
 import { securityHeaders,cspEvidenceComplete,type Report } from '../../packages/core';
 import { contentHash,canonicalJson } from '../../packages/core/integrity';
-import { projectEvidenceSchema,type ProjectEvidence,type ProjectFact } from '../../packages/core/project-evidence';
+import { hasFixtureEvalPolicy,hasHashedInlineFallbackPolicy,projectEvidenceSchema,type ProjectEvidence,type ProjectFact } from '../../packages/core/project-evidence';
 import { probeInlineScript } from './project-probes';
 import { transfer } from './project-loopback-transport';
 import {observeMetaPolicy,sourceMetaPolicy,metaPolicyStillMatches,metaPolicyVersion,type MetaPolicySummary} from './project-meta-policy';
@@ -20,14 +20,20 @@ export interface NativeScriptCheck {
 export interface ScriptPhase {
   complete:boolean;functionality:'passed'|'failed'|'unknown';
   inline:'blocked'|'executed'|'unknown';
+  stringEvaluation?:'blocked'|'executed'|'unknown';
   metaPolicy?:MetaPolicySummary;
 }
-export interface ScriptControls {baseline:ScriptPhase;disabled:ScriptPhase;restored:ScriptPhase}
+export interface ScriptControls {baseline:ScriptPhase;disabled:ScriptPhase;restored:ScriptPhase;withoutUnsafeEval?:ScriptPhase}
 export function scriptControlsPass(controls:ScriptControls){
   const a=controls.baseline.metaPolicy,b=controls.restored.metaPolicy;
   const validMeta=(m:MetaPolicySummary)=>m.version===metaPolicyVersion&&!m.mutated&&/^[a-f0-9]{64}$/.test(m.identityHash??'')&&(m.status==='absent'&&m.policyCount===0||m.status==='early-supported'&&m.beforeScripts===true&&typeof m.restricted==='boolean'&&m.policyCount>=1&&m.policyCount<=16);
   const metaCompatible=!a&&!b||Boolean(a&&b&&validMeta(a)&&validMeta(b)&&b.status===a.status&&a.identityHash===b.identityHash&&a.restricted===b.restricted);
-  return metaCompatible&&Object.values(controls).every(p=>p.complete)
+  const paired=controls.withoutUnsafeEval;
+  const evaluationCompatible=paired?controls.baseline.stringEvaluation==='executed'&&controls.restored.stringEvaluation==='executed'&&
+    controls.baseline.inline==='blocked'&&paired.inline==='blocked'&&paired.stringEvaluation==='blocked'&&paired.functionality==='passed'&&
+    a?.status==='absent'&&paired.metaPolicy?.status==='absent'&&paired.metaPolicy.identityHash===a.identityHash:
+    controls.baseline.stringEvaluation===undefined&&controls.restored.stringEvaluation===undefined;
+  return metaCompatible&&evaluationCompatible&&Object.values(controls).every(p=>p.complete)
     &&controls.baseline.functionality==='passed'&&controls.restored.functionality==='passed'
     &&controls.disabled.functionality==='failed'&&controls.disabled.inline==='unknown'
     &&controls.baseline.inline!=='unknown'&&controls.baseline.inline===controls.restored.inline;
@@ -35,10 +41,21 @@ export function scriptControlsPass(controls:ScriptControls){
 export interface ScriptMeasurement {
   version:typeof scriptFunctionVersion;scanId:string;originalScanHash:string;checkIdentity:string;
   status:'verified'|'needs-review';controls:ScriptControls;
+  /** Metadata digest for developer oracle replay; never code or an input feature. */
+  sourceScriptsHash?:string;
   targets:{findingId:string;facts:{cspProbeAllowed:ProjectFact;cspProbeBlocked:ProjectFact;metaPolicyBeforeScripts?:ProjectFact;scriptPolicyEnforced?:ProjectFact;scriptSourcesRestricted?:ProjectFact}}[];
 }
 const issued=new WeakMap<ScriptMeasurement,string>();
 const unknown=():ScriptPhase=>({complete:false,functionality:'unknown',inline:'unknown'});
+async function probeStringEvaluation(page:Page):Promise<NonNullable<ScriptPhase['stringEvaluation']>>{
+  const session=await page.context().newCDPSession(page);
+  try{
+    const {result,exceptionDetails}=await session.send('Runtime.evaluate',{expression:'new Function("return 517")() === 517',
+      returnByValue:true,allowUnsafeEvalBlockedByCSP:false});
+    if(exceptionDetails?.exception?.className==='EvalError')return 'blocked';
+    return !exceptionDetails&&result.value===true?'executed':'unknown';
+  }finally{await session.detach().catch(()=>{});}
+}
 async function scriptIdentity(page:Page){
   const metadata=await page.evaluate(()=>{
     if(document.scripts.length>150)return null;
@@ -53,10 +70,13 @@ async function scriptIdentity(page:Page){
   return contentHash(metadata);
 }
 
-async function phase(source:BrowserContext,report:Report,check:NativeScriptCheck,enabled:boolean,sourceScripts:string|undefined,sourceMeta:MetaPolicySummary|undefined,signal:AbortSignal):Promise<ScriptPhase>{
+async function phase(source:BrowserContext,report:Report,check:NativeScriptCheck,enabled:boolean,sourceScripts:string|undefined,sourceMeta:MetaPolicySummary|undefined,signal:AbortSignal,
+  evaluation?:'observe'|'remove'):Promise<ScriptPhase>{
   signal.throwIfAborted();const browser=source.browser();if(!browser)return unknown();
   if(!sourceScripts)return unknown();
   const url=new URL(report.observation.url),cookies=await source.cookies(report.observation.url);
+  const expectedHeaders={...report.observation.headers};
+  if(evaluation==='remove')expectedHeaders['content-security-policy']=expectedHeaders['content-security-policy'].replace(" 'unsafe-eval'",'');
   if(cookies.length>100)return unknown();
   const context=await browser.newContext({javaScriptEnabled:enabled,serviceWorkers:'block',acceptDownloads:false});
   const network=new AbortController();setMaxListeners(82,network.signal);
@@ -75,6 +95,11 @@ async function phase(source:BrowserContext,report:Report,check:NativeScriptCheck
         const body=request.postDataBuffer();if(body&&body.length>64*1024){incomplete=true;await route.abort();return;}
         const response=await transfer(target,request.method(),await request.allHeaders(),body,network.signal,size=>{bytes+=size;if(bytes>8*1024*1024)throw Error('Script interaction budget exceeded');});
         if(response.status>=300&&response.status<400){incomplete=true;await route.abort();return;}
+        if(evaluation==='remove'&&request.isNavigationRequest()&&target.href===report.observation.url){
+          const headers=Object.entries(response.headers).map(([name,value])=>({name,value}));
+          if(!cspEvidenceComplete(headers)||canonicalJson(securityHeaders(headers))!==canonicalJson(report.observation.headers)){incomplete=true;await route.abort();return;}
+          response.headers['content-security-policy']=expectedHeaders['content-security-policy'];
+        }
         for(const header of ['content-length','transfer-encoding'])delete response.headers[header];
         await route.fulfill({status:response.status,headers:response.headers,body:response.body});
       }catch{incomplete=true;await route.abort().catch(()=>{});}
@@ -89,16 +114,18 @@ async function phase(source:BrowserContext,report:Report,check:NativeScriptCheck
     const response=await page.goto(report.observation.url,{waitUntil:'load'});
     if(!response||response.status()<200||response.status()>=300||page.url()!==report.observation.url)return unknown();
     const headers=await response.headersArray();
-    if(canonicalJson(securityHeaders(headers))!==canonicalJson(report.observation.headers??{})
+    if(canonicalJson(securityHeaders(headers))!==canonicalJson(expectedHeaders)
       ||cspEvidenceComplete(headers)!==(report.observation.cspEvidenceComplete??false))return unknown();
     const functionality=await check.check(page);
     if(enabled&&await scriptIdentity(page)!==sourceScripts)return unknown();
     if(!['passed','failed','unknown'].includes(functionality))return unknown();
     const inline=enabled?await probeInlineScript(page):'unknown';
+    const stringEvaluation=evaluation?await probeStringEvaluation(page):undefined;
     await page.waitForLoadState('networkidle',{timeout:1500});
     const metaPolicy=await metaObservation?.finish();
     if(enabled&&(!sourceMeta||sourceMeta.status==='needs-review'||!metaPolicy||metaPolicy.status==='needs-review'||sourceMeta.identityHash!==metaPolicy.identityHash))return {...unknown(),metaPolicy};
-    return {complete:!incomplete&&page.url()===report.observation.url&&context.pages().length===1&&page.frames().length===1,functionality,inline,...(metaPolicy?{metaPolicy}:{})};
+    return {complete:!incomplete&&page.url()===report.observation.url&&context.pages().length===1&&page.frames().length===1,functionality,inline,
+      ...(stringEvaluation?{stringEvaluation}:{}),...(metaPolicy?{metaPolicy}:{})};
   })()]);}catch(error){if(signal.aborted)throw error;return unknown();}
   finally{clearTimeout(timer);signal.removeEventListener('abort',stop);network.abort();await metaObservation?.close();await context.close().catch(()=>{});}
 }
@@ -114,7 +141,13 @@ export async function measureScriptFunction(source:BrowserContext,report:Report,
   const sourceScripts=live.length===1?await scriptIdentity(live[0]):undefined;
   const sourceMeta=live.length===1?sourceMetaPolicy(live[0]):undefined;
   const compatibleSource=sourceMeta&&await metaPolicyStillMatches(live[0],sourceMeta)?sourceMeta:undefined;
-  const controls={baseline:await phase(source,report,check,true,sourceScripts,compatibleSource,combined),disabled:await phase(source,report,check,false,sourceScripts,compatibleSource,combined),restored:await phase(source,report,check,true,sourceScripts,compatibleSource,combined)};
+  const evalPolicy=url.hostname==='127.0.0.1'&&url.protocol==='http:'&&report.observation.cspEvidenceComplete===true&&
+    hasFixtureEvalPolicy(report.observation.headers?.['content-security-policy']);
+  const evaluation=evalPolicy?'observe':undefined;
+  const controls={baseline:await phase(source,report,check,true,sourceScripts,compatibleSource,combined,evaluation),
+    disabled:await phase(source,report,check,false,sourceScripts,compatibleSource,combined),
+    restored:await phase(source,report,check,true,sourceScripts,compatibleSource,combined,evaluation),
+    ...(evalPolicy?{withoutUnsafeEval:await phase(source,report,check,true,sourceScripts,compatibleSource,combined,'remove')}: {})};
   const result:ScriptMeasurement={version:scriptFunctionVersion,scanId:report.scanId,originalScanHash:await contentHash(report),checkIdentity:check.identityHash,status:'needs-review',controls,targets:[]};
   if(!scriptControlsPass(controls))return result;
   // Syntax and one successful interaction cannot establish nonce generation,
@@ -124,11 +157,14 @@ export async function measureScriptFunction(source:BrowserContext,report:Report,
   if(responsePolicy&&(!report.observation.cspEvidenceComplete||responsePolicy.split(',').length>16||responsePolicy.split(',').some(p=>parseScriptPolicySources(p)===undefined)))return result;
   if(responsePolicy?.split(',').some(scriptPolicyUsesNonce))return result;
   result.status='verified';
+  result.sourceScriptsHash=sourceScripts;
   const witnessHash=await contentHash({version:scriptFunctionVersion,check:check.identityHash,originalScanHash:result.originalScanHash,sourceScripts,controls});
   const fact=(value:boolean,source:ProjectFact['source']='functional'):ProjectFact=>({value,source,coverage:'complete',witnessHash});
   const responseRestricted=Boolean(responsePolicy&&report.observation.cspEvidenceComplete&&responsePolicy.split(',').length<=16&&responsePolicy.split(',').some(p=>parseScriptPolicySources(p)===true));
+  const hashedResponse=hasHashedInlineFallbackPolicy(responsePolicy)&&controls.baseline.metaPolicy?.status==='absent'&&controls.baseline.inline==='blocked';
   for(const finding of report.findings.filter(f=>f.ruleId==='HDR-003'))result.targets.push({findingId:finding.id,facts:{cspProbeAllowed:fact(true),cspProbeBlocked:fact(controls.baseline.inline==='blocked'),
-    ...(controls.baseline.metaPolicy?.status==='early-supported'?{metaPolicyBeforeScripts:fact(true,'browser'),scriptPolicyEnforced:fact(true,'browser'),scriptSourcesRestricted:fact(responseRestricted||controls.baseline.metaPolicy.restricted!,'browser')}:{})}});
+    ...(controls.baseline.metaPolicy?.status==='early-supported'?{metaPolicyBeforeScripts:fact(true,'browser'),scriptPolicyEnforced:fact(true,'browser'),scriptSourcesRestricted:fact(responseRestricted||controls.baseline.metaPolicy.restricted!,'browser')}:
+      hashedResponse?{scriptPolicyEnforced:fact(true,'browser'),scriptSourcesRestricted:fact(true,'browser')}:{})}});
   issued.set(result,canonicalJson(result));return result;
 }
 export function mergeScriptFunction(evidence:ProjectEvidence,measurement:ScriptMeasurement):ProjectEvidence{

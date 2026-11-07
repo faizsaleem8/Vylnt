@@ -5,17 +5,19 @@ import {setMaxListeners} from 'node:events';
 import {securityHeaders,cspEvidenceComplete,type Report} from '../../packages/core';
 import {canonicalJson,contentHash} from '../../packages/core/integrity';
 import {projectEvidenceSchema,type ProjectEvidence,type ProjectFact} from '../../packages/core/project-evidence';
-import {framePolicyScope} from '../../packages/core/frame-policy-scope';
+import {duplicateFrameDeny,framePolicyScope} from '../../packages/core/frame-policy-scope';
 import {transfer} from './project-loopback-transport';
 
 export const framePolicyVersion='vylnt-frame-policy-v1';
 const sources=new WeakMap<Page,string>(),epochs=new WeakMap<Page,number>(),issued=new WeakMap<FramePolicyMeasurement,string>();
-export interface FramePolicyCheck {identityHash:string;check(frame:Frame):Promise<boolean>}
-export type PolicyFrameOutcome='embedded'|'csp-blocked'|'unknown';
+export interface FramePolicyCheck {identityHash:string;check(frame:Frame):Promise<boolean>;requestHeaders?:Partial<Record<'x-api-key'|'x-session-token',string>>}
+export type PolicyFrameOutcome='embedded'|'csp-blocked'|'xfo-blocked'|'unknown';
 export interface FramePolicyMeasurement {
   version:typeof framePolicyVersion;scanId:string;originalScanHash:string;checkIdentity:string;
   status:'verified'|'needs-review';sourceHealthy:boolean;
-  controls:{permitted?:PolicyFrameOutcome;forbidden?:PolicyFrameOutcome;repeatedForbidden?:PolicyFrameOutcome;nestedForbidden?:PolicyFrameOutcome};
+  mechanism?:'duplicate-xfo-deny-paired';
+  controls:{permitted?:PolicyFrameOutcome;forbidden?:PolicyFrameOutcome;repeatedForbidden?:PolicyFrameOutcome;nestedForbidden?:PolicyFrameOutcome;
+    foreignWithoutHeader?:PolicyFrameOutcome;nestedWithoutHeader?:PolicyFrameOutcome};
   targets:{findingId:string;facts:{framePolicyEnforced:ProjectFact;frameAncestorsRestricted:ProjectFact}}[];
 }
 /** Collector-owned same-run capability. Navigation, including history updates,
@@ -30,13 +32,17 @@ export async function recordFramePolicySource(page:Page,report:Report){
   if(!page.isClosed()&&epochs.get(page)===epoch&&page.url()===report.observation.url)sources.set(page,hash);
 }
 export function framePolicyControlsPass(result:FramePolicyMeasurement){
+  if(result.mechanism==='duplicate-xfo-deny-paired')return result.sourceHealthy&&result.controls.permitted==='embedded'&&
+    result.controls.forbidden==='xfo-blocked'&&result.controls.repeatedForbidden==='xfo-blocked'&&result.controls.nestedForbidden==='xfo-blocked'&&
+    result.controls.foreignWithoutHeader==='embedded'&&result.controls.nestedWithoutHeader==='embedded';
   return result.sourceHealthy&&(!result.controls.permitted||result.controls.permitted==='embedded')
     &&result.controls.forbidden==='csp-blocked'&&result.controls.repeatedForbidden==='csp-blocked'
     &&(!result.controls.permitted||result.controls.nestedForbidden==='csp-blocked');
 }
 const html=(url:string)=>'<!doctype html><iframe src="'+url.replaceAll('&','&amp;').replaceAll('"','&quot;')+'"></iframe>';
 
-async function run(source:BrowserContext,report:Report,check:FramePolicyCheck,parent:string,nested:string|undefined,signal:AbortSignal):Promise<PolicyFrameOutcome>{
+async function run(source:BrowserContext,report:Report,check:FramePolicyCheck,parent:string,nested:string|undefined,signal:AbortSignal,
+  xfo?:'enforce'|'remove'):Promise<PolicyFrameOutcome>{
   signal.throwIfAborted();const browser=source.browser();if(!browser)return 'unknown';
   const context=await browser.newContext({serviceWorkers:'block',acceptDownloads:false}),network=new AbortController();setMaxListeners(82,network.signal);
   let closing:Promise<void>|undefined;const close=()=>closing??=context.close().catch(()=>{});
@@ -55,7 +61,9 @@ async function run(source:BrowserContext,report:Report,check:FramePolicyCheck,pa
         if(url.href===outer){await route.fulfill({contentType:'text/html',body:html(inner??report.observation.url)});return;}
         if(inner&&url.href===inner){await route.fulfill({contentType:'text/html',body:html(report.observation.url)});return;}
         if(url.origin!==target.origin||url.username||url.password||['worker','serviceworker'].includes(request.resourceType())){incomplete=true;await route.abort();return;}
-        const response=await transfer(url,'GET',await request.allHeaders(),null,network.signal,size=>{bytes+=size;if(bytes>8*1024*1024)throw Error('Frame policy budget exceeded');});
+        // Native header authentication is transient and target-origin only.
+        // It is never forwarded to the synthetic ancestors or serialized.
+        const response=await transfer(url,'GET',{...await request.allHeaders(),...check.requestHeaders},null,network.signal,size=>{bytes+=size;if(bytes>8*1024*1024)throw Error('Frame policy budget exceeded');});
         if(response.status>=300&&response.status<400){incomplete=true;await route.abort();return;}
         if(request.isNavigationRequest()){
           if(url.href!==report.observation.url||matched){incomplete=true;await route.abort();return;}
@@ -63,15 +71,19 @@ async function run(source:BrowserContext,report:Report,check:FramePolicyCheck,pa
           matched=response.status>=200&&response.status<300&&canonicalJson(securityHeaders(headers))===canonicalJson(report.observation.headers??{})
             &&cspEvidenceComplete(headers)===(report.observation.cspEvidenceComplete??false);
           if(matched)protectedFrame=request.frame();
+          if(matched&&xfo==='remove')delete response.headers['x-frame-options'];
         }
         for(const name of ['content-length','transfer-encoding'])delete response.headers[name];
         await route.fulfill({status:response.status,headers:response.headers,body:response.body});
       }catch{incomplete=true;await route.abort().catch(()=>{});}
     });
     const page=await context.newPage(),session=await context.newCDPSession(page);
-    let targetFrameId:string|undefined;const mainId=(await session.send('Page.getFrameTree')).frameTree.frame.id;
-    session.on('Network.requestWillBeSent',event=>{if(event.type==='Document'&&event.request.url===report.observation.url)targetFrameId=event.frameId;});
+    let targetFrameId:string|undefined,targetRequestId:string|undefined,responseBlocked=false;const mainId=(await session.send('Page.getFrameTree')).frameTree.frame.id;
+    session.on('Network.requestWillBeSent',event=>{if(event.type==='Document'&&event.request.url===report.observation.url){targetFrameId=event.frameId;targetRequestId=event.requestId;}});
     await session.send('Network.enable');
+    if(xfo==='enforce'){
+      session.on('Network.loadingFailed',event=>{if(targetRequestId===event.requestId&&event.errorText==='net::ERR_BLOCKED_BY_RESPONSE')responseBlocked=true;});
+    }
     session.on('Audits.issueAdded',({issue})=>{
       const d=issue.details.contentSecurityPolicyIssueDetails;
       // Chromium reports the protected origin (not the full target path) and
@@ -88,8 +100,9 @@ async function run(source:BrowserContext,report:Report,check:FramePolicyCheck,pa
     if(!protectedFrame||!frames.includes(protectedFrame)||protectedFrame.parentFrame()?.url()!==(inner??outer))return 'unknown';
     if(inner&&frames.filter(f=>f.url()===inner).length!==1)return 'unknown';
     const targets=frames.filter(f=>f.url()===report.observation.url);
-    if(targets.length===1){if(blocked||await targets[0].evaluate(()=>location.href).catch(()=>null)!==report.observation.url||!await check.check(targets[0]))return 'unknown';return 'embedded';}
-    return blocked?'csp-blocked':'unknown';
+    if(targets.length===1){if(blocked||responseBlocked||await targets[0].evaluate(()=>location.href).catch(()=>null)!==report.observation.url||!await check.check(targets[0]))return 'unknown';return 'embedded';}
+    if(xfo==='enforce'&&responseBlocked&&!blocked&&protectedFrame.url()==='chrome-error://chromewebdata/')return 'xfo-blocked';
+    return blocked&&!xfo?'csp-blocked':'unknown';
   })()]);}catch(error){if(signal.aborted)throw error;return 'unknown';}
   finally{clearTimeout(timer);signal.removeEventListener('abort',stop);network.abort();await close();}
 }
@@ -97,13 +110,19 @@ async function run(source:BrowserContext,report:Report,check:FramePolicyCheck,pa
 /** Exact finite response policies, with a healthy target and actual ancestor
  * enforcement. Does not infer public embedding intent or sensitive actions. */
 export async function measureFramePolicy(source:BrowserContext,report:Report,check:FramePolicyCheck,signal?:AbortSignal):Promise<FramePolicyMeasurement>{
+  if(check.requestHeaders){
+    const entries=Object.entries(check.requestHeaders);
+    if(entries.length>2||entries.some(([name,value])=>!['x-api-key','x-session-token'].includes(name)||typeof value!=='string'||!/^[\x21-\x7e]{1,512}$/.test(value)))throw Error('Unsupported transient frame authentication headers');
+    check={...check,requestHeaders:{...check.requestHeaders}};
+  }
   const url=new URL(report.observation.url);
   if(url.protocol!=='http:'||!['localhost','127.0.0.1','[::1]'].includes(url.hostname)||url.username||url.password||url.search||url.hash)throw Error('Frame policy checks require plain HTTP loopback');
   if(!/^[a-f0-9]{64}$/.test(check.identityHash))throw Error('Frame policy identity is required');
   const combined=AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(65000)]);combined.throwIfAborted();
   const hash=await contentHash(report),result:FramePolicyMeasurement={version:framePolicyVersion,scanId:report.scanId,originalScanHash:hash,checkIdentity:check.identityHash,status:'needs-review',sourceHealthy:false,controls:{},targets:[]};
+  const xfo=report.observation.headers?.['x-frame-options']===duplicateFrameDeny&&report.observation.headers?.['content-security-policy']===undefined;
   const scope=framePolicyScope(report.observation.headers?.['content-security-policy'],report.observation.url);
-  if(!scope.supported||report.observation.cspEvidenceComplete!==true)return result;
+  if(!xfo&&(!scope.supported||report.observation.cspEvidenceComplete!==true))return result;
   const pages=source.pages().filter(p=>p.url()===report.observation.url&&sources.get(p)===hash);if(pages.length!==1)return result;
   const page=pages[0];let timer:ReturnType<typeof setTimeout>|undefined,settle:(v:boolean)=>void=()=>{};
   const stop=()=>{settle(false);void page.close().catch(()=>{});};combined.addEventListener('abort',stop);
@@ -121,12 +140,22 @@ export async function measureFramePolicy(source:BrowserContext,report:Report,che
     }
     if(!server||scope.origins.includes(forbidden))return result;
     const permitted=scope.origins[0];
-    if(permitted)result.controls.permitted=await run(source,report,check,permitted,undefined,combined);
-    result.controls.forbidden=await run(source,report,check,forbidden,undefined,combined);
-    result.controls.repeatedForbidden=await run(source,report,check,forbidden,undefined,combined);
-    if(permitted)result.controls.nestedForbidden=await run(source,report,check,forbidden,permitted,combined);
+    if(xfo){
+      result.mechanism='duplicate-xfo-deny-paired';
+      result.controls.permitted=await run(source,report,check,url.origin,undefined,combined,'remove');
+      result.controls.forbidden=await run(source,report,check,forbidden,undefined,combined,'enforce');
+      result.controls.repeatedForbidden=await run(source,report,check,forbidden,undefined,combined,'enforce');
+      result.controls.nestedForbidden=await run(source,report,check,forbidden,url.origin,combined,'enforce');
+      result.controls.foreignWithoutHeader=await run(source,report,check,forbidden,undefined,combined,'remove');
+      result.controls.nestedWithoutHeader=await run(source,report,check,forbidden,url.origin,combined,'remove');
+    }else{
+      if(permitted)result.controls.permitted=await run(source,report,check,permitted,undefined,combined);
+      result.controls.forbidden=await run(source,report,check,forbidden,undefined,combined);
+      result.controls.repeatedForbidden=await run(source,report,check,forbidden,undefined,combined);
+      if(permitted)result.controls.nestedForbidden=await run(source,report,check,forbidden,permitted,combined);
+    }
     if(!framePolicyControlsPass(result)||sources.get(page)!==hash)return result;
-    result.status='verified';const witnessHash=await contentHash({version:framePolicyVersion,originalScanHash:hash,check:check.identityHash,policyHash:await contentHash(report.observation.headers!['content-security-policy']),controls:result.controls,scope:'finite-response-policy/http-loopback-ancestors'});
+    result.status='verified';const witnessHash=await contentHash({version:framePolicyVersion,originalScanHash:hash,check:check.identityHash,policyHash:await contentHash(xfo?duplicateFrameDeny:report.observation.headers!['content-security-policy']),controls:result.controls,scope:xfo?'duplicate-xfo-deny-paired/http-loopback-ancestors':'finite-response-policy/http-loopback-ancestors'});
     const fact:ProjectFact={value:true,source:'browser',coverage:'complete',witnessHash};
     for(const finding of report.findings.filter(f=>f.ruleId==='HDR-002'))result.targets.push({findingId:finding.id,facts:{framePolicyEnforced:{...fact},frameAncestorsRestricted:{...fact}}});
     issued.set(result,canonicalJson(result));return result;

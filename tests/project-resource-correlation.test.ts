@@ -8,7 +8,7 @@ async function fixture({counterpart=false,status=200,failed=false,duplicate=fals
   const target='https://127.0.0.1/profile',raw='http://127.0.0.1/app.js?private=value',frame={};
   const scripts=[raw,...duplicate?[raw.replace('value','other-secret')]:[]];
   let current=target;
-  const input={scripts:scripts.map(raw=>({raw,attrs:[raw,'','','',''],async:false,defer:false,noModule:false})),policies:[]};
+  const input={scripts:scripts.map(raw=>({raw,attrs:[raw,'','','',''],async:false,defer:false,noModule:false})),policies:[],styles:[]};
   const events=Object.assign(new EventEmitter(),{url:()=>current,mainFrame:()=>frame,locator:()=>({evaluate:async()=>input})}),page=events as unknown as Page;
   const request={url:()=>counterpart?raw.replace('http:','https:'):raw,resourceType:()=>'script',frame:()=>frame,redirectedFrom:()=>null,redirectedTo:()=>redirect?{}:null,
     response:async()=>({status:()=>status,fromServiceWorker:()=>false,securityDetails:async()=>({protocol:'TLS 1.3'}),serverAddr:async()=>synthetic?null:{ipAddress:'127.0.0.1',port:443}}),

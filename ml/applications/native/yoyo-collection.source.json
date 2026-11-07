@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:stammig/yoyo-collection",
+  "repository": "https://github.com/stammig/yoyo-collection",
+  "repositoryId": 1268727987,
+  "revision": "94347ba9e181ae5d69eab83554e3c5b0dad3a47b",
+  "license": "MIT",
+  "licenseGitBlob": "d4b2e7b17cc57d5e01b84b71383523c82772bafb",
+  "dependencyLockSha256": "631b8f1bf26d268ea79cc8e943f8f1c360aba6aa0f6444b1c33aab0018a35140",
+  "sourceSha256": {
+    "LICENSE": "8db5aaa8fc188fa28cc793707dd7416851226297b6a29d905366b29b7f274fa8",
+    "server.js": "10deb1191b773949d50d31f23856fc5eca2c2daa74814f4846185dcc80a2f2eb",
+    "db.js": "e118fae4ba7b31765d282080c745f6affdb362daf923ae988d7bea2a8947f7e7",
+    "schema.sql": "349dcc9ce33a9863735fc1caea8ea3168fb731ef54ac91e91ac3142a384fa88e"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

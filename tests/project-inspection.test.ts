@@ -27,6 +27,23 @@ it('recognizes a bounded exported Express initializer while retaining partial in
   const result=await inspect("var express=require('express');var session=require('express-session');var app;module.exports.initialize=function(config){app=express();app.use(session({secret:'PRIVATE'}));app.get('/',(req,res)=>res.cookie('session','PRIVATE_VALUE'));};module.exports.getInstance=function(){if(!app)throw Error('not initialized');return app;};");
   expect(result).toMatchObject({framework:'express',coverage:'partial',cookieOperations:1,sessionMiddlewareRegistrations:1});expect(JSON.stringify(result)).not.toMatch(/PRIVATE|initialize|session\('/);
 });
+it('recognizes an exported ESM Express factory without claiming complete route coverage',async()=>{
+  const result=await inspect("import express from 'express'; export function createApp(config){const app=express();app.get('/',(req,res)=>res.cookie('session','PRIVATE_VALUE'));return {app};}");
+  expect(result).toMatchObject({framework:'express',coverage:'partial',cookieOperations:1});
+  expect(JSON.stringify(result)).not.toContain('PRIVATE_VALUE');
+});
+it.each([
+  "import express from 'express';export function createApp(express){const app=express();return app;}",
+  "import express from 'express';export function createApp(){const express=other;const app=express();return app;}",
+  "import express from 'express';export function createApp(){if(enabled){const app=express();return app;}}",
+  "import express from 'express';export function createApp(){let app=express();app=other;return app;}",
+  "import express from 'express';export function createApp(){const app=express();function nested(app){app.get('/',handler);}return app;}"
+])('does not resolve shadowed or dynamic ESM factories %#',async source=>{
+  expect((await inspect(source)).framework).toBe('unsupported');
+});
+it('inventories a bounded monolithic Express source while retaining the per-file ceiling',async()=>{
+  expect(await inspect("import express from 'express';const app=express();\n//"+'x'.repeat(90000))).toMatchObject({framework:'express'});
+});
 it.each([
     "var express=require('express');var app;exports.init=function(express){app=express();};",
     "var express=require('express');var app;exports.init=function(){var express=other;app=express();};",
@@ -44,5 +61,5 @@ it.each([
 });
 it('marks nested scopes and oversized files incomplete instead of fabricating static resolution',async()=>{
   expect(await inspect("const express=require('express');const app=express();app.get('/',(req,res)=>{function another(res){res.cookie('name','value');}});")).toMatchObject({framework:'express',coverage:'partial',cookieOperations:0});
-  expect(await inspect('//'+ 'x'.repeat(65536))).toMatchObject({framework:'unsupported',coverage:'partial',sourceHashes:[]});
+  expect(await inspect('//'+ 'x'.repeat(256*1024))).toMatchObject({framework:'unsupported',coverage:'partial',sourceHashes:[]});
 });

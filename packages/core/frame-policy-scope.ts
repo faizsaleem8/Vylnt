@@ -1,3 +1,14 @@
+export const duplicateFrameDeny='DENY, DENY';
+export const broadFrameAncestors='frame-ancestors http:';
+
+/** Exact controlled scheme source, with no competing framing header. */
+export function hasBroadFixtureFramePolicy(headers:Record<string,string>|undefined,complete:boolean|undefined){
+  const policy=headers?.['content-security-policy'];
+  if(complete!==true||!policy||policy.includes(',')||headers?.['x-frame-options']!==undefined)return false;
+  const ancestors=policy.split(';').map(part=>part.trim()).filter(part=>/^frame-ancestors(?:\s|$)/i.test(part));
+  return ancestors.length===1&&ancestors[0]===broadFrameAncestors;
+}
+
 /** Narrow response-policy scope for controlled HTTP loopback ancestor checks.
  * Returned identifiers are transient matching data, never model features. */
 export function framePolicyScope(policy:string|undefined,target:string):{supported:boolean;origins:string[];policies:number}{

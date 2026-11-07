@@ -73,8 +73,8 @@ it('binds native development exposures before any holdout prediction',async()=>{
   await expect(access(join(f.local,'project-holdout-consumed',f.candidateHash+'.json'))).rejects.toThrow();
   await expect(access(join(f.local,'changed-exposure'))).rejects.toThrow();
 },60000);
-it('refuses a missing native exposure inventory rather than silently forgetting development',async()=>{
-  const f=await setup();await rm(join(f.root,'ml/applications/native/tabinator.source.json'));
+it.each(['tabinator','fieldpoint','yoyo-collection','bookwise','wikiflow','portal','personal-knowledge-manager','stockbase','8star-links','anonymous-notepad','habit-tracker'])('refuses missing %s native exposure rather than silently forgetting development',async family=>{
+  const f=await setup();await rm(join(f.root,'ml/applications/native/'+family+'.source.json'));
   const result=await f.run(['preflight','--registration','.local/registration','--prepared','.local/prepared']);
   expect(result.code).not.toBe(0);expect(result.stderr).toContain('exposure inventory is missing');
 },60000);

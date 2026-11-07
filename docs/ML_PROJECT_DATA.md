@@ -1,5 +1,7 @@
 # VYLNT project-backed development data
 
+**Current result, 6 November 2026.** The new prospective preparation contains 93 retained rows across seven files from 38 native runs and 12 development families. The candidate credits 11 material cases after exclusions. The earlier seed-only notes below are historical. [Registration, class counts and remaining gaps](ML_REGISTERED_DATASETS.md)
+
 This is developer tooling for Stage C, not a user data-entry workflow or model qualification. It prepares evidence-v4 numeric inputs from signed companion scans and independent, developer-owned functional oracle records. No historical dataset, family key, model, evaluator or held-out result is overwritten.
 
 Earlier 2026-10-29 policy increment: v2 introduced executed framing-policy controls; current producers emit v3 as described below. V1/V2 remain readable with their original uncertainty rules. New source/oracle registrations must bind the actual assessment policy and updated harness; do not relabel old rows or reuse old registration identities for new semantics. Mechanism framing fixtures remain excluded from application counts. See `ML_FRAME_POLICY.md`.
@@ -7,6 +9,8 @@ Earlier 2026-10-29 policy increment: v2 introduced executed framing-policy contr
 Fresh holdout preparation is a separate workflow in `ML_PROJECT_HOLDOUT.md`; it uses a distinct source-lock version/holdout partition and cannot be passed into development fitting. Both paths share signature, sanitization, source/oracle and overlap checks. The new producer code changes the preparation identity: existing registrations are retained and are not silently upgraded. Register a new preparation experiment where the new producer is required; do not rewrite old artifacts.
 
 ## Register before collecting
+
+Current 5 November status: native pre-cohort acquisition now includes **twelve sources and 52 completed batches**, with 67 repetitions removed. Scoped framing/script/cookie seeds exist; this supersedes the early positive-cookie-only snapshot below. Public/header/document operations have separate native controls and cannot fabricate cookie-purpose labels. **No eligible 8/4 cohort is registered and 0/7 category datasets are ready**; the source count alone cannot satisfy distinct class/evidence and overlap requirements. See `ML_NATIVE_TWELVE_FAMILIES.md`. Register new preparation only with eligible evidence and complete historical exposure/grouping checks; do not relabel old aggregates or consumed experiments.
 
 Native acquisition now has a separate `ml:projects:seeds` workflow and category files, documented in `ML_NATIVE_DATASETS.md`. These are explicitly pre-cohort seed observations, not registered training inputs. Native labels are issued during new same-run controls; historical unlabelled prototypes are not rewritten. Current scope supplies measured CK-001/CK-002 positive seeds only; other observed findings remain uncertain. The two response profiles share an adapter identity and remain one family. Collection and type checking passed; PLAN.md records final counts and tests. An eligible 8/4 family source selection and independent contextual cases remain necessary before the registration/fitting commands below can run successfully.
 

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:joshuaengine7/stockbase",
+  "repository": "https://github.com/JoshuaEngine7/StockBase",
+  "repositoryId": 1289674380,
+  "revision": "859234c5928774fceb9dcb4f119df55356475616",
+  "license": "MIT",
+  "licenseGitBlob": "cd99f310b3838d328a84681f1516799bf52d6cf3",
+  "dependencyLockSha256": "981ccb33fde9d740b817d3e8ea3f854e75aabe2509dc52946f6cd3eaead3e6ab",
+  "sourceSha256": {
+    "LICENSE": "ba4789b346a14bb339cb967022ae95d6af7e9b4ee7382e748d9440aa40bb7b57",
+    "server.js": "2b5243929e4b1a3df641ea9dad27d1295ddfc18be09f441b0d11dbb0671df82b"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

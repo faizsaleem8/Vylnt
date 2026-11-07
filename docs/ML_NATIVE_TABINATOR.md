@@ -1,5 +1,7 @@
 # VYLNT native Tabinator evidence
 
+2026-11-05: the optional `--framing-policy --seeds` profile now supplies the first complete native contextual HDR-002 seed. The explicit proxy response configuration permits the application's own HTTP origin; the native authenticated JSON response and SQL/session implementation remain unchanged. Browser controls verify healthy permitted embedding and enforced forbidden/repeated/nested denial. This is a scoped response-control scenario, not proof of route-wide safety or native frontend compatibility. Chromium/Edge and cancellation passed. Seed v2, exact counts and remaining cohort requirements are in `ML_NATIVE_DATASETS.md`.
+
 This second pinned native development application complements Jingo. It is not an eligible training cohort, held-out family count or qualified category. Selection/exclusions were recorded before collection in [ML_NATIVE_COHORT_PLAN.md](ML_NATIVE_COHORT_PLAN.md).
 
 The source manifest pins repository/revision, MIT licence/blob, dependency lock and auth/session/database hashes. The original licence and lock are retained beside it. The runner refuses changed tracked source, copies regular files into disposable storage and excludes existing data. A separately hashed runner binds the listener to loopback. Native auth/session modules are unchanged. Only basic runtime environment variables and fresh synthetic secrets reach the application; upstream logs are discarded because they include body fields.

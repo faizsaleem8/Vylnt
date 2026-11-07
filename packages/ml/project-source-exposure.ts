@@ -14,7 +14,7 @@ export type NativeExposure=z.infer<typeof prototype>;
 export async function readNativeProjectExposures(directory=resolve('ml/applications/native')){
   const names=(await readdir(directory)).filter(name=>name.endsWith('.source.json')).sort();
   // Removing a known exposure must fail closed, not make its family fresh again.
-  if(!names.includes('jingo.source.json')||!names.includes('tabinator.source.json')||names.length>200)throw Error('Native development exposure inventory is missing or exceeds its budget');
+  if(['jingo','tabinator','fieldpoint','yoyo-collection','bookwise','wikiflow','portal','personal-knowledge-manager','stockbase','8star-links','anonymous-notepad','habit-tracker','homeinventory','etherpad'].some(name=>!names.includes(name+'.source.json'))||names.length>200)throw Error('Native development exposure inventory is missing or exceeds its budget');
   const records:NativeExposure[]=[];
   for(const name of names){
     const path=resolve(directory,name),info=await lstat(path);
@@ -31,7 +31,7 @@ interface ProposedFamily {familyId:string;repository:string;repositoryId:number;
  * registry. It is not a certificate of independence for unknown repositories. */
 export function assertFreshNativeSources(families:ProposedFamily[],records:NativeExposure[]){
   for(const family of families)for(const record of records){
-    const implementations=new Set(Object.entries(record.sourceSha256??{}).filter(([path])=>/\.(?:[cm]?[jt]s|sql)$/.test(path)).map(([,hash])=>hash));
+    const implementations=new Set(Object.entries(record.sourceSha256??{}).filter(([path])=>/\.(?:[cm]?[jt]sx?|sql)$/.test(path)).map(([,hash])=>hash));
     const overlap=family.familyId.toLowerCase()===record.familyId.toLowerCase()
       ||family.repository.toLowerCase()===record.repository.toLowerCase()
       ||record.repositoryId!==undefined&&family.repositoryId===record.repositoryId

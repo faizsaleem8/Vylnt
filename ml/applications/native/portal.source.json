@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:larsmikki/portal",
+  "repository": "https://github.com/larsmikki/portal",
+  "repositoryId": 1232789690,
+  "revision": "90755ce5884e97eb86c8aea33ed3642dce977b11",
+  "license": "MIT",
+  "licenseGitBlob": "ce0ecd2536eccac72722e7421809428b0789806e",
+  "dependencyLockSha256": "6b054a5f87718d9239f316d0d579eca9a802e362361feef56aecaac33cd0a9fc",
+  "sourceSha256": {
+    "LICENSE": "3536be83b17a18fbebed08cd6c77f0829ce76e6c9cf8964c3587d888b62709ea",
+    "server/src/app.ts": "04cd517b57f7a3e3ee993f09403b688c34726d7d2e44bd3ce4532bc9c5eed3bd",
+    "server/src/config.ts": "12fce6ee2051e0314d3d95a9a2c8c807711e5cd9f7d036af68cb7ff86ecd5fbf",
+    "server/src/db/index.ts": "9c5ffc2c5bb9e9fa4041215e1b81116d1155a868bfb0ce135a29176707bc779e",
+    "server/src/routes/groups.ts": "82224d77c96f2474451517352e521e5341563be8023b8c482ded0501364bb653",
+    "server/src/validation.ts": "d3148f9068ff8098448ce818afe26ed22eb262df89363b5b5c08c13787b3f7d5"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

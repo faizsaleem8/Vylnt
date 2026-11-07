@@ -6,14 +6,20 @@ import {projectEvidenceSchema,type ProjectEvidence,type ProjectFact} from '../..
 import {guardProjectRedirects} from './project-redirect-guard';
 
 export const resourceFunctionVersion='vylnt-resource-function-v1';
+export const upgradeFixtureHost='vylnt-resource.test';
+const upgradeDirective='upgrade-insecure-requests';
 type Outcome='passed'|'failed'|'unknown';
+type ResourceKind='script'|'stylesheet';
 export interface NativeResourceCheck {
   identityHash:string;
+  resourceKind?:ResourceKind;
+  /** Opt in only for the reviewed standalone module in the pinned fixture. */
+  nativeModulePath?:'/app.js';
   /** Trusted, read-only interaction. Failure must be positively observed. */
   check(page:Page):Promise<Outcome>;
 }
 export interface ResourcePhase {
-  complete:boolean;functionality:Outcome;transfer:'http'|'withheld'|'unknown';metadataHash?:string;
+  complete:boolean;functionality:Outcome;transfer:'http'|'https-upgraded'|'withheld'|'unknown';metadataHash?:string;
 }
 export interface ResourceControls {baseline:ResourcePhase;withheld:ResourcePhase;restored:ResourcePhase}
 export interface ResourceMeasurement {
@@ -23,34 +29,40 @@ export interface ResourceMeasurement {
   checks:{findingIds:string[];controls:ResourceControls}[];
   targets:{findingId:string;facts:{resourceTlsUpgradeObserved:ProjectFact;resourceHttpTransferObserved:ProjectFact;resourceFunctionVerified:ProjectFact;requestChainComplete:ProjectFact}}[];
 }
-interface Script {raw:string;url:string;classic:boolean}
-interface Snapshot {hash:string;scripts:Script[]}
+interface Script {raw:string;url:string;classic:boolean;standaloneModuleCandidate:boolean}
+interface Snapshot {hash:string;scripts:Script[];styles:{raw:string;url:string;eligible:boolean}[]}
 interface Transfer {raw:string;type:string;main:boolean;done:boolean;failed:boolean;direct:boolean;wire:boolean;status?:number;tlsObserved?:boolean;redirected?:boolean;metadataUnavailable?:boolean}
 interface Observation {
   reportHash:string;metadata:Snapshot;transfers:Transfer[];complete:boolean;
-  origins:readonly string[];ignoreHTTPSErrors:boolean;
+  origins:readonly string[];ignoreHTTPSErrors:boolean;namedUpgrade:boolean;
 }
 const observed=new WeakMap<Page,Observation>(),issued=new WeakMap<ResourceMeasurement,string>();
 const loopback=(host:string)=>['127.0.0.1','localhost','[::1]'].includes(host);
-function plain(raw:string){try{const url=new URL(raw);return ['http:','https:'].includes(url.protocol)&&loopback(url.hostname)&&!url.username&&!url.password&&raw.length<=8192?url:undefined;}catch{return;}}
+function plain(raw:string,namedUpgrade=false){try{const url=new URL(raw);return ['http:','https:'].includes(url.protocol)&&(loopback(url.hostname)||(namedUpgrade&&url.hostname===upgradeFixtureHost))&&!url.username&&!url.password&&raw.length<=8192?url:undefined;}catch{return;}}
 const unknown=():ResourcePhase=>({complete:false,functionality:'unknown',transfer:'unknown'});
 
 async function snapshot(page:Page):Promise<Snapshot|undefined>{
   const input=await page.locator('html').evaluate(root=>{
     const doc=root.ownerDocument;if(doc.scripts.length>150)return null;
     const scripts=[...doc.scripts].map(s=>({raw:s.src,attrs:[s.getAttribute('src')??'',s.type,s.integrity,s.crossOrigin??'',s.referrerPolicy],async:s.hasAttribute('async'),defer:s.hasAttribute('defer'),noModule:s.noModule}));
+    const links=doc.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"][href]');
+    if(links.length>60)return null;
+    const styles=[...links].map(link=>({raw:link.href,media:link.media,integrity:link.integrity,disabled:link.disabled,alternate:link.relList.contains('alternate')}));
     const policies=[...doc.querySelectorAll('meta[http-equiv]')].filter(m=>/^(content-security-policy|content-security-policy-report-only)$/i.test(m.getAttribute('http-equiv')??''))
       .map(m=>[m.getAttribute('http-equiv'),m.getAttribute('content')]);
     if(policies.length>16||scripts.some(s=>s.attrs.some(a=>a.length>2048))||policies.some(p=>p.some(a=>(a?.length??0)>8191)))return null;
-    return {scripts,policies};
+    return {scripts,policies,styles};
   });
   if(!input||Buffer.byteLength(JSON.stringify(input))>64*1024)return;
-  return {hash:await contentHash(input),scripts:input.scripts.filter(s=>s.raw).map(s=>({raw:s.raw,url:safeUrl(s.raw),classic:!s.attrs[1]||/^(?:text|application)\/javascript$/i.test(s.attrs[1])}))};
+  return {hash:await contentHash(input),
+    scripts:input.scripts.filter(s=>s.raw).map(s=>({raw:s.raw,url:safeUrl(s.raw),classic:!s.attrs[1]||/^(?:text|application)\/javascript$/i.test(s.attrs[1]),
+      standaloneModuleCandidate:s.attrs[1]==='module'&&!s.attrs[2]&&!s.attrs[3]&&!s.noModule})),
+    styles:input.styles.filter(s=>s.raw).map(s=>({raw:s.raw,url:safeUrl(s.raw),eligible:!s.disabled&&!s.alternate}))};
 }
 
 /** Start before navigation. Bookkeeping contains transient identifiers only;
  * consumers cannot upload this receipt or attach it to an older scan. */
-export function observeResourceRequests(page:Page,target:string,origins:ReadonlySet<string>,ignoreHTTPSErrors=false){
+export function observeResourceRequests(page:Page,target:string,origins:ReadonlySet<string>,ignoreHTTPSErrors=false,namedUpgrade=false){
   const records=new Map<Request,Transfer>(),pending=new Set<Promise<void>>();let complete=true,active=true,bytes=0;
   const request=(req:Request)=>{
     if(!active)return;
@@ -62,7 +74,7 @@ export function observeResourceRequests(page:Page,target:string,origins:Readonly
   const finished=(req:Request)=>{
     const record=records.get(req);if(!record)return;record.done=true;
     record.redirected=!!req.redirectedTo();
-    if(record.type!=='script'||!record.main||!record.direct||record.redirected)return;
+    if(!['script','stylesheet'].includes(record.type)||!record.main||!record.direct||record.redirected)return;
     const task=(async()=>{
       let timer:ReturnType<typeof setTimeout>|undefined;
       try{
@@ -91,10 +103,10 @@ export function observeResourceRequests(page:Page,target:string,origins:Readonly
   const close=()=>{active=false;page.removeListener('request',request);page.removeListener('response',response);page.removeListener('requestfinished',finished);page.removeListener('requestfailed',failed);};
   return {close,async finish(report:Report){
     try{
-      await Promise.all([...pending]);const metadata=await snapshot(page),url=plain(target);
+      await Promise.all([...pending]);const metadata=await snapshot(page),url=plain(target,namedUpgrade);
       if(!url||url.search||url.hash||target!==page.url()||report.observation.url!==target||!metadata)return;
       observed.set(page,{reportHash:await contentHash(report),metadata,transfers:[...records.values()],complete,
-        origins:Object.freeze([...origins]),ignoreHTTPSErrors});
+        origins:Object.freeze([...origins]),ignoreHTTPSErrors,namedUpgrade});
     }finally{close();}
   }};
 }
@@ -142,14 +154,19 @@ export function resourceControlsPass(controls:ResourceControls){
   return [a,b,c].every(p=>p.complete&&/^[a-f0-9]{64}$/.test(p.metadataHash??''))
     &&a.metadataHash===b.metadataHash&&a.metadataHash===c.metadataHash
     &&a.functionality==='passed'&&b.functionality==='failed'&&c.functionality==='passed'
-    &&a.transfer==='http'&&b.transfer==='withheld'&&c.transfer==='http';
+    &&(a.transfer==='http'||a.transfer==='https-upgraded')&&b.transfer==='withheld'&&c.transfer===a.transfer;
 }
-function directTransfer(observation:Observation,raw:string){
-  const matches=observation.transfers.filter(r=>r.raw===raw&&r.main&&r.type==='script');
+function directTransfer(observation:Observation,raw:string,kind:ResourceKind){
+  const matches=observation.transfers.filter(r=>r.raw===raw&&r.main&&r.type===kind);
   return observation.complete&&matches.length===1&&matches[0].done&&!matches[0].failed&&matches[0].direct&&matches[0].wire;
 }
+function upgradedTransfer(observation:Observation,raw:string,upgraded:string,kind:ResourceKind){
+  const matches=observation.transfers.filter(r=>r.raw===upgraded&&r.main&&r.type===kind);
+  return !observation.ignoreHTTPSErrors&&!observation.transfers.some(r=>r.raw===raw)&&directTransfer(observation,upgraded,kind)&&
+    matches[0]?.tlsObserved===true&&matches[0]?.redirected===false&&!matches[0]?.metadataUnavailable;
+}
 
-async function phase(source:BrowserContext,report:Report,original:Observation,raw:string,check:NativeResourceCheck,withhold:boolean,signal:AbortSignal):Promise<ResourcePhase>{
+async function phase(source:BrowserContext,report:Report,original:Observation,raw:string,check:NativeResourceCheck,kind:ResourceKind,withhold:boolean,signal:AbortSignal,upgraded?:string):Promise<ResourcePhase>{
   signal.throwIfAborted();const browser=source.browser();if(!browser)return unknown();
   const cookies=await source.cookies();if(cookies.length>100)return unknown();
   const context=await browser.newContext({ignoreHTTPSErrors:original.ignoreHTTPSErrors,serviceWorkers:'block',acceptDownloads:false});
@@ -164,9 +181,10 @@ async function phase(source:BrowserContext,report:Report,original:Observation,ra
     signal.throwIfAborted();await context.addCookies(cookies);
     await context.routeWebSocket('**/*',socket=>{incomplete=true;socket.close();});
     await context.route('**/*',async route=>{
-      const req=route.request(),url=plain(req.url());
+      const req=route.request(),url=plain(req.url(),original.namedUpgrade);
       if(!url||!original.origins.includes(url.origin)||++requests>80||req.method()!=='GET'||req.redirectedFrom()||['worker','serviceworker'].includes(req.resourceType())){incomplete=true;await route.abort();return;}
-      if(withhold&&req.url()===raw&&req.resourceType()==='script'){withheld++;await route.abort();return;}
+      if(upgraded&&req.url()===raw){incomplete=true;await route.abort();return;}
+      if(withhold&&req.url()===(upgraded??raw)&&req.resourceType()===kind){withheld++;await route.abort();return;}
       await route.continue();
     });
     const page=await context.newPage();page.setDefaultTimeout(2500);page.setDefaultNavigationTimeout(5000);
@@ -176,7 +194,7 @@ async function phase(source:BrowserContext,report:Report,original:Observation,ra
     page.on('frameattached',()=>{incomplete=true;});page.on('worker',()=>{incomplete=true;});
     context.on('page',other=>{if(other!==page)incomplete=true;});
     page.on('download',()=>{incomplete=true;});
-    observer=observeResourceRequests(page,report.observation.url,new Set(original.origins),original.ignoreHTTPSErrors);
+    observer=observeResourceRequests(page,report.observation.url,new Set(original.origins),original.ignoreHTTPSErrors,original.namedUpgrade);
     const response=await page.goto(report.observation.url,{waitUntil:'load'});
     if(!response||response.status()<200||response.status()>=300||page.url()!==report.observation.url)return unknown();
     const headers=await response.headersArray();
@@ -184,24 +202,29 @@ async function phase(source:BrowserContext,report:Report,original:Observation,ra
     const functionality=await check.check(page);if(!['passed','failed','unknown'].includes(functionality))return unknown();
     await page.waitForLoadState('networkidle',{timeout:2000});await observer.finish(report);
     const capture=observed.get(page);if(!capture||capture.metadata.hash!==original.metadata.hash)return unknown();
-    const transfer:ResourcePhase['transfer']=withhold?(withheld===1?'withheld':'unknown'):directTransfer(capture,raw)?'http':'unknown';
+    const transfer:ResourcePhase['transfer']=withhold?(withheld===1?'withheld':'unknown'):
+      upgraded?(upgradedTransfer(capture,raw,upgraded,kind)?'https-upgraded':'unknown'):directTransfer(capture,raw,kind)?'http':'unknown';
     return {complete:!incomplete&&capture.complete&&page.url()===report.observation.url&&context.pages().length===1&&page.frames().length===1,
       functionality,transfer,metadataHash:capture.metadata.hash};
   })()]);}catch(error){if(signal.aborted)throw error;return unknown();}
   finally{clearTimeout(timer);signal.removeEventListener('abort',stop);observer?.close();await redirectGuard?.close();for(const page of context.pages())observed.delete(page);await close();}
 }
 
-/** Direct HTTP classic-script dependencies only. No absent request, failed
- * transfer, redirect or HTTPS-looking URL establishes a pre-transfer upgrade. */
+/** Direct HTTP dependencies and the strict, named fixture's paired HTTPS
+ * upgrade. An HTTPS counterpart alone establishes no functional dependency. */
 export async function measureResourceFunction(source:BrowserContext,report:Report,check:NativeResourceCheck,signal?:AbortSignal):Promise<ResourceMeasurement>{
-  const url=plain(report.observation.url);if(!url||url.protocol!=='https:'||url.search||url.hash)throw Error('Resource checks require a plain HTTPS loopback document');
+  const url=plain(report.observation.url,true);if(!url||url.protocol!=='https:'||url.search||url.hash)throw Error('Resource checks require a plain HTTPS loopback document');
   if(!/^[a-f0-9]{64}$/.test(check.identityHash))throw Error('Resource check identity is required');
   const combined=AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(60000)]);combined.throwIfAborted();
   const originalScanHash=await contentHash(report),result:ResourceMeasurement={version:resourceFunctionVersion,scanId:report.scanId,originalScanHash,checkIdentity:check.identityHash,status:'needs-review',sourceFunctionality:'unknown',checks:[],targets:[]};
   const pages=source.pages().filter(p=>p.url()===report.observation.url);if(pages.length!==1)return result;
   const page=pages[0],original=observed.get(page);
   if(!original||!original.complete||original.reportHash!==originalScanHash||(await snapshot(page))?.hash!==original.metadata.hash)return result;
-  const selected=report.findings.filter(f=>f.ruleId==='NET-001'&&f.evidence.resourceType==='script'),urls=[...new Set(selected.map(f=>f.url))];
+  const kind=check.resourceKind??'script';
+  // The DOM finding is the stylesheet target. A corresponding network
+  // finding supplies transfer evidence for the same dependency, not a second case.
+  const findingType=kind==='stylesheet'?'link':'script';
+  const selected=report.findings.filter(f=>f.ruleId==='NET-001'&&f.evidence.resourceType===findingType),urls=[...new Set(selected.map(f=>f.url))];
   if(urls.length===0||urls.length>3)return result;
   let timer:ReturnType<typeof setTimeout>|undefined,settle:(value:'unknown')=>void=()=>{};
   const stop=()=>{void page.close().catch(()=>{});settle('unknown');};combined.addEventListener('abort',stop);
@@ -213,17 +236,30 @@ export async function measureResourceFunction(source:BrowserContext,report:Repor
   finally{if(timer)clearTimeout(timer);combined.removeEventListener('abort',stop);}
   combined.throwIfAborted();
   if(result.sourceFunctionality!=='passed'||page.url()!==report.observation.url||(await snapshot(page))?.hash!==original.metadata.hash)return result;
+  const dependencies=kind==='stylesheet'?original.metadata.styles:original.metadata.scripts.map(s=>({...s,eligible:check.nativeModulePath?
+    s.standaloneModuleCandidate&&plain(s.raw,original.namedUpgrade)?.pathname===check.nativeModulePath:s.classic}));
   for(const identifier of urls){
-    const members=selected.filter(f=>f.url===identifier),matches=original.metadata.scripts.filter(s=>s.url===identifier);
-    if(matches.length!==1||!matches[0].classic)continue;
-    const raw=matches[0].raw,target=plain(raw);
-    if(!target||target.protocol!=='http:'||!original.origins.includes(target.origin)||!directTransfer(original,raw))continue;
-    const controls={baseline:await phase(source,report,original,raw,check,false,combined),withheld:await phase(source,report,original,raw,check,true,combined),restored:await phase(source,report,original,raw,check,false,combined)};
+    const members=selected.filter(f=>f.url===identifier);
+    const matches=dependencies.filter(resource=>resource.url===identifier);
+    if(matches.length!==1||!matches[0].eligible)continue;
+    const raw=matches[0].raw,target=plain(raw,original.namedUpgrade);
+    if(!target||target.protocol!=='http:'||!original.origins.includes(target.origin))continue;
+    if(check.nativeModulePath&&(!original.namedUpgrade||kind!=='script'||url.hostname!==upgradeFixtureHost||url.pathname!=='/'||target.search||target.hash))continue;
+    let upgraded:string|undefined;
+    if(target.hostname===upgradeFixtureHost){
+      if(!original.namedUpgrade)continue;
+      if(target.hostname!==upgradeFixtureHost||target.host!==url.host||target.search||target.hash||
+        report.observation.headers?.['content-security-policy']!==upgradeDirective||report.observation.cspEvidenceComplete!==true)continue;
+      const secure=new URL(target);secure.protocol='https:';
+      if(!original.origins.includes(secure.origin)||!upgradedTransfer(original,raw,secure.href,kind))continue;
+      upgraded=secure.href;
+    }else if(!directTransfer(original,raw,kind))continue;
+    const controls={baseline:await phase(source,report,original,raw,check,kind,false,combined,upgraded),withheld:await phase(source,report,original,raw,check,kind,true,combined,upgraded),restored:await phase(source,report,original,raw,check,kind,false,combined,upgraded)};
     result.checks.push({findingIds:members.map(f=>f.id),controls});
     if(!resourceControlsPass(controls))continue;
     const witnessHash=await contentHash({version:resourceFunctionVersion,originalScanHash,check:check.identityHash,resourceIdentity:await contentHash(raw),metadata:original.metadata.hash,controls});
     const fact=(value:boolean):ProjectFact=>({value,source:'functional',coverage:'complete',witnessHash});
-    for(const member of members)result.targets.push({findingId:member.id,facts:{resourceTlsUpgradeObserved:fact(false),resourceHttpTransferObserved:fact(true),resourceFunctionVerified:fact(true),requestChainComplete:fact(true)}});
+    for(const member of members)result.targets.push({findingId:member.id,facts:{resourceTlsUpgradeObserved:fact(!!upgraded),resourceHttpTransferObserved:fact(!upgraded),resourceFunctionVerified:fact(true),requestChainComplete:fact(true)}});
   }
   if(result.targets.length){result.status='verified';issued.set(result,canonicalJson(result));}return result;
 }

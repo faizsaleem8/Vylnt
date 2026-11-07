@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "role": "development-source-screening",
+  "selectionIdentity": "75e56087ca83d4b32cd7ccaa37b447b467ef3f3e640c76bd364842c86884993a",
+  "additionalSelectionIdentity": "10388112feae41ce076b0c0b83c0053959b8491ea8e57c0cc92065b7c9089303",
+  "modelPredictions": 0,
+  "trainingReady": false,
+  "sources": [
+    {
+      "repository": "joesalaz/BookWise",
+      "revision": "547203a025c28d809bc09c8bbd00992b81c032aa",
+      "licenseSha256": "033e320ca143986aad91f1587896b43b07661c2c098d4edbfd042838a2a62bf9",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "larsmikki/portal",
+      "revision": "90755ce5884e97eb86c8aea33ed3642dce977b11",
+      "licenseSha256": "3536be83b17a18fbebed08cd6c77f0829ce76e6c9cf8964c3587d888b62709ea",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "fufu1209/personal-knowledge-manager",
+      "revision": "413d308c0b43b2a171dd945a29909a95b47904f0",
+      "licenseSha256": "f79f38ac7592020712d7549f761aa41430ba0e72e6176855db1478425190e713",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "egeyigit/fieldpoint",
+      "revision": "1329edc008f284967517f6fb9af1f622900af7b2",
+      "licenseSha256": "330ec97a0f56e0a944c999bb9d74da034569f7a9df0ab4d9940654d3bf351977",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "asdteke/HomeInventory",
+      "revision": "ffbdb191ac9eeb0d6e19a91db0c9fea4b476e49b",
+      "licenseSha256": "2f4f58a418fc4a438568c1c1214090f94d3443a0d117b0e11dd25c7bc22e2871",
+      "status": "excluded",
+      "reason": "719 tracked files exceed the existing 600-file disposable-copy limit."
+    },
+    {
+      "repository": "stammig/yoyo-collection",
+      "revision": "94347ba9e181ae5d69eab83554e3c5b0dad3a47b",
+      "licenseSha256": "8db5aaa8fc188fa28cc793707dd7416851226297b6a29d905366b29b7f274fa8",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "JoshuaEngine7/StockBase",
+      "revision": "859234c5928774fceb9dcb4f119df55356475616",
+      "licenseSha256": "ba4789b346a14bb339cb967022ae95d6af7e9b4ee7382e748d9440aa40bb7b57",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "afnan-nex/inventory_management",
+      "revision": "ee1d114a98612eaf9d424ca461e07b630195eb27",
+      "licenseSha256": "4833d7f5733b1e0c5df86028a07215548545b77ea4be25ca952aac8c4b65c242",
+      "status": "excluded",
+      "reason": "Pinned code is an Electron desktop application, outside the Node/Express web corpus."
+    },
+    {
+      "repository": "AIALRA-0/Wikiflow",
+      "revision": "c41f5ba323ff3bd931cc7396f13b801272253b77",
+      "licenseSha256": "6326a7b5fe1b287eb82889f72c920a3c1e87dca5d299cbd3f5160f75a82f22bc",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "TimoM84/8star-links",
+      "revision": "b52d350eec54822d9d4039eaa4cbce833c0368dc",
+      "licenseSha256": "e6746cbf654ba71498a299a22e5c5b5522239346e3c14c096c5a772ecc9f5914",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "ntkhang03/Anonymous-Notepad",
+      "revision": "135e18dde6ac1acae195bb74dfaee49a0fbf33f6",
+      "licenseSha256": "522b9eafe905a7df26a34fe97f09e73028b3d983a2fd705bae8933bbe4b9e5b4",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    },
+    {
+      "repository": "brixdorf/habit-tracker",
+      "revision": "c903c2788f8336bb195e7b2ce490a8b8d97e1a0d",
+      "licenseSha256": "70c6edf65a493f32405e5dd91f53c3d3b438c9fdf7e4bf8a022de18944719151",
+      "status": "native-adapter",
+      "reason": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed."
+    }
+  ],
+  "overlapAudit": {
+    "nativeFamiliesChecked": 12,
+    "historicalApplicationsChecked": 22,
+    "exactImplementationOverlap": false,
+    "scope": "Repository identities and exact JS/TS/SQL file hashes in the two public historical source locks. Not a full numeric-exposure, rewritten-template or source-independence certificate."
+  }
+}

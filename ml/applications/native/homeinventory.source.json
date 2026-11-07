@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:asdteke/homeinventory",
+  "repository": "https://github.com/asdteke/HomeInventory",
+  "repositoryId": 1184688688,
+  "revision": "ffbdb191ac9eeb0d6e19a91db0c9fea4b476e49b",
+  "license": "MIT",
+  "licenseGitBlob": "1d4c6c94172451293c3ae310a9cab6cf676ff504",
+  "dependencyLockSha256": "17b9da13fdb157a8c2c1e6ec916cc93b25962f1ec7f1eb8ca8f8b2352d3015bd",
+  "clientDependencyLockSha256": "96dbe93218d962169467ef141dffff21a04d0d161dcf76d2d99ef6f16235490c",
+  "sourceSha256": {
+    "LICENSE": "2f4f58a418fc4a438568c1c1214090f94d3443a0d117b0e11dd25c7bc22e2871",
+    "package-lock.json": "17b9da13fdb157a8c2c1e6ec916cc93b25962f1ec7f1eb8ca8f8b2352d3015bd",
+    "client/package-lock.json": "96dbe93218d962169467ef141dffff21a04d0d161dcf76d2d99ef6f16235490c",
+    "server.js": "3a86e2f79d8291eebab13d7715702e2810b3345ce6d33b4549d97df586d565d0",
+    "app.js": "48b486b748c4bc83dbfe9919d19e16724c44fa5d236b58a8786506b352695ad7",
+    "database.js": "0f5c53a8b0bc86fa0480f924b880f7015940d0a68ca3ac210f39217274410843",
+    "middleware/auth.js": "94396bc33bc3fdef5fb3bdc681731c14d86d1f27f9313df08ac01e40fff42746",
+    "routes/auth.js": "cbd7acdb2e45605c3d51d00d5d663e8169eaf8c969b9d619dc7e5b554af34525",
+    "config/i18n.js": "60b06db8f9fa4ba7653e9ca335602790c55455d95368eef983a27048a24d215b",
+    "utils/protectedFields.js": "1d8a4b1fdf65097c496a0c31140a225f4197e338e785050f75fed5f5f28b019a",
+    "utils/runtimePaths.js": "882a2f051619d7f18522a7d265dd2825822c109636062d13d798543f46d48fc1",
+    "client/src/i18n.ts": "862a40cc37b3137fb297fdbe86e8820465226cc6f88f8e17a3d29f4859f53816",
+    "client/src/components/LanguageSwitcher.tsx": "205d23867d9023f687ebcf2128f5051a3d9c609a4b838daec1937d0d4e7e745b",
+    "client/src/utils/languageSupport.ts": "7b900a1dda0f6fe684041a7107d5f90dea68584957b217099aeab69c923db141"
+  },
+  "scope": "Native localization and authentication controls. Controlled readability and matching-name variants are development prototypes; training and qualification require separate gates.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs or hash-confirmed CRLF normalization. At most 1,000 files, 8 MiB/file, 128 MiB total."
+}

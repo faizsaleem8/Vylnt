@@ -1,0 +1,13 @@
+{
+  "version": "vylnt-native-material-context-v1",
+  "common": ["https", "headersCollected", "domCollected", "cookiesCollected", "matchingUnknown"],
+  "categories": {
+    "HDR-001": ["hstsPositive", "hstsPresent", "project_tlsValidated", "project_responseChainComplete", "project_hstsSyntaxSupported", "project_hstsPositive", "project_hstsPreloadConfirmed", "project_hstsApplicable"],
+    "HDR-002": ["frameAncestors", "xFrameRestrictive", "project_framePolicyEnforced", "project_frameAncestorsRestricted", "project_embeddingPublicVerified", "project_sensitiveActionVerified"],
+    "HDR-003": ["cspPresent", "scriptDirective", "broadScriptSource", "project_scriptPolicyEnforced", "project_scriptSourcesRestricted", "project_metaPolicyBeforeScripts", "project_cspProbeBlocked", "project_cspProbeAllowed"],
+    "CK-001": ["secure", "httpOnly", "session", "sameSiteNone", "sameSiteLax", "sameSiteStrict", "project_cookieAuthDependency", "project_cookiePreferenceVerified"],
+    "CK-002": ["secure", "httpOnly", "session", "sameSiteNone", "sameSiteLax", "sameSiteStrict", "project_cookieAuthDependency", "project_cookiePreferenceVerified", "project_cookieJsAccessObserved", "project_cookieJsAccessRequired"],
+    "CK-003": ["secure", "httpOnly", "session", "sameSiteNone", "sameSiteLax", "sameSiteStrict", "project_cookieAuthDependency", "project_cookieCrossSiteRequired", "project_csrfChecksPassed", "project_stateChangingRoutesCovered"],
+    "NET-001": ["external", "completed", "failed", "requested", "referenced", "scriptResource", "imageResource", "frameResource", "styleResource", "project_resourceTlsUpgradeObserved", "project_resourceHttpTransferObserved", "project_resourceFunctionVerified", "project_requestChainComplete"]
+  }
+}

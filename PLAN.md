@@ -1,8 +1,1140 @@
 # VYLNT implementation plan
 
-Last updated: 2026-10-29 (Asia/Calcutta)
+Last updated: 2026-11-07 (Asia/Calcutta)
 
 ## Current milestone
+
+**7 November — Technical report and demo study guide.** Updated the
+[editable report](docs/VYLNT_TECHNICAL_REPORT.md) and rebuilt the
+[38-page PDF](output/pdf/VYLNT_Technical_Report_and_Presentation_Guide.pdf).
+The guide now traces one finding from browser collection through report
+generation, blockchain verification and GitHub checks. It includes a
+timed demo, a troubleshooting guide and interview practice. The PDF
+verifier rendered all 38 pages and found no content outside page bounds.
+All rendered pages were reviewed at thumbnail scale. The update uses
+the existing dataset `056` and recorded evaluations. No new application
+tests, model training or qualification runs were performed for the report.
+
+**7 November — Etherpad HSTS validation supplement.** The adapter registers
+against the active validation family, requires the native protected pad
+response over strict HTTPS, and checks an authorized pad write against
+the disposable database. Anonymous writes must leave the stored value
+unchanged. The pinned Linux-local runtime is being prepared to address
+the prior startup timeout. Dataset `056` remains the latest admitted corpus.
+
+**7 November — HomeInventory HSTS training supplement.** The collector
+registers against the active signed source split and reuses the pinned
+HomeInventory server, signed session and disposable Ubuntu dependencies.
+The scoped browser report identifies the same owner as the native house
+write and independent SQLite readback. Anonymous writes left storage
+unchanged. Two earlier attempts timed out before the listener opened.
+Using verified Git objects and a Linux-local dependency copy resolved
+startup. All four registered Chromium runs passed.
+
+Dataset `056` credits **326/630, 304 outstanding, 22 class or family
+deficits and 0/7 ready to fit**. HSTS reaches **84/90**. Its training quotas
+are complete at 30 per class from eight families. Validation still needs
+three change-warranted and three contextual cases. Type checking, 55
+focused tests and production builds passed. Preflight exited 2. Datasets
+`055` and `056` each reproduced all 14 files byte for byte. Etherpad's pinned Ubuntu
+stage and frozen lock install passed, but its first Linux smoke test
+timed out before readiness. It adds no cases. No model fitting or holdout
+evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Native response installs HSTS.** The new profile verifies a
+credential-free reset and plaintext baseline in Chromium. It reloads the
+strict HTTPS application response and requires a TLS handshake in place of
+plaintext after the positive directive. The receipt binds the verified
+negative preload fact to the scan. Seven training and three validation
+families passed. Dataset `055` credits **322/630**, with 308 outstanding
+and 24 class or family deficits. HSTS reaches **80/90**. Each HSTS class
+needs two more training and three more validation examples. Type checking,
+44 focused tests and production builds passed. Datasets `054` and `055`
+each reproduced all 14 files byte for byte. Preflight exited 2.
+All ten admitted activation receipts passed the wire and cleanup audit.
+
+Four additional Anonymous Notepad Chromium runs passed, with native
+editor, SQLite and wrong-password controls. The material importer
+rejected the supplement because HomeInventory replaced Anonymous Notepad
+in the active training split. Those captures remain private and add
+zero examples. The updated adapter passed type checking, 45 focused tests
+and production builds. The remaining HSTS acquisition targets the active
+HomeInventory and Etherpad families. HomeInventory's pinned Ubuntu
+dependency installation passed its lock check and SQLite, bcrypt and
+Sharp smoke checks. Its HSTS adapter and browser runs remain open.
+No fitting or holdout evaluation ran.
+
+**7 November — Application response clears active HSTS.** A new registered
+browser profile starts with a plaintext baseline, installs a valid policy
+and verifies a TLS handshake in place of plaintext. It then reloads the
+application over strict HTTPS and requires the actual `max-age=0` response
+to restore plaintext. Separate policy-control listeners reject credentials.
+The signed capture retains the wire receipt and the verified preload fact
+for the scoped fixture. Ten Chromium runs passed across seven training
+and three validation families. BookWise passed on retry after its initial
+plaintext check failed. Type checking, 43 focused tests and production
+builds passed.
+
+Dataset `054` adds **ten change-warranted HSTS examples** and credits
+**312/630, 318 outstanding, 24 class or family deficits and 0/7 ready
+to fit**. HSTS reaches 70/90, with two change-warranted and nine contextual
+training cases plus three change-warranted and six contextual validation
+cases still needed. Preflight exited 2. All ten signed capture receipts
+passed the wire-control and cleanup audit. Datasets `053` and `054`
+each reproduced all 14 files byte for byte. No fitting or holdout
+evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Wikiflow signed-session HSTS collector.** The strict
+loopback HTTPS runner now supports Wikiflow's pinned `/api/session` route
+and requires a verified signed session, native term write, independent
+SQLite owner readback, anonymous denial and the application's own CSRF
+checks. The Ubuntu Node 20 fixture runtime passed its release checksum,
+and the locked SQLite and password addons passed smoke checks. All six
+registered Chromium runs passed, covering three change-warranted and
+three contextual HSTS cases from the same training family.
+
+Dataset `053` credits **302/630, 328 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. HSTS is at 60/90. Type checking, 38 focused
+tests and production builds passed. Preflight exited 2 with the remaining
+gaps. Datasets `052` and `053` each reproduced all 14 files byte for byte. The result
+covers one authenticated API route and the verified write. No model
+fitting or holdout evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Protected notes endpoint HSTS collector.** The strict
+loopback HTTPS harness now supports Personal Knowledge Manager's pinned
+`/api/notes` route. Its native write and SQLite readback are separate from
+the browser transport control. The collector checks the backend dependency
+lock and package manifest before startup. The pinned SQLite addon compiled
+under Ubuntu Node 24 using workspace-local tools. The initial browser run
+reached the seed stage but was rejected by the public-route check. A new
+registration verified the notes API's missing- and invalid-credential
+denials instead. All six registered Chromium runs then passed.
+
+Dataset `052` adds **six HSTS training examples**, three change-warranted
+and three contextual, and credits **296/630, 334 outstanding, 24 class
+or family deficits and 0/7 ready to fit**. Type checking, production builds
+and 41 focused tests passed. Preflight exited 2 with the remaining gaps.
+Datasets `051` and `052` reproduced all 14 files byte for byte. The new
+evidence covers one protected API route. No model fitting or holdout
+evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Etherpad contextual HttpOnly validation.** Four registered
+Chromium runs verified the native line-number preference with Secure set.
+They tested save and reload, editor failure under HttpOnly, recovery after
+restoring access, and denial of pad access with the preference cookie alone.
+The first batch timed out at startup. The isolated retry passed three
+cases, and the final case passed on its own retry after an initial save
+failure. All credited runs completed cleanup and signature checks.
+
+Dataset `051` adds **four contextual HttpOnly validation examples** on top
+of HomeInventory's four training examples. It credits **290/630, 340
+outstanding, 24 class or family deficits and 0/7 ready to fit**. Contextual
+HttpOnly has eight cases from one family in each split. Preflight exited 2
+with the remaining gaps. Dataset `051` reproduced all 14 files byte for
+byte. No fitting or holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Secure cookies that still need JavaScript.** Four registered
+HomeInventory Chromium runs verified the native language preference with
+Secure set, across two SameSite values and two browser lifetimes. The native
+preference worked with JavaScript access, failed with HttpOnly and worked
+after restoration. The control preserved the authentication cookie
+attributes and verified a separate native write through storage readback.
+
+Dataset `050` adds **four contextual HttpOnly training examples** and
+credits **286/630, 344 outstanding, 24 class or family deficits and 0/7
+ready to fit**. Type checking, 46 focused tests and production builds
+passed. Datasets `049` and `050` reproduced all 14 files byte for byte.
+Preflight exited 2 with the remaining gaps. The training
+and validation contextual HttpOnly sets still have only one family each.
+No model fitting or holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Standalone module transport.** Two registered Chromium
+runs preserved 8star Links' native module bytes and `type="module"`.
+The settings toggle stopped working only while the module was withheld.
+One run transferred the module over HTTP on loopback. The other verified
+an HTTPS upgrade before transfer. A separate native write passed SQLite
+readback in both runs. The profile covers this one reviewed module.
+
+Dataset `049` adds **two mixed-resource training examples** and credits
+**282/630, 348 outstanding, 24 class or family deficits and 0/7 ready to
+fit**. Type checking, 59 focused tests, both native Chromium runs, the
+Chromium resource regression and production builds passed. Preflight
+exited 2 with the remaining gaps. Datasets `048` and `049` reproduced all
+14 files byte for byte. No model fitting or holdout evaluation
+ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — String evaluation in the script response policy.** Six
+registered Chromium runs blocked unapproved inline elements while the
+bounded string-evaluation probe executed. Removing only `unsafe-eval`
+blocked string evaluation while preserving the tested native interaction.
+The debugger's CSP bypass was disabled. Assessment v18 requires the
+matched response and paired receipt. The result applies to the tested
+interaction and does not establish an attacker-controlled input.
+
+Dataset `048` adds **six change-warranted script-policy examples** and
+credits **280/630, 350 outstanding, 24 class or family deficits and 0/7
+ready to fit**. Type checking, 65 focused tests, six native Chromium runs
+and production builds passed. Preflight exited 2 with the remaining gaps.
+Datasets `047` and `048` each reproduced all 14 files byte for byte.
+No model fitting or holdout evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Hash-based script response policy.** Six registered
+Chromium runs verified that the native interaction worked while an
+unapproved inline probe was blocked by the response policy. Each app's
+native write also passed independent storage readback. Assessment v17
+requires the exact policy and matching browser facts with no meta policy.
+BookWise and Yoyo Collection passed sequential reruns after initial
+startup failures.
+
+Dataset `047` adds **six contextual script-policy examples** and credits
+**274/630, 356 outstanding, 24 class or family deficits and 0/7 ready
+to fit**. Type checking, 58 focused tests, Chromium script acceptance and
+production builds passed. Datasets `046` and `047` reproduced all 14 files
+byte for byte. Preflight exited 2 with the remaining gaps. No model fitting or holdout
+evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Broad ancestor policy and authenticated writes.** Six
+registered applications performed their native authenticated action in
+same-origin and repeated foreign frames under `frame-ancestors http:`.
+Storage readback verified each action. BookWise passed an isolated rerun
+after an inconclusive parallel run. Assessment v16 treats the exercised
+configuration as change-warranted. Its scope is one tested route and action.
+
+Dataset `046` adds **six eligible examples** and credits **268/630,
+362 outstanding, 24 class or family deficits and 0/7 ready to fit**. The
+first import hit the 16-entry historical adapter-list cap. Preparation now
+uses the existing bounded capture limit for adapter identities and continues
+to require signed provenance, the original family and split, and material
+deduplication. Type checking, 74 focused tests, Chromium framing acceptance
+and production builds passed. Preflight exited 2 with the remaining gaps.
+Datasets `045` and `046` each replayed byte for byte across all 14 files.
+No model fitting or holdout evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Paired framing denial controls.** Three previously
+inconclusive applications and Jingo passed the duplicate `DENY` profile.
+The producer binds Chromium's blocked request to the error frame and
+requires successful loads after removing only the header in otherwise
+identical direct and nested foreign frames. The three earlier direct-frame
+runs lacked the expected Chromium diagnostic despite a blocked request.
+
+Dataset `045` adds **four contextual framing examples** and credits
+**262/630, 368 outstanding, 24 class or family deficits and 0/7 ready
+to fit**. Type checking, 65 focused tests, four registered Chromium runs
+and production builds passed. A separate Portal run passed in Microsoft
+Edge outside the dataset. Preflight exited 2 with the remaining gaps.
+Datasets `044` and `045` each replayed byte for byte across all 14 files.
+No model fitting or holdout evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Duplicate framing denial.** Chromium blocked direct,
+repeated and nested foreign framing under the exact duplicate `DENY`
+header. Removing only the header let the native response load in a
+same-origin control. Assessment v15 preserves the raw rule finding
+and records the scoped browser result. The initial policy incorrectly
+made adjacent cookie evidence incomplete. The correction keeps that
+evidence eligible, and the final runs use a fresh registration.
+
+Dataset `044` adds **six contextual framing examples** and credits
+**258/630, 372 outstanding, 24 class or family deficits and 0/7 ready
+to fit**. Three attempted applications did not pass all framing controls
+and supplied no examples. Type checking, 52 focused tests, the existing
+Chromium framing acceptance and production builds passed. Candidate
+preflight exited 2 with the remaining gaps. Datasets `043` and `044`
+each replayed byte for byte across all 14 files. No model fitting or holdout
+evaluation ran. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Jingo stylesheet transport.** Two registered Chromium
+runs verified Jingo's native help dialog with its Bootstrap stylesheet
+loaded, withheld and restored. One case used direct HTTP and the other
+proved an HTTPS upgrade before transfer. Both independently verified a
+native Git-backed page write. Both cases entered mixed-resource validation.
+
+Dataset `043` credits **252/630, 378 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. Type checking, 22 focused tests, both
+browser runs and production builds passed. Preflight exited 2 with the
+remaining gaps. Datasets `042` and `043` each replayed byte for byte
+across all 14 files. No model fitting or holdout evaluation ran. Source screening
+found that Tabinator's CORS configuration alone leaves a body-independent
+logout POST outside the JSON preflight defense. It adds no contextual
+SameSite example. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — FieldPoint origin configuration.** Four registered
+Chromium profiles verified repeated authenticated writes from an
+unrelated site after it was added to the native origin allowlist.
+Removing the cookie or setting Lax stopped writes from that same site.
+The protected configuration passed separately and contributed no new
+credits. The four new cases cover one native route and training family.
+
+Dataset `042` credits **250/630, 380 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. SameSite change-warranted training now
+has 16 examples from four families. Contextual validation still has zero
+examples. Type checking, 37 focused tests, five browser runs and production
+builds passed. Candidate preflight exited 2 with the remaining gaps. No
+model fitting or holdout evaluation ran. Datasets `041` and `042` each
+replayed byte for byte across all 14 files. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Portal HSTS coverage.** All six registered Chromium
+profiles passed on Portal's pinned `/api/groups` route with strict TLS.
+The collector independently verified the native public group operation
+in SQLite. All three change-warranted and all three contextual examples
+were admitted into Portal's existing training split.
+
+Dataset `041` credits **246/630, 384 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. Type checking, 59 focused tests and
+production builds passed. Candidate preflight exited 2 with the
+remaining gaps. Datasets `040` and `041` each replayed byte for byte
+across all 14 preparation files. No model fitting or holdout evaluation ran. HSTS
+still needs 42 examples across its four class and split cells.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Retained HSTS policy.** Seven pinned application families
+passed Chromium checks showing that an already-installed policy still
+upgrades requests when the native response sends `max-age=invalid`.
+Assessment v14 preserves the unsupported header syntax and requires
+the scoped browser receipt, including a credential-free reset. The
+result applies to the tested browser state. First-time visits still
+need a valid policy.
+
+Dataset `040` adds **seven eligible contextual examples** and credits
+**240/630, 390 outstanding, 24 class or family deficits and 0/7 ready
+to fit**. Type checking, 80 focused tests and production builds passed.
+Four localhost tests initially hit restricted network access and
+passed with access to their disposable local servers. Preflight exited
+2 with the remaining gaps. No model fitting or holdout evaluation ran.
+Both the archived `039` and the new `040` reproduced all 14 files
+byte for byte.
+Remaining work includes additional HSTS mechanisms, native framing and
+script policy cases, preference and cross-site cookie cases, and
+functional resource upgrade examples. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Malformed HSTS evidence.** Seven pinned Chromium
+runs verified that the exact malformed directive left plaintext
+reachable. A valid HTTPS control then caused a TLS handshake in
+place of plaintext. Assessment v13 requires this scoped browser
+receipt, strict TLS and the original response. Other unsupported
+directives continue to require review.
+
+Dataset `039` credits **233/630, 397 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. All seven cases were admitted,
+four in training and three in validation. Type checking, 52 focused
+tests, all seven browser runs and the production build passed.
+Datasets `038` and `039` reproduced all 14 files byte for byte.
+Candidate preflight exited 2 with the remaining gaps. No model
+fitting or holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — HSTS reset isolation.** BookWise's reset carried a
+cookie even after the browser cookie jar was cleared. The reset now
+uses a browser request with credentials omitted. The listener still
+rejects Cookie and Authorization headers. BookWise and Tabinator
+passed strict TLS, the headerless reload, the wire upgrade and
+plaintext after reset. An earlier Tabinator capture was excluded
+because its producer had changed after registration. The rerun
+matches the signed registration.
+
+Dataset `038` credits **226/630, 404 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. BookWise adds one contextual HSTS
+training case and Tabinator adds one validation case. Type checking,
+43 focused tests, both Chromium captures and the production build
+passed. Dataset replay matched all 14 files byte for byte. Candidate
+preflight exited 2 with the remaining gaps. The proof covers the
+tested named loopback responses.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Same-host HSTS evidence.** Assessment v12 distinguishes
+the absent raw header from an observed effective policy installed
+by another HTTPS response on the same host. Five Chromium runs
+verified the original headerless route, a wire-level upgrade while
+the policy was active and a return to plaintext after reset. The
+expected failed TLS navigation runs in a separate page to keep the
+reset navigation independent. BookWise still failed its reset and
+contributed no example.
+
+Dataset `037` credits **224/630, 406 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. The five contextual HSTS cases add
+three training and two validation examples. Evidence remains scoped
+to named loopback fixtures. Type checking, 51 focused tests, five
+Chromium captures and the production build passed. Datasets `036`
+and `037` reproduced byte for byte. Candidate preflight exited 2
+with the remaining gaps. No model fitting or holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Native HSTS expansion.** Strict Chromium runs on
+8star Links and Jingo covered disabled, positive and missing
+response directives. The 8star Links oracle verified its native
+SQLite write. The Jingo oracle verified a new Git-backed page.
+For missing directives, both applications passed the same-browser
+plaintext control followed by the HTTPS policy control. The disabled
+and positive Jingo runs reproduced existing contexts.
+
+Dataset `036` credits **219/630, 411 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. 8star Links adds three HSTS training
+cases and Jingo adds one missing-header validation case. The proof
+covers the tested named loopback responses. Type checking, 54 focused
+tests, six Chromium profiles and the production build passed.
+Replay matched all 14 dataset files byte for byte. Candidate
+preflight exited 2 with 24 gaps. No model fitting or holdout
+evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — HomeInventory transient language cookies.** Two
+registered Chromium captures exercised Lax and Strict session
+variants of the existing language preference. The profile modifies
+only the preference cookie's lifetime and SameSite attributes on
+native server and browser writes. All seven browser controls passed,
+including the language switch and denial with the preference alone.
+The original browser profile also passed its regression check.
+
+Dataset `035` credits **215/630, 415 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. Contextual Secure and HttpOnly
+training each have four of 30 examples from one of three required
+families. This evidence covers the tested language interaction on
+loopback. Type checking, 51 focused tests and both new Chromium
+captures passed. Replay matched all 14 dataset files byte for byte.
+Candidate preflight exited 2 with 24 gaps. No model fitting or
+holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Etherpad preference variants.** Three registered
+Chromium captures supplement Etherpad's existing validation slot. The
+editor rewrote the initial browser-injected attributes before the
+first attempt could sign. The corrected test changes only lifetime
+and SameSite on writes to the single native preference cookie. It
+then verifies the attributes after reload, the native read failure
+under HttpOnly, restoration and denial with the preference alone.
+Material preparation now checks the original rotation separately
+from each signed supplemental Etherpad adapter. The prior dataset
+reproduced byte for byte after that fix.
+
+Dataset `034` credits **211/630, 419 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. Contextual Secure and HttpOnly
+validation each have four examples from one family. This evidence
+covers one editor preference under controlled loopback settings.
+Type checking, 47 focused tests, three Chromium captures, the
+production build and whitespace checks passed. The new dataset
+reproduced all 14 files byte for byte. Candidate preflight exited 2
+with 24 gaps. No model was fitted and no holdout was evaluated.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — HomeInventory SameSite evidence.** Four registered
+cookie configurations now cover native house creation. The signed
+account cookie was required for authentication. Foreign form submissions
+created owner-linked SQLite rows twice, while the anonymous control
+returned 401 and left rows unchanged. The first run exposed a mismatch
+when comparing cookie objects across a copied scan. The corrected
+collector binds to the finding and verified cookie dependency.
+
+Dataset `033` credits **205/630, 425 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. SameSite change cases meet the
+three-family minimum in both splits. Training has 12 of 30 cases
+and validation has 12 of 15. The new proof covers one route with
+explicit cookie settings. Type checking, 47 focused tests, four
+Chromium captures, the existing language-preference browser check
+and the production build passed. All 14 dataset files reproduced
+byte for byte. Candidate preflight exited 2 with the remaining gaps.
+No candidate was fitted or evaluated.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Native logout SameSite evidence.** Habit Tracker now
+contributes four registered training cases across session lifetime and
+readability variants. The browser's foreign form revoked the signed
+session in both repeated trials. The anonymous control returned the
+same HTTP 200 and left the session intact. The first acquisition used
+an empty body that the form probe could not validate. The corrected
+profile sends one inert field that native logout ignores.
+
+Dataset `032` credits **201/630, 429 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. SameSite training change is now
+8 of 30 cases from two families. The test covers session revocation
+on the one route under the tested cookie settings. Type checking,
+47 focused tests, all four Chromium captures and the production build
+passed. Replay matched all 14 files byte for byte. Candidate preflight
+exited 2 with 24 remaining gaps. No candidate was fitted and no holdout
+was used.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Native JSON SameSite evidence.** The Tabinator development
+profile now tests credentialed bookmark writes across two distinct loopback
+sites. The JSON probe lets Chromium and the pinned server handle preflight.
+The original intercepted attempt did not provide a valid browser CORS
+test. The corrected fixture verifies that all six foreign preflights
+reach the server and that denying CORS prevents every foreign write.
+All four registered Tabinator cookie variants produced a same-origin and
+two foreign 201 responses with independent owner-specific SQLite readback.
+Their anonymous controls returned 401 and left storage unchanged.
+
+Dataset `031` credits **197/630, 433 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. SameSite validation change reaches
+three families and 12 of 15 examples. Contextual validation still has
+zero cases. The new cases cover the single bookmark route with
+permissive development CORS. Type checking, 47 focused tests, Chromium
+and Edge browser acceptance, the production build and whitespace checks
+passed. Replay matched all 14 dataset files byte for byte. Candidate
+preflight exited 2 with the remaining gaps. No candidate was fitted and
+no holdout was used.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — SameSite cookie variants.** The FieldPoint split-origin
+adapter can verify separate readable and persistent cookie configurations.
+Each capture repeats the trusted, anonymous, Lax, restored and hostile
+mutation controls. The collector checks the actual browser cookie
+attributes before labelling. All three variants passed and contributed
+contextual training cases. Yoyo Collection contributed four validation
+change cases across its readable and persistent cookie configurations.
+The browser's foreign multipart form sent the owner cookie and added a
+generated photo. Independent SQLite and file readback confirmed the
+mutation. The anonymous request received 403 and left photo rows unchanged.
+
+Dataset `030` credits **193/630, 437 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. SameSite has four examples per training
+class from one family per class. Validation has eight change cases
+from two families and zero contextual cases. The FieldPoint results
+cover the reviewed split-origin deployment. The Yoyo results cover
+one native upload route in the tested cookie configurations. Type
+checking, 54 focused tests, the Chromium cross-site regression, the
+production build and whitespace checks passed. Both dataset versions
+reproduced all 14 files byte for byte. Candidate preflight exited 2
+with the remaining deficits. No model fitting or holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Framed native write acquisition.** FieldPoint's site
+editor and Jingo's wiki editor now have scoped browser profiles. The
+FieldPoint profile changes only the target document's framing policy
+and uses an offline tile. The Jingo replay checks the exact native
+POST success redirect before returning a neutral terminal response.
+The adapters require owner-specific SQLite or author-specific Git
+readback and separate anonymous non-mutation. Habit Tracker builds its
+pinned native client with cosmetic external fonts omitted, then verifies
+the framed note form against SQLite. The first client build failed
+because a Windows dependency was missing. Its lockfile-verified binding
+restored the build. The protected Jingo profile checks the native editor
+against own-origin, foreign, repeated and nested parents.
+
+All four signed cases passed admission. Dataset `028` credits
+**186/630, 444 outstanding, 24 class or family deficits and 0/7 ready
+to fit**. HDR-002 meets the three-family minimum for both classes and
+both splits. It has three change and seven contextual training cases,
+and three of each in validation. Type checking, 62 focused tests,
+the production build, whitespace checks and both Chromium framing
+regressions passed. All 14 dataset files reproduced byte for byte.
+Candidate preflight exited 2. These cases establish only the tested
+response and native operation.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Native script-policy training acquisition.** FieldPoint
+and 8star Links now have controlled missing, broad response, broad
+meta and restrictive early meta profiles. The adapters compare native
+site editor or settings menu behavior with scripts enabled, disabled
+and restored, and independently verify a disposable native write.
+All eight Chromium captures passed and were admitted. A separate
+layered profile paired a permissive response header with a restrictive
+early meta policy in FieldPoint, 8star Links, BookWise, Yoyo Collection,
+Tabinator and Jingo. All six passed. The browser blocked the unapproved
+inline probe, kept the native control working and reproduced the
+behavior after script restoration.
+
+Dataset `026` credits **182/630, 448 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. HDR-003 now meets the three-family
+minimum in both classes and both splits. Training has nine change
+and six contextual cases. Validation also has nine change and six
+contextual cases. These fixtures establish the measured policy and
+interaction behavior on the tested pages. Type checking, 69 focused
+tests, the production build and whitespace checks passed. Datasets
+`025` and `026` both reproduced all 14 files byte for byte.
+Preflight still rejects fitting.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — 8star Links mixed-resource training.** The native
+operation adapter measures the settings menu against a matched
+stylesheet and independently verifies a disposable folder write. A
+cache miss required a pinned Linux dependency install. The first
+browser runs failed the independent write check. The corrected runs
+kept strict TLS in Chromium and used the original loopback API
+listener for the SQLite oracle. Both direct HTTP and pre-transfer
+HTTPS-upgrade captures passed and were admitted.
+
+Dataset `024` credits **168/630, 462 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. NET-001 now meets the three-family
+minimum in both classes and both splits. It has five examples per
+class in training and four in validation, below the numerical minima
+of 30 and 15. The 8star case tests one native settings menu and a
+public folder operation. Type checking, 69 focused tests, the
+production build and whitespace checks passed. All 14 dataset files
+reproduced byte for byte. Preflight still rejects fitting.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Tabinator mixed-resource validation.** A disposable
+Tabinator profile serves the verified native bookmark editor script as
+one loopback asset. It retains the existing editor interaction check
+and independent native SQLite write and anonymous-denial checks.
+Both Chromium profiles passed. The editor operation worked after the
+direct HTTP transfer or pre-transfer HTTPS upgrade, failed with the
+script withheld and recovered when it was restored. The fixture serves
+the original script bytes and omits unrelated external presentation
+assets. The interaction measures the native bookmark handler in that
+fixture.
+
+Dataset `023` credits **166/630, 464 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. The two captures bring NET-001
+validation to four cases per class from three families, satisfying its
+validation family minimum. Training still has four cases per class
+from two families. Both splits need additional examples. Preflight
+exited 2, and all 14 dataset files reproduced byte for byte. Type
+checking, 69 focused tests, the production build and whitespace
+checks passed.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — FieldPoint mixed-resource acquisition.** The pinned
+FieldPoint adapter targets native Leaflet JavaScript and stylesheet
+dependencies. An offline tile removes the external basemap dependency.
+The direct-HTTP fixture listener exposes only the selected asset.
+The browser verified that withholding Leaflet JavaScript broke map
+initialization and that restoring it recovered the right-click site
+editor. Both direct HTTP and the working HTTPS upgrade passed, with
+independent native write readback and anonymous-denial checks.
+
+The initial stylesheet replays stopped without complete evidence.
+A withheld stylesheet left the browser renderer busy. Bounding the
+map viewport let the corrected run verify that tile positioning failed
+with Leaflet CSS withheld and recovered when restored. Both correctly
+registered stylesheet profiles passed.
+
+Dataset `022` credits **164/630, 466 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. NET-001 has four examples per class in
+training and three per class in validation, with two families per
+class in each split. Type checking, 66 focused tests, the production
+build and whitespace checks passed. All 14 dataset files reproduced
+byte for byte. Candidate preflight exited 2. Fitting and qualification
+remain open.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Native stylesheet dependency evidence.** The bounded
+resource collector now supports a matched stylesheet on a pinned
+BookWise or Yoyo page. It requires the native control to behave with
+the stylesheet present, fail measurably when withheld and recover on
+restoration. It binds the DOM finding to the wire transfer without
+crediting them as two examples. The first BookWise captures proved
+both transports but are excluded from the successor preparation
+because the direct-HTTP capture duplicated its target.
+
+All four corrected Chromium captures passed and were admitted, one
+direct HTTP and one working HTTPS upgrade in each family. Dataset
+`020` credits **160/630, 470 outstanding, 24 class or family deficits,
+and 0/7 ready to fit**. NET-001 now has two change and two contextual
+examples in training, and three of each in validation. Type checking,
+66 focused tests, the Chromium resource regression, production build and
+whitespace checks passed. Both dataset versions replayed all 14 files
+byte for byte. Candidate preflight exited 2 with 24 class or family
+deficits. Additional resource types and independent families, candidate
+fitting and fresh qualification remain open.
+[Resource evidence](docs/ML_RESOURCE_COMPATIBILITY.md)
+
+**7 November — Protected cross-site SameSite evidence.** The pinned
+FieldPoint adapter now verifies cookie necessity and native origin
+protection in a controlled split-origin deployment. Chromium exercised
+38 declared JSON mutation routes and 19 form-encoded POST variants.
+The hostile requests carried the signed session and received the
+application's explicit denial without changing SQLite state. The trusted
+site creation succeeded with SameSite=None, failed with Lax or no cookie,
+and succeeded again after restoration. The bundled client is same-origin.
+The measured scope is the pinned loopback fixture and tested API requests.
+
+Dataset `019` credits **156/630, 474 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. Its one new credit is the first contextual
+SameSite example, in training. Validation still has no contextual SameSite
+examples. Additional independent families and relevant scenarios are
+required. Candidate preflight rejected fitting. No model fitting or holdout
+evaluation ran. Type checking, 56 focused tests, the production build and
+whitespace checks passed. All 14 files in each of the previous and new
+datasets reproduced byte for byte. The new evidence policy rejects partial
+coverage and mismatched witnesses. [Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Missing HSTS header wire control.** Added a bounded
+named-loopback browser probe for a distinct missing-header scenario.
+It requires a real plaintext transfer after the application's strict
+HTTPS response and a TLS attempt after applying a positive control in
+the same browser. The scanner sends no credentials to the control
+listeners. The scoped evidence policy preserves the same feature shape
+and leaves unrelated findings uncertain. The first browser attempt
+failed the wire receipt and supplied no example. The revised probe
+let Chromium perform its internal rewrite, with request routing
+limited to the two owned listeners. All five native runs then passed
+and supplied distinct admitted cases.
+
+Dataset `018` credits **155/630, 475 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. The missing-header cases add three
+training and two validation change examples. HSTS change coverage is
+now 6/30 in training and 5/15 in validation. Contextual coverage is
+still 3/30 and 3/15. The result establishes behavior only for the
+isolated browser instance and named fixture.
+
+Type checking, 55 focused tests, the production build and whitespace
+checks passed. Both the previous and current preparations replayed
+all 14 frozen files byte for byte. Cleanup found
+no temporary trust profiles or application scratch directories.
+No model fitting or holdout evaluation ran. See
+[measured datasets](docs/ML_REGISTERED_DATASETS.md).
+
+**7 November — HSTS coverage for authenticated APIs.** FieldPoint,
+Habit Tracker and Tabinator now have bounded named TLS profiles for
+disabled and valid positive HSTS. The collector checks the actual
+authenticated browser response, verifies a native write through
+independent storage readback and checks anonymous denial. The HSTS
+seed issuer checks the exact response scope and leaves other findings
+uncertain. All six signed cases passed admission. FieldPoint and Habit
+Tracker add training coverage, and Tabinator adds validation coverage.
+Both HSTS classes now meet the three-family requirement in both splits.
+Each class has three examples against minima of 30 in training and 15
+in validation. Additional materially different policy contexts remain
+necessary.
+
+Dataset `017` credits **150/630, 480 outstanding, 24 class or family
+deficits and 0/7 ready to fit**. No fitting or holdout evaluation ran.
+Fifty-four focused tests, type checking, the production build and
+whitespace checks passed. All 14 frozen files replayed byte for byte.
+Habit Tracker's initial install tried to compile its locked SQLite
+dependency. The retry used the package's bundled Linux binary and
+verified it with an in-memory query before collection. Cleanup removed
+all disposable application and browser trust profiles. See
+[measured datasets](docs/ML_REGISTERED_DATASETS.md).
+
+**7 November — BookWise and Yoyo transport acquisition.** The named strict
+TLS collector now supports direct HTTP script dependencies, pre-transfer
+HTTPS upgrades and two HSTS directives for these pinned applications.
+BookWise verifies the profile-menu interaction and an independent native
+category write. Yoyo verifies the native add form and the matching SQLite
+row. Both use disposable authentication and separate locked Ubuntu
+dependencies. The named browser permits only its paired fixture origins
+and, for direct HTTP, one explicitly registered numeric loopback origin.
+The tests cover mismatched origins and mixed replay outcomes.
+
+All eight controlled cases passed browser collection, native readback,
+signature reload, tamper checks, cleanup and dataset admission. BookWise
+adds the first training example in each class for HDR-001 and NET-001.
+Yoyo adds the second validation family in each class. The fixed 8/4 split
+is preserved. Dataset `016` credits **144/630, 486 outstanding, 24 class
+or family deficits and 0/7 ready to fit**. The next transport acquisition
+needs additional independent families and materially distinct scenarios.
+High-severity resource findings still require review.
+
+Type checking, 53 focused tests, the production build and whitespace
+checks passed. Preparations `014` through `016` replayed all 14 files byte
+for byte. No temporary trust profiles or app scratch directories remained.
+The first attempts timed out or failed browser/SQLite checks and supplied
+zero observations. The passing runs use a bounded cold-start allowance,
+a bounded SQLite lock wait, verified UI interactions and an explicit
+numeric-loopback resolver exception. No fitting or holdout evaluation ran.
+[Measured datasets](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — First eligible contextual NET-001 case.** Pinned Jingo
+ran on a disposable Ubuntu loopback wiki. Chromium validated the temporary
+certificate and upgraded the original HTTP CodeMirror reference to a
+direct HTTPS script request. Withholding that script broke the editor
+interaction. Restoring it recovered the interaction, and an actual editor
+save created the expected content in a new Git commit. The named listener
+observed no plaintext or unexpected TLS handshake. Reload verified the
+signed evidence, and altered scans and seals were rejected.
+
+The frozen 8/4 cohort now credits **136/630, 494 outstanding, 24 class or
+family deficits and 0/7 ready to fit**. The first contextual mixed-resource
+case is in validation. This classic-script finding remains high severity
+and eligible only for review under the runtime safeguard. NET-001 still
+needs both classes in training and more independent validation families.
+No candidate was fitted and no holdout was consumed.
+
+Fifty-six focused tests, type checking and the production build passed.
+The certificate tests initially could not start the bundled OpenSSL in
+the restricted runner, then passed in the approved local run. Both
+cohorts replayed all 14 frozen files byte for byte. The Ubuntu cleanup
+check found no remaining browser trust profile. See
+[measured datasets](docs/ML_REGISTERED_DATASETS.md) and
+[resource evidence](docs/ML_RESOURCE_COMPATIBILITY.md).
+
+**7 November — Verified pre-transfer HTTPS resource-upgrade fixture.**
+Ubuntu Chromium 156.0.8078.4 mapped a reserved test name to loopback and
+trusted its leaf only in a disposable browser profile. With the CSP upgrade
+directive, the original HTTP script reference produced one direct HTTPS
+script response, no plaintext request and successful execution. Without the
+directive the browser blocked the script. Withholding the HTTPS request
+stopped execution and restoring it recovered execution. The localhost
+control still fetched and ran over HTTP. Chromium reported a successful
+script response, TLS metadata and the exact loopback server address. An
+explicit plaintext probe verified the listener's HTTP detection. The initial
+multiplexed listener timed out. The replacement fixture passed twice and
+the final cleanup check found no remaining trust profile.
+
+This is a mechanism fixture. The admitted dataset remains **135/630,
+495 outstanding, with 0/7 remaining categories ready to fit**. NET-001's
+contextual class still needs signed native application cases. Next, bind
+the upgrade and withholding controls to a pinned editor's real operation,
+independent storage readback and existing provenance. Preserve the fixed
+split and historical reports. See [resource evidence](docs/ML_RESOURCE_COMPATIBILITY.md).
+
+**7 November — Etherpad signed validation examples.** The new prospective
+development cohort credits **135/630 examples, with 495 remaining and
+24 class or family deficits**. Secure and HttpOnly each gain their first
+contextual validation example. Etherpad takes StockBase's validation slot
+before fitting. The rotation preserves eight training and four validation
+families and retires two StockBase captures from the new cohort, costing
+one contextual framing credit. The previous cohort remains archived.
+
+The signed capture binds a sanitized snapshot from the running editor to
+the native preference save, reload, HttpOnly intervention, restoration and
+protected-pad authentication controls. It rechecks pinned source after
+cleanup. Reload verification passed, and changes to the scan or evidence
+invalidated the signature. An altered prospective parent binding was
+rejected before writing a replacement cohort. Both preparations reproduced
+all 14 frozen files byte for byte. The new preflight processed 140
+captures and 443 finding observations. Seventy-seven focused tests, type
+checking, the production build and whitespace checks passed.
+
+**0/7 remaining categories are ready to fit or qualified.** Contextual
+SameSite and mixed-resource examples remain at zero. The next acquisition
+needs native protected cross-site flows, verified HTTPS upgrades and
+additional contextual cookie families. No model was fitted and no
+holdout was used. See [registered datasets](docs/ML_REGISTERED_DATASETS.md)
+and [developer commands](RUN_COMMANDS.md).
+
+**7 November — Etherpad preference prototype verified.** The
+pinned preference candidate is now runnable locally. Staging copied 1,167
+verified Git blobs, totaling 16,903,864 bytes. Exact re-verification passed
+and a modified settings template was rejected. pnpm 12.4.2 installed the
+frozen dependency lock with lifecycle scripts disabled. Etherpad's startup
+also invokes pnpm for an installed-plugin inventory. The isolated runner
+uses the same exact binary in offline mode for that operation.
+
+The disposable native process opened an ephemeral loopback listener. The same
+pad returned 401 for an anonymous request and HTML for a synthetic account.
+The runner restricted outbound Node sockets to loopback and removed the
+temporary settings and database. Chromium saved the native line-number
+preference and reproduced it in a fresh context. With the same cookie set to
+HttpOnly, the exact preference-read error prevented editor initialization.
+Restoring access restored the saved setting. The preference cookie alone
+still returned 401. Earlier attempts exposed startup-tool and asynchronous
+editor readiness issues. The final run passed all four browser controls and
+saved a metadata-only receipt after cleanup.
+
+Etherpad's executed revision and reviewed code digests now appear in the
+mandatory native development exposure inventory. Reusing the revision or
+renaming the same preference implementation fails fresh-holdout screening.
+Thirty-three focused tests, type checking, production build, source
+re-verification and whitespace checks passed.
+
+The credited cohort remains **134/630, with 496 examples and 24 class or
+family deficits outstanding**. Etherpad remains outside the fixed 8/4
+development cohort. Its next step is prospectively registered, signed
+preference collection with a fixed family role and independent provenance.
+Candidate fitting, fresh holdout and category release remain gated.
+[Acquisition constraints](docs/ML_DATA_ACQUISITION_CAPACITY.md)
+and [developer commands](RUN_COMMANDS.md).
+
+**7 November — Tabinator bookmark editor acquisition complete.** The five
+registered Chromium scenarios add five eligible development examples and move
+ML-Q to **134/630, with 496 remaining**. Script-policy validation now has nine
+change and three contextual cases, each across three families. Framing has two
+validation change cases across two families. The fixed twelve-family split
+remains in place and **0/7 categories are ready for fitting**.
+
+The script scenarios use the native editor with missing, restrictive early
+meta, broad response and broad early meta policies. Normal and restored
+editor interaction worked, and disabling JavaScript stopped it. The scoped
+framing case submitted three real bookmark writes under one same-origin and
+two foreign-origin parents. SQLite verified owner, name and URL after each
+write, and the anonymous check left storage unchanged. The first attempt
+exceeded the functional replay limit on Tabinator's 3.8 MB logo. The rerun
+uses a small local icon in the disposable copy and retains the replay limit.
+
+`.local/ml-q-material-datasets-011` has 141 signed runs, 441 observations,
+195 retained rows and 45 uncertain rows. All 14 preparation files reproduced
+byte for byte. The five new reports passed reload, tamper and cookie-value
+exclusion checks. Preflight reports 24 outstanding class or family deficits,
+with zero predictions or holdout consumption. The restrictive editor policy
+and framed write passed separate Edge runs. The existing Chromium API profile,
+49 focused tests, type checking, production build and whitespace checks passed.
+
+Etherpad `v3.3.15` was pinned and screened in a read-only clone. The recorded
+license, lock and selected source hashes match the pinned Git objects. Source
+review found a native browser preference path and a configurable cookie
+prefix, with a separate author-token mechanism. The screened source has no
+partition assignment or eligible examples. Next acquisition requires a local
+adapter and independent preference and protected-access controls. Broader
+header contexts and verified resource upgrades also remain open.
+[Current counts](docs/ML_REGISTERED_DATASETS.md) and
+[source provenance](ml/applications/native/etherpad.source.json).
+
+**7 November — Wikiflow, Jingo and BookWise cookie collection complete.**
+Twenty new signed browser runs increased the cohort from 110 to **129/630
+eligible development examples**. **501 remain**, across 24 class or family
+deficits. The fixed twelve-family split remains intact.
+
+- **Secure and HttpOnly.** The Wikiflow matrix closed both training change
+  requirements. Secure has 32 and HttpOnly has 34 training change contexts,
+  each across four families. Each category gained six credits before its
+  30-example cap. The disposable Wikiflow profile uses a controlled session
+  name and independently verifies the app's signature, session-to-account
+  binding, CSRF controls and SQLite writes.
+- **SameSite.** Repeated cross-site form submissions and Git readbacks added
+  four Jingo validation contexts. Equivalent controls with independent SQLite
+  readbacks added three distinct BookWise training contexts. The anonymous
+  controls left state unchanged. The exercised operations yielded change
+  examples. Necessary protected cross-site use remains unverified.
+
+`.local/ml-q-material-datasets-010` contains 136 signed runs, 426 observations,
+189 retained rows and 44 uncertain rows. All 14 prepared files reproduced byte
+for byte. The 20 new captures passed reload, tamper rejection and cookie-value
+exclusion checks. All registered Chromium runs passed, and separate Wikiflow
+and Jingo repeats passed in Edge. Forty-nine focused tests, type checking and
+the production build passed. Candidate preflight remains blocked at **0/7
+categories ready**, with zero predictions or holdout consumption. Candidate
+registration rejected the incomplete cohort and created no output.
+
+Next work requires contextual cookie flows from additional independent
+applications, broader header cases, and verified functional resource upgrades.
+The current two admitted HSTS cases would supply at most 24 of 90 HSTS credits
+even across all twelve families. Additional materially distinct, independently
+verified HSTS mechanisms are needed. [Current counts](docs/ML_REGISTERED_DATASETS.md)
+and [acquisition constraints](docs/ML_DATA_ACQUISITION_CAPACITY.md).
+
+**7 November — Jingo completes two validation requirements.** Secure and
+HttpOnly change cases now each have **19 contexts across three validation
+families**. Both cells meet the requirement of 15 contexts and three families.
+The development preflight drops from 28 to **26 remaining class or family
+deficits**. The credited total remains **110/630**, with **520 still needed**,
+because both validation classes already reached the numeric credit cap.
+
+Four prospectively registered Chromium profiles verified Jingo's issued
+session and signature in memory, protected editor access after cookie removal
+and restoration, and editor compatibility with HttpOnly. The authenticated
+wiki update produced the expected committed page and synthetic author. The
+anonymous request redirected to login and left Git unchanged. The repeat
+in Edge and the existing Chromium early-meta script profile passed. All
+four registered reports passed reload, alteration
+rejection and cookie-value exclusion checks. The same 12 source roles remain.
+The new preparation `.local/ml-q-material-datasets-008` has 116 signed runs,
+348 observations and 158 retained rows, including 40 uncertain rows. All 14
+prepared files reproduced byte for byte. Forty-four focused tests, type
+checking and the production build passed.
+
+The remaining cookie training change cells each need six more contexts.
+Each contextual training cell has two examples from HomeInventory, and both
+contextual validation cells remain empty. A bounded audit of the pinned sources
+found no second verified browser-cookie preference flow. The next acquisition
+requires source-suitable independent apps and matching behavior controls.
+The other five categories' eligible counts are unchanged. Zero of the seven
+categories is ready for fitting and no holdout was consumed.
+[Measured dataset](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — native session-cookie matrix acquired and frozen.** The cohort
+now credits **110/630 eligible development examples**, up from 47. **520 remain**
+and **0/7 categories are ready for fitting**. Chromium executed 12 registered
+profiles in each of BookWise, FieldPoint, Habit Tracker, Yoyo Collection and
+Tabinator. Each capture checked the real issued session's Secure, HttpOnly,
+SameSite and persistence attributes, the authenticated operation, anonymous
+denial and storage readback. Fifty-eight scenarios passed on the first complete
+batch. The BookWise startup and Habit Tracker source-inspection failures passed
+on individual retry. Two signed captures from the earlier stalled batch were
+also preserved. The Node 20 wrappers now release their process channel after
+the Node 24 collector exits.
+
+`.local/ml-q-material-datasets-007` preserves the 12 existing family roles
+and contains 112 authenticated runs, 328 observations, 151 retained rows and
+39 uncertain rows. All 14 prepared files reproduced byte for byte. The 60 new
+matrix reports passed the cookie-value exclusion check and all matrix scratch
+app directories were cleaned up. Type checking, production builds, 72 Python
+tests and 74 of 75 focused TypeScript tests passed on the first run. The
+release-staging test that timed out during collection passed on its own rerun.
+Preflight recorded 28 remaining class or family deficits and zero predictions.
+Candidate registration refused the incomplete cohort and created no files.
+
+Secure and HttpOnly each now have 24 change examples across three training
+families and 16 across two validation families. Each validation change cell
+meets the numerical minimum and still needs a third family. Contextual cookie
+coverage, verified cross-site protections and functional HTTPS upgrades are
+still missing across the required families, along with broader header coverage.
+Candidate fitting, fresh holdout evaluation and qualified runtime acceptance
+remain open. [Counts by category](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — Yoyo Collection validation acquisition complete.** The existing
+validation family supplied five eligible editor cases. Chromium exercised an
+authenticated native form write from same-origin and repeated foreign-origin
+parents, plus missing, permissive response, permissive early meta and restrictive
+early meta script policies. Native writes were read back from disposable SQLite.
+The anonymous request was denied with no row created. Script policy labels also
+require browser execution and native editor controls. Edge passed separate
+framed-write and restrictive-policy repeats after the capture manifest froze.
+
+**47/630 eligible, 583 still required.** `.local/ml-q-material-datasets-006`
+extends the frozen baseline through `.local/native-material-registration-07`
+and prospective `.local/native-dev-registration-07`. All 45 baseline captures
+and twelve roles were preserved. Five new captures raised the total to 50 runs,
+148 observations, 86 retained rows and 62 removed repeats. Of the retained rows,
+39 remain uncertain. Validation gained its first framing change case. Script
+policy validation now has six change cases and two contextual cases from two
+families. All seven categories still fall below fitting requirements.
+
+Supplemental adapter identities are bound to the same upstream family and
+partition. Strict preparation and material holdout require their original
+adapter binding. The actual preparation reproduced byte for byte and rejected
+duplicate adoption and an edited readiness flag. Candidate registration refused
+the incomplete cohort before creating an output. The five signed captures
+passed reload and tamper checks, and their reports contain no cookie values.
+Seventy focused TypeScript tests across seven files, 72 Python tests, type
+checking and production builds passed. No candidate was fitted or evaluated.
+Remaining work includes broader per-class family coverage, verified necessary
+cross-site flows and resource upgrades, training, fresh holdout evaluation and
+qualified runtime acceptance. [Current counts](docs/ML_REGISTERED_DATASETS.md)
+
+**7 November — signed native preference acquisition and cohort preparation
+completed.** Opt-in assessment v9 now accepts the exercised HomeInventory
+cookie-driven localization scope. Seven counterfactual controls bind source,
+scan, adapter and inspection to matching cookie facts. Native signed-session,
+owner readback, anonymous denial, JS restriction/restoration and competing
+storage controls passed in Chromium and Edge under prospective registration
+`.local/native-preference-registration-07`. A further Chromium repetition passed
+after the dataset manifest was frozen and supplies compatibility evidence only.
+Signed evidence survived reload; altered scans/evidence were rejected.
+
+**42/630 eligible, 588 still required.** New snapshot
+`.local/ml-q-material-datasets-005` adopts 43 authenticated prior runs and two
+new preference runs under `.local/native-material-registration-06`. HomeInventory
+replaces unsupported Anonymous Notepad in its training slot; the other eleven
+identities/roles, including all four validation families, stay fixed. The two
+excluded captures and their reasons remain recorded. Forty-five runs produced
+133 observations, 80 retained rows and 53 removed material repeats; 38 rows stay
+uncertain. Secure and HttpOnly each gained two contextual target variants in
+**one** family, covering the native Lax/Strict writers. Original high severity
+still keeps Secure findings visible. These are four contexts, not four families.
+The independent candidate preflight still reports **0/7 training-ready** and no
+model fitting or holdout predictions. [Current counts](docs/ML_REGISTERED_DATASETS.md)
+
+**Collector correction and limits.** The app's native consent redirect and two
+cookie writers are explicitly supported. Rejected path/metadata/timing attempts
+remain failure records and contributed no accepted examples. An optional,
+bounded native-readiness hook runs before the shared snapshot; real Chromium
+tests verify settled metadata, absence of retained values and failure/cleanup
+when readiness is missing. The existing project-browser acceptance passed.
+Final validation passed **133 relevant TypeScript tests across twelve files**,
+all **72 Python ML tests**, type checking and production builds. Actual
+copied-data checks preserved the archived 18/38 counts and current 42 count,
+rejected forged readiness and refused candidate registration. All eleven kept
+source roles were verified, and the saved scans contain no cookie values.
+No new
+certificate trust, rule, released model, GitHub policy or archived report bytes
+were changed. Signed development preparation does not establish ML quality.
+
+**Next qualification work.** Collect the remaining category/class coverage and
+at least three contributing families per class/partition, including native
+protected necessary cross-site flows, functioning pre-transfer upgrades and
+richer verified effective-policy contexts. Fit only after the 630-case gate;
+then freeze a new candidate and fresh-family holdout. Material-protocol
+holdout/family-clustered intervals, ambiguous-input runtime abstention and
+qualified Worker/API/export acceptance remain open. **ML-Q is not closed;
+JS-002 remains the only qualified category.**
+
+**Approved counting correction implemented for development preparation.** The user's 6 November approval is recorded in [the protocol](docs/ML_COUNTING_CORRECTION_PROPOSAL.md). New registration `.local/native-material-registration-02` freezes category-specific target projections and authenticates adoption of all 45 original captures. Preparation rechecks source roles, acquisition receipts, signatures, original scan/evidence bindings, labels and capture hashes. Independently supported families may share numeric inputs. Within-family material repeats, identifiers and unrelated background cannot increase credit. Unknown rows receive no fitting weight; supported conflicts abstain. LSTM/logistic fitting, checkpoint selection and validation calibration use equal-family weights within category/class. All original family, 630-example, accuracy and safety gates remain.
+
+**Measured recount: 18 → 38 eligible examples.** `.local/ml-q-material-datasets-002` contains 78 retained rows from 129 observations; 51 repeated material contexts were removed and 40 rows remain uncertain. Eleven train/validation numeric overlaps are retained and audited. All seven datasets remain below fitting requirements, with **592 additional eligible development cases required**, plus the minimum contributing families in every cell. A direct archived preflight still credits the strict corpus at 18. No new category model was fitted, holdout consumed or release enabled. [Category counts and exact remaining work](docs/ML_REGISTERED_DATASETS.md)
+
+**Validation.** All 72 relevant TypeScript tests across seven files and all 72 Python ML tests passed, including executed Python/JavaScript projection parity, authenticated v2 preparation, conflicts, family weighting/calibration, strict holdout/release refusal and archived frozen reports. Type checking and the production build passed. On copied actual data, changed labels, claimed readiness, changed policy and altered registration were rejected; candidate registration refused to create a candidate. Two concurrent preflights completed after fixing shared temporary-feature-file races. Final checks found no disposable preference-run or candidate-command directory remaining. Old artifacts remain intact. Existing Zod/Ed25519 and synthetic scaler warnings remain. The new family-clustered holdout protocol, runtime abstention for ambiguous material contexts and qualified activation/export acceptance still need implementation before promotion. The existing strict holdout path rejects the new preparation format rather than silently applying its older protocol.
+
+**Native preference continuation.** The pinned MIT HomeInventory source passed verification of all 719 tracked files (53,426,165 bytes). Locked frontend and backend dependencies were installed in ignored staging. A verified isolated Node 24.11.1 runtime and the existing Microsoft compiler built its SQLite dependency with `--clang=0`; the initial Node 24 builds failed because ClangCL was unavailable. The application runs with disposable SQLite, synthetic credentials, fresh encryption keys, loopback listeners and a temporary browser profile.
+
+**Measured controls.** Seven native readable-cookie trials passed in Chromium and Edge. The native language control changed German to French. Removing the preference preserved authentication, restricting JavaScript access changed the preference outcome, restoration recovered German, local storage took precedence when supplied, and removing authentication denied access while preserving localization. A declared misleading-name profile also passed all seven controls and reproduced CK-001/CK-002 through the shared scanner. Readiness failures and the native server's HttpOnly-cookie conflict remain recorded. The observed absent-cookie fallback was Turkish, so the probe records native fallback behavior instead of manufacturing English defaults. Final Chromium and Edge repetitions also passed collector/overlay identity and authentication-attribute guards. These remain prototype controls and contribute no training credit. The approved recount above credits 38 existing cases; zero of the seven categories is training-ready or newly qualified. Signed evidence/seed integration and a prospectively registered suitable cohort are still required before preference observations can count. [Protocol and exact scope](docs/ML_NATIVE_PREFERENCE_PLAN.md)
+
+**6 November — authenticated framing and acquisition feasibility.** Added a native BookWise framing-write profile. It checks a same-origin frame and two separately loaded foreign-origin frames, performs the actual category form operation, and verifies the expected owner-specific SQLite row each time. A prior native operation independently checks anonymous denial and session ownership. The exploratory run passed. The new v8 scope and issued browser receipt keep incomplete, escaped or forged measurements in review. Registration `native-dev-registration-05` starts a new cohort. The completed 45-run, 12-family preparation retained 107 of 129 observations and removed 22 repeats. Candidate preflight credits **18/630 cases, leaving 612**. HDR-002 now has one change-warranted training example. Other eligible category counts held steady. The new profile passed in Chromium and Edge. Browser tests rejected escaped post-action traffic and copied or tampered receipts. Validation passed 59 focused tests, final incomplete-evidence guards, type checking and the production build. A BookWise login failure passed on retry. All seven categories remain below fitting minimums. Results are in `.local/ml-q-seven-datasets-004`.
+
+**Capacity correction.** The remaining 613 are a minimum data requirement, not examples that the implemented collectors can generate by increasing batch size. The current nine change and three contextual mechanisms have an optimistic ceiling of 144 credits across the fixed 8/4 split before deduplication. Native cookie preferences, protected necessary cross-site flows and verified resource upgrades still lack contextual oracles. [Acquisition capacity and required new evidence](docs/ML_DATA_ACQUISITION_CAPACITY.md)
+
+**6 November — permissive script policies.** Registered a new 8/4 acquisition (`.local/native-dev-registration-04`) with two additional HDR-003 mechanisms on the BookWise and Jingo editors. One case delivers an enforcing response header permitting inline scripts. The other places a permissive policy in the document head before scripts. The opt-in v7 evidence policy requires an executed inline probe, repeated native functionality and signed same-run facts. The 12-family rerun accepted 44 scans. Preparation retained 105 of 126 observations and preflight credited all four new cases. **17/630 eligible, 613 remaining, 0/7 ready for fitting.** Two separate BookWise Edge checks passed. Validation passed 58 focused tests, type checking and the production build. Next collection needs independent contextual mechanisms and additional contributing families in each partition. No model was fitted or holdout consumed.
+
+**6 November — BookWise category-editor acquisition.** Added two HDR-003 development profiles to the pinned BookWise application. Chromium exercised the native category editor with JavaScript enabled, disabled and restored. The functional controls, inline execution probe, signed source evidence, owned SQLite row and anonymous-write denial passed in both exploratory runs. A separate prospective registration (`.local/native-dev-registration-03`) retains the eight/four family assignments. Only captures made under that registration can enter its preparation. Qualification and fitting still require the existing count, independence and quality gates.
+
+**Result.** The new cohort finished 40 accepted runs across 12 families. The seven rebuilt files in `.local/ml-q-seven-datasets-002/` contain 112 observations, 97 retained rows and 15 repeats removed. Candidate preflight credits **13 distinct cases**, up from 11. HDR-003 now has one change-warranted and one contextual example in training (BookWise) and one of each in validation (Jingo). The other six category counts held steady. All seven still fall short of fitting. Both new scenarios also passed separately in Edge. An initial Windows Jingo login failed and the three HTTP profiles passed on retry. The three strict HTTPS profiles passed in isolated Linux Chromium. Type checking, production build, 48 focused TypeScript tests and 66 Python ML tests passed.
+
+**Next collection.** Register materially distinct application behaviours with independently checked causes in both partitions. The current script-policy cause key gives each family at most one example of each class, so repeating these two profiles cannot reach the required 30/15 per class. Authenticated framing and verified cookie-purpose controls are also missing. See the [category table and acquisition limits](docs/ML_REGISTERED_DATASETS.md). Candidate fitting, an untouched qualification holdout and release acceptance remain open.
+
+**6 November — registered seven-category acquisition.** The first prospective source lock with eight training and four validation families passed the repository, revision, licence, inspection, historical family/input and split checks. The registration incorporates the published JS-002 holdout's unfiltered exposure. Acquisition receipts bind new scans to this registration. The first diagnostic registration was superseded before collecting its corpus. Earlier seed batches are preserved outside the new split.
+
+BookWise's controlled SameSite=None/Secure session demonstrated a cross-site category write twice on distinct loopback sites. Each write returned 201 and created the expected owner's row. The anonymous control redirected and left storage unchanged. Three other native session profiles supplied uncertain examples. Windows rejected the strict TLS test connection and the exact temporary leaf was removed. An isolated Linux Chromium profile produced Jingo HSTS disabled/positive records and a direct HTTP editor dependency proven by transfer, withholding, functional recovery and Git readback.
+
+**Measured preparation.** `.local/ml-q-seven-datasets-001/` has **7/7 populated datasets, 38 accepted runs, 12 families, 106 observations, 93 retained rows, 13 repeats discarded**. Seventeen overlapping numeric variants are excluded from both sides of candidate fitting. Preflight credits 11 separate material cases. **0/7 training-ready, 0/7 newly qualified**. The LSTM/logistic fit and fresh holdout stay gated. Current example deficits, licence/provenance scope and per-category counts are in [the registered dataset report](docs/ML_REGISTERED_DATASETS.md). Developer commands are in [RUN_COMMANDS.md](RUN_COMMANDS.md).
+
+Validation included the executed browser runs, 59 focused TypeScript tests, type checking and production builds. Strict Windows attempts and the initial Linux cold-start attempts are retained as failures. The native/Linux HSTS and HTTP-dependency results apply to the exercised Jingo response/editor. Next acquisition needs positive framing, protected legitimate cross-site flows, verified native cookie preferences and working pre-transfer upgrades in independently supported applications, in both partitions. Additional observations must pass the existing uniqueness, family and class gates before fitting. JS-002 remains the single qualified category.
+
+The full Python ML suite passed **66 tests**. On the actual prepared corpus, candidate preflight returned exit 2 with 28 class/partition deficits, candidate registration refused to create a candidate, and altering a copied audit to claim readiness failed its installation receipt. Final checks found no Windows native run directories and zero copies of the temporary leaf in CurrentUser Root. The production build and whitespace check passed.
+
+**2026-11-05 twelve-family acquisition completed:** Portal, Personal Knowledge Manager, StockBase, 8star Links, Anonymous Notepad and Habit Tracker now have executed collectors, expanding retained acquisition **6 → 12 native application families**. All use exact pinned source, verified MIT licences, locked dependencies, disposable SQLite data and native operations with independent SQLite readback. The user explicitly approved installing and running all six. No new application authentication/session wrapper supplies fabricated independence or cookie labels. Public/header/document-password operations use separate bounded controls; Habit Tracker uses its native signed SQLite owner session and note creation. This completes the requested collection-family expansion, not the eligible Stage C training corpus.
+
+The new immutable aggregate `.local/project-native-seeds-009/` has **52 accepted batches, 12 families and 67 removed repeated inputs**. The prior `008` intermediate and earlier aggregates remain unchanged. HDR-002 has ten complete contextual scenario groups/five unique numeric variants and fourteen unknown inputs; HDR-003 has one change and one contextual scenario/variant with twenty-eight unknowns. CK-001 has five change scenario groups/six unique variants plus one unknown; CK-002 has five change scenarios/two variants. HDR-001, CK-003 and NET-001 still have no retained native seed examples. All seven files exist but **0/7 are training-ready**. The actual candidate preflight refuses fitting with unchanged registered 8-training/4-validation, distinct class-count and family-coverage requirements. No new model, calibration, holdout consumption, category release or accuracy claim occurred; **1/8 categories remain qualified**.
+
+Source selection: the original screening lock remains unchanged; `expansion-next.candidates.json` records two newly pinned sources and exclusions before prediction. HomeInventory's 719 files exceed the unchanged 600-file copy limit; the Electron source and a newly screened template are excluded. Known-source manifests now require all twelve development exposures; removing/renaming them cannot make future qualification sources fresh. Exact implementation hashes were checked for overlap with the prior two public source locks and each other; this is not a general independence certificate or the required full historical numeric-exposure/split audit.
+
+Validation: all thirteen new Chromium native/framing/readable runs and six Edge framing runs completed with privacy, same-run signatures, reload, tampering rejection and cleanup. Five new framing adapters produced verified controls in each browser. Anonymous Notepad remains **Needs review** in the framing profile because its native external assets and POSTs exceed the GET-only framing scope; it is not a passed protection assessment. Its native editor/write and password-denial checks passed. All six explicit cancellations and all six actual source-tampering-before-startup checks passed; original bytes were restored. **109 relevant tests/seven files passed**, type checking and production builds passed. Existing Node Ed25519/Zod warnings and third-party dependency warnings remain. Initial Personal Knowledge Manager ABI and header-auth framing failures were resolved with the compatible Node 20 child runtime and transient target-only headers; no upstream dependency versions or source logic were rewritten. Other new apps/collectors use Node 24. Headers are bounded/allowlisted and never retained or sent to synthetic ancestor origins. Broad UI/PDF/performance and hosted migration-006 acceptance were not rerun.
+
+Remaining: obtain materially distinct positive/contextual native cases and missing HTTPS/HSTS, cross-site and upgrade/dependency evidence; audit historical input overlap, source suitability/independence and freeze eligible 8/4 assignments; then fit/calibrate, evaluate untouched families and accept qualified runtime/exports. Twelve collected families alone cannot close these gates. See `docs/ML_NATIVE_TWELVE_FAMILIES.md`, the updated ML-Q/data/cohort documentation and `RUN_COMMANDS.md`. No certificate trust, deployment, Docker or GitHub policy changes were made.
+
+Final checks: the executed overlap audit found no exact implementation/repository reuse among the twelve native sources or the 22 applications in the two historical public source locks. Command-help and whitespace checks passed. A restricted CIM query was unavailable; the subsequent successful read-only process inspection confirmed **zero owned native processes and zero temporary native run directories**. Source cancellation/tamper tests left no running project. These checks do not establish production compatibility or full numeric-exposure eligibility.
+
+**2026-11-05 BookWise/Wikiflow acquisition completed:** two further pinned applications now have executed native collectors, increasing retained acquisition from **four to six families**. BookWise uses its native Sequelize models to seed a disposable verified user, then native login, signed-session validation, independent SQLite user/category ownership and protected-write/anonymous-denial controls. Wikiflow uses its native signed two-cookie session, SQLite user/term ownership and valid-anonymous-CSRF authentication-denial checks; missing and wrong CSRF tokens are separately rejected without mutation. These are bounded native operations, not whole-site protection or real cross-site qualification.
+
+All three profiles (native, readable-cookie, own-origin framing) passed in Chromium for both applications; both framing profiles passed in Edge. Both startup cancellation and actual altered-source-before-startup rejection checks passed, with original source bytes restored. Existing FieldPoint acquisition also passed. Metadata records collector Node 24.22.1 and, in current Edge results, BookWise Node 24.22.1 / Wikiflow Node 20.18.0. Exact native code remains pinned; upstream vendored dependencies/cache trees are excluded from application copying and replaced by the pinned npm lock installation. Old native dependency deprecation warnings remain; they are isolated developer fixtures, not shipped application dependencies. The user explicitly approved both dependency installations/native runs.
+
+The seed mapper now validates multiple cookie controls by unique name/attributes, with separate authentication/access outcomes; names stay outside numeric inputs. Missing purpose stays uncertain. Original single-cookie receipts remain valid. **Wikiflow's `wf_sess` names do not trigger the existing cookie-name heuristic**: no cookie findings or labels are fabricated and no names/rules were changed to improve counts. It contributes framing data and uncertain script-policy data. Its scoped CSRF checks do not populate a CK-003 qualification dataset. Both new source manifests are mandatory in future exposure checks; deletion/renaming cannot make the known sources fresh again.
+
+Actual new immutable aggregate `.local/project-native-seeds-007/`: **33 completed batches, six families, 54 repeated inputs discarded**. HDR-002 has five complete contextual scenario groups/three unique numeric variants and seven uncertain inputs. HDR-003 retains one change and one contextual scenario/variant with sixteen uncertain inputs. CK-001 has four change scenarios/six unique variants plus one unknown; CK-002 has four change scenarios/two unique variants. HDR-001, CK-003 and NET-001 remain empty. More family instances did not manufacture new numeric cookie variants. **0/7 datasets are training-ready**, and actual candidate preflight refuses fitting with the original cohort/class-count deficits. No candidate training, holdout consumption or category release occurred; **ML-Q remains open, 1/8 categories qualified**.
+
+Validation: **87 relevant tests/seven files passed**, covering multi-cookie matching/unknowns/privacy, family/commit binding, missing native exposures, once-only holdout mechanics with synthetic fixtures, source inspection, archived frozen reports and existing framing/script evidence. Type checking, production builds and whitespace checks passed. Initial failures (anonymous landing-page external assets and upstream tracked dependency symlinks) were resolved without relaxing collection limits, changing rule verdicts or rewriting native authentication. Native tests retain failures separately; only completed privacy/signature/reload/cleanup runs contribute seeds. Final process/directory checks found no owned native application left running. No certificate trust changes occurred in this increment. Broad UI/PDF/performance and hosted migration-006 checks were not rerun.
+
+Remaining: additional suitable independent families (five screened candidates remain unexecuted; the excluded Electron source cannot fill the target), native contextual cookie/JavaScript-use cases, sufficient script/framing classes, reliable native HTTPS/HSTS and actual resource-upgrade/dependency evidence, cross-site coverage and adequate materially distinct examples. Then register eligible 8/4 preparation, fit/calibrate, evaluate genuinely untouched families and accept qualified runtime/exports. Updated `docs/ML_NATIVE_BOOKWISE_WIKIFLOW.md`, native/cohort/ML-Q docs and `RUN_COMMANDS.md` with actual results and commands. This closes these two family collectors, not Stage C or ML-Q.
+
+**2026-11-05 native dataset expansion completed for two additional applications:** pinned FieldPoint and Yoyo Collection now contribute actual native observations, expanding retained acquisition from **two to four families**. Native session implementations remain unchanged: FieldPoint's signed SQLite session-to-user link and Yoyo's signed expiring owner token are checked separately, followed by native protected writes, independent SQLite readback and anonymous non-mutation. Native/readable-cookie/own-origin-framing response profiles are explicitly identified; repeated profiles/browsers remain the same family. Source inspection now recognises bounded exported ESM Express factories and monolithic files up to 256 KiB (4 MiB total), retaining partial coverage. No application-purpose claim comes from syntax counts. Native source signatures/receipts, privacy, reload and tampering guards remain active.
+
+Actual aggregate `.local/project-native-seeds-006/`: **24 completed batches, four families, 48 repeated inputs discarded**. HDR-002 has three complete contextual scenario groups/two numeric variants and five uncertain inputs. HDR-003 retains one change and one contextual scenario/variant with ten uncertain inputs. CK-001 has three native change scenarios/six numeric variants plus one unknown; CK-002 has three change scenarios/two numeric variants. HDR-001, CK-003 and NET-001 still have no retained native seed observations. Seven category files were regenerated, but **0/7 are training-ready**. The actual candidate preflight refuses fitting and reports the missing eligible 8/4 cohort and 30/15 per-class distinct examples. No candidate was trained or holdout consumed; **ML-Q remains open, 1/8 categories qualified**.
+
+Source screening: ten additional repositories were pinned before prediction and actual MIT licence text/hash checked. Two are executed adapters, seven remain unexecuted suitability candidates, and `inventory_management` is excluded because its pinned code is an Electron desktop application. The twelve inspected/pinned repositories therefore do not establish twelve eligible data families. Source manifests/exposure checks prevent FieldPoint/Yoyo reuse as fresh qualification sources. The original family key and old aggregates remain unchanged. See `docs/ML_NATIVE_EXPANSION.md` and `ml/applications/native/expansion.audit.json`.
+
+Validation: **75 focused TypeScript tests/seven files passed** (69 passed initially; loopback API and OpenSSL restrictions required rerunning the remaining two files outside those restrictions, where all 13 passed). Type checking and production builds passed; existing Ed25519 and Zod/Rollup warnings remain. All six native Chromium profiles, both Edge framing profiles, both explicit startup cancellations, private artifact reload/tampering and cleanup passed. Initial native source-inspection failures were corrected before accepted records were written. Failure metadata remains separate from accepted data. Automatic approval review initially rejected third-party execution; after the user's explicit approval for these two applications, runs proceeded with disposable databases, synthetic identities, restricted environments and loopback listeners. This is process isolation, not an OS sandbox.
+
+HTTPS: the user approved a fresh two-day localhost-only non-CA leaf. Strict Chromium mechanism checks passed missing/positive/disabled HSTS profiles, while actual resource upgrade/execution failed (partial result, not acceptance). Native Tabinator HTTPS attempts still failed browser certificate validation and contributed no accepted data. The exact temporary trust entry was removed after each attempt; a fresh store read confirmed **zero remaining entries**, and process/directory inspection found no owned native runs left. No CA, certificate bypass, new category release or service deployment was introduced.
+
+Remaining dataset work: native contextual cookie/JavaScript-necessity and cross-site protection cases, reliable native strict HTTPS/HSTS and verified upgrade/functionality evidence, additional eligible independent families and sufficient materially distinct class examples, then registered preparation/fitting and untouched holdout qualification. Complete Worker/API/report activation, broader performance/UI/PDF and hosted migration-006 acceptance remain separate. This increment expands measured data; it does **not** complete the requested seven training datasets. Qualification targets and raw detection/GitHub policy remain unchanged.
+
+Final expansion checks: altered FieldPoint source was rejected before startup/run-directory creation and original bytes were restored. The seed assembler's actual-command tests (15 tests) passed after adding four-family collection orchestration. Both new source exposure records are now mandatory, so removing one cannot make it eligible for a new holdout registration. **All nine holdout-command tests passed**, including missing-record, changed-registry, once-only/failed-evaluation and release mechanics with disposable synthetic test fixtures; these are not real model evaluations. Combined validation is **84 tests/eight files passed**. Source-exposure tests (11) and final type checking also passed. Individual native profiles were executed as recorded; the full `--collect` orchestration was not rerun in one invocation. No frozen JS-002 release or historical evaluation was changed. New source setup/profile/aggregation commands and exact remaining counts are documented separately in `RUN_COMMANDS.md`.
+
+**2026-11-05 native Jingo script-data increment completed and executed:** the pinned second native family now supplies missing-policy, restrictive early-meta and late-meta HDR-003 development profiles. Native editor interaction, JavaScript removal/restoration, repeated inline execution/blocking and independent saved-file/Git-commit readback establish scoped labels. A disposable exact-blob copy uses pinned dependencies; only controlled meta-policy insertion and cosmetic offline font fulfilment change responses. Authentication, native scripts, storage and redirects remain intact. Opt-in assessment v5 permits the exercised scope despite partial source inventory; v1-v4/default producer behavior stays unchanged. Unknown timing, truncated present policies, missing witnesses and high/critical contextual proposals retain review.
+
+Actual data: ignored `.local/project-native-seeds-005/` combines **16 completed batches, two native families, 42 repeated inputs discarded**. HDR-003 now has **one complete change scenario and one complete contextual scenario** (one numeric variant each), plus six uncertain inputs. HDR-002 retains one contextual scenario and three uncertain observations. CK-001 retains one change scenario/three numeric variants plus one unknown native observation; CK-002 retains one change scenario/variant. HDR-001, CK-003 and NET-001 remain empty. Jingo profiles and Chromium/Edge repetitions are one family, not separate training applications. Authenticated seed v2 binds native controls to source/scan/adapter/witness identities; old receipts remain valid. The new script metadata digest is provenance, never an identity feature or source code.
+
+Validation: **50 TypeScript tests/seven files passed**, covering native profile/pinned-byte guards, class and uncertainty controls, signature/oracle tampering, deduplication, archived policies, high-severity safeguards and frozen report reload/unchanged analysis. The Python seed-audit command regression passed (v1/v2 preflight and refusal to register/fit). Type checking and production builds passed. All three real native profiles passed in **Chromium and Edge**, including privacy, signature/reload, altered-scan/evidence rejection and cleanup. Explicit cancellation after native startup passed; final process/directory inspection found no disposable native run remaining. The actual combined-data preflight reports seven deficits and no fitting/prediction. Existing Node 20 Ed25519 and Zod/Rollup warnings remain.
+
+Initial execution failures were resolved without changing detection rules or quality gates: Windows CRLF bytes now require exact pinned Git-blob confirmation; copied app resolution now uses its own dependencies; inspection uses the same verified Git mirror; absent response CSP is distinguished from incomplete present CSP; native redirect responses bypass HTML intervention. Subsequent failed/cancelled profile runs have separate metadata-only failure records and cannot become accepted seed batches. The full repository suite, broad UI/PDF/performance, hosted migration-006 verification and TLS trust were not rerun or changed. Frozen JS-002 model/evaluator files and raw detection/GitHub policy have no diff.
+
+**ML-Q remains open: 1/8 categories qualified, 0/7 new datasets training-ready, and no seven-category candidate fitted.** Next work remains strict repeatable HTTPS/HSTS and upgrade/functionality evidence, native contextual cookie/cross-site cases, an eligible independent twelve-family 8/4 development cohort with sufficient distinct classes, real fitting, fresh holdout gates and qualified runtime/export/hosted/performance acceptance. This increment closes native HDR-003 seed acquisition for one tested editor flow, not Stage C or ML-Q. Updated `docs/ML_NATIVE_JINGO_SCRIPTS.md`, dataset/qualification/cohort/meta-policy/ML-Q documents and `RUN_COMMANDS.md` with actual commands and boundaries.
+
+**2026-11-05 native contextual framing acquisition completed and executed:** the pinned Tabinator native authentication response now passes healthy own-origin embedding and enforced forbidden/repeated/nested ancestor controls in Chromium and Edge. An explicit proxy response-header intervention preserves native authentication, session, database and response-body code. Independent SQLite session/bookmark/anonymous-write checks remain active. Opt-in assessment policy v4 supports this bounded response protection with nonempty inspected source hashes while retaining partial route coverage; v1-v3 decisions and the default producer remain unchanged. High/critical safeguards, unknown purpose and unsupported/foreign-parent review remain intact. This does not assert native frontend or route-wide protection.
+
+Actual data: new ignored `.local/project-native-seeds-004/` combines **eight completed batches, one family, fifteen repeated inputs discarded**. HDR-002 now has **one complete contextual scenario/one numeric variant** and two uncertain observations. CK-001 retains one change scenario/three numeric variants; CK-002 retains one change scenario/variant. HDR-003 has five uncertain inputs; HDR-001, CK-003 and NET-001 remain empty. Seed v2 binds the policy identity, preserves v1 receipt verification and propagates duplicate uncertainty regardless of ordering. Conflicting labels cannot inflate counts. Browser repetitions/profiles still count as one native family.
+
+Validation: **64 TypeScript tests/nine files passed**, plus a Python command regression exercising seed-audit v1/v2 preflight and refusal to register/fit. Type checking and production builds passed. Actual Chromium/Edge framing runs, fresh default/readable collection, privacy/signature/reload/tampering checks and cancellation passed. Frozen v4 provenance retains `assessment: not-enabled`, with unchanged prior analysis/scan hashes and archived verification. The actual candidate preflight reports all seven deficits, with no fitting or predictions. Initial unit fixture syntax/sanitization/type errors were corrected. Restricted native startup and API tests could not access loopback; approved execution outside that restriction passed. A stalled restricted taskkill was stopped only after exact process identification; cleanup now has a timeout/fallback, and final inspection confirmed no native test processes or temporary run directories. Existing Node 20 Ed25519 and Zod/Rollup warnings remain. Frozen JS-002 model/evaluator files have no diff; whitespace checks passed.
+
+**ML-Q remains open: 1/8 categories qualified and 0/7 new datasets training-ready.** The first native contextual seed closes the zero-contextual-data gap only. Reliable strict HTTPS/HSTS and upgrade/functionality, other native category contexts, the eligible 12-family 8/4 development cohort, real candidate fitting, untouched holdout gates and qualified runtime/export/performance/hosted migration-006 acceptance remain. No trust-store changes, model promotion, new holdout evaluation or broader UI/PDF/live Supabase acceptance occurred. Updated `docs/ML_NATIVE_DATASETS.md`, `docs/ML_PROJECT_QUALIFICATION.md`, related ML-Q documents and `RUN_COMMANDS.md` with the executed scope and commands.
+
+**2026-10-29 technical report and presentation guide completed:** `docs/VYLNT_TECHNICAL_REPORT.md` and the **29-page** `output/pdf/VYLNT_Technical_Report_and_Presentation_Guide.pdf` cover all seven requested technical sections, architecture/data flow, stack trade-offs, component lifecycles, typeset LSTM/loss equations, measured JS-002 results, derived confusion matrices, limitations, five defense questions and a timed presentation/demo guide. A repository evidence register and primary technical references identify claim sources. It separates active JS-002 qualification from unfinished seven-category work, local EVM integrity from assessment validity, and uploaded-report CI from fresh-commit checks. Missing AUC, percentile, attribution and production measurements remain explicitly unmeasured.
+
+Validation: reproducible PDF build and verification scripts passed required-content/derived-metric assertions; every page rendered, with no detected horizontal text-bound violations or sparse body pages. Contact sheets and detailed equation/chart/final-pagination pages were visually reviewed. Editable Markdown retains numeric confusion tables; the PDF renders their equivalent annotated plots. This is documentation/artifact validation, not a rerun of application tests or new model/hosted/performance acceptance. No runtime behavior, historical evaluation or model release changed. Existing ML-Q and production-readiness gaps remain open.
+
+**2026-10-29 strict local-TLS environment and native profile implemented; positive acceptance blocked:** `ml:projects:tls prepare|review` creates/checks an identity-bound two-day localhost/127.0.0.1 leaf with CA:FALSE and displays exact trust/removal commands without executing them. Key/certificate identity, validity, SAN, self-signature, public DER, bounded files and private paths are checked. The optional Tabinator `--tls` profile uses a loopback HTTPS proxy over unchanged native auth/database source; transport configuration binds the certificate digest and same-run browser receipts. HTTP profiles remain supported. Preparation failures clean their own generated directory. A trusted mechanism records header-profile checkpoints and failed authority/upgrade observations.
+
+The user explicitly approved temporary leaf trust and removal. First Chromium execution reached three strict HTTPS/HSTS profiles, then failed because the localhost CSP resource-upgrade probe did not execute its expected script. That failed probe is retained; no positive upgrade label was issued. Repeat trust attempts failed inconsistently: an API-added leaf was rejected by Chromium (`ERR_CERT_AUTHORITY_INVALID`), Import-Certificate returned `0x80092004`, and certutil reported import success while Windows chain validation remained false. Initial provider cleanup needed exact API cleanup; fresh-process reads subsequently verified the exact leaf absent from CurrentUser Root, Disallowed and TrustedPeople. No issuing CA was installed. Further trust changes stopped. Aggregate executed outcomes are in ignored `test-results/project-transport/local-trust-attempts-2026-10-29.json`.
+
+Validation: **25 tests/three files passed**, covering local leaf/CA/key/DER/path/quoting guards, transport uncertainty and seed-data integrity. Type checking and production builds passed. The actual existing native HTTP/readable-cookie run passed SQLite/session, cookie controls, privacy, reload/tampering and cleanup after adding the TLS option. No disposable native-run directories remain. An initial sandbox OpenSSL named-object denial was resolved by an approved file-generation run outside the sandbox; this is separate from the subsequent Windows certificate trust failures. Existing Zod/Rollup and Node 20 Ed25519 warnings remain. Frozen JS-002 kernels/evaluators have no diff; whitespace checks passed.
+
+**Step 1 remains incomplete:** repeatable strict Windows/browser trust and successful native TLS collection are pending, as are other category-specific native contexts. The new native TLS branch is implemented/type-checked, not claimed as executed successfully. Steps 2–5 remain open: the 12-family development cohort, adequate independent class data, real fitting, fresh qualification and active runtime/report acceptance. No new training examples, model fitting, held-out evaluation or category promotion occurred in this increment. **ML-Q remains open; 1/8 categories qualified.** See `docs/ML_LOCAL_TLS_SETUP.md` and `RUN_COMMANDS.md`.
+
+The trusted-mechanism report explicitly returns partial/exit 2 when TLS profiles pass but resource-upgrade execution is missing; that failed probe cannot produce a complete acceptance pass. Final type checking passed after this distinction.
 
 **2026-10-29 NET-001 transfer correlation implemented:** original HTTP script references now match same-page HTTP/HTTPS request outcomes using transient exact identifiers and explicit loopback scope. Duplicate sanitized references, multiple matches and redirects remain ambiguous. Failed requests, HTTP errors, completed bodies and metadata timeouts have separate outcomes. Bounded response metadata distinguishes actual loopback wire evidence from synthetic fulfilment; supported TLS metadata is recorded only under strict validation. Changed scans, DOM or navigation cannot reuse a prior observation. Returned diagnostics exclude raw query strings, bodies and private values.
 

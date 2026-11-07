@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:ntkhang03/anonymous-notepad",
+  "repository": "https://github.com/ntkhang03/Anonymous-Notepad",
+  "repositoryId": 835732214,
+  "revision": "135e18dde6ac1acae195bb74dfaee49a0fbf33f6",
+  "license": "MIT",
+  "licenseGitBlob": "267ffad9c5142a78291edd34f90b46b79e4ba969",
+  "dependencyLockSha256": "e74ffbe7a011cb0c60969b696ed56d1ad14d4faf94f42567c92fdf64fd91af54",
+  "sourceSha256": {
+    "LICENSE": "522b9eafe905a7df26a34fe97f09e73028b3d983a2fd705bae8933bbe4b9e5b4",
+    "index.js": "d1078a7e0d8ed3ecd8ef0324a19e45f3384cb2920a6ea33696e9cdffd2dcb027",
+    "config/database.js": "985b69d0fd0a1ca1b04500270695c28e4eaf2ecacd71b67057ffa2e1f5f41666",
+    "models/Note.js": "a9c15752e7bbae3fe1e7370f7f7096f5dfe9a248c7474dabd250dcf6b3b4f0e4",
+    "routes/note.js": "44e8f19e2ff1bf1b75276e9d52087cf3d8ce63b288ad884bd44a4e92037d0d8d",
+    "controllers/noteController.js": "8c38bc142e74e79108da126cebd7987f00aa6b63e3a31e18841fd052fd805ba2"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

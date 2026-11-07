@@ -32,5 +32,12 @@ it('rejects unsupported endpoints and pre-cancellation before any browser access
   const report=createReport(crypto.randomUUID(),{url:'http://127.0.0.1/',scannedAt:'2026-10-29T00:00:00Z',headers:{},cookies:[],scripts:[],resources:[],domCollected:true});
   const check={identityHash:'a'.repeat(64),cookieName:'session',path:'https://example.invalid/',prepare:async()=>({}),observe:async()=>'unknown' as const};
   await expect(measureCrossSite({} as never,report,check)).rejects.toThrow(/route/);
+  const png=Buffer.from('89504e470d0a1a0a','hex');
+  for(const multipartImage of [{field:'photos[0]',bytes:png},{field:'photos',bytes:Buffer.alloc(8)},{field:'photos',bytes:Buffer.concat([png,Buffer.alloc(16384)])}]){
+    await expect(measureCrossSite({} as never,report,{...check,path:'/upload',multipartImage})).rejects.toThrow(/multipart/);
+  }
+  await expect(measureCrossSite({} as never,report,{...check,path:'/upload',wireMethod:'GET',multipartImage:{field:'photos',bytes:png}})).rejects.toThrow(/multipart/);
+  await expect(measureCrossSite({} as never,report,{...check,path:'/update',json:true,effectiveMethod:'DELETE'})).rejects.toThrow(/JSON/);
+  await expect(measureCrossSite({} as never,report,{...check,path:'/upload',json:true,multipartImage:{field:'photos',bytes:png}})).rejects.toThrow(/JSON/);
   const abort=new AbortController();abort.abort();await expect(measureCrossSite({} as never,report,{...check,path:'/update'},abort.signal)).rejects.toThrow();
 });

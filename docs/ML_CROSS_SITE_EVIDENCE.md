@@ -2,6 +2,100 @@
 
 Implemented 2026-10-29 in `apps/cli/project-cross-site.ts`. Developer-owned mutating checks run only against disposable local applications. Ordinary extension scans and user projects do not automatically run this adapter. These are diagnostic observations, not qualified CK-003 decisions.
 
+## FieldPoint split-origin deployment fixture
+
+The overbroad-origin profiles use the same pinned app and add the unrelated
+client to FieldPoint's native `ALLOWED_ORIGINS` in the disposable process.
+The browser must send the authenticated cookie from that distinct site
+twice, and both requests must create rows owned by the synthetic user.
+Requests from the same unrelated origin with an absent cookie or a Lax
+counterfactual must return 401 and leave storage unchanged. The intended
+client must remain functional before and after the checks. The receipt
+covers site creation. Other routes remain outside this result, and the
+fixture says nothing about the application's default deployment.
+
+The pinned FieldPoint adapter runs the native Express origin allowlist against
+a trusted client on `127.0.0.2` and an untrusted client on `127.0.0.3`. FieldPoint's
+bundled frontend uses same-origin requests. This controlled deployment instead
+uses its supported origin allowlist with a disposable client and a
+`Secure; SameSite=None` session. A fixture proxy supplies CORS for both
+origins so the native middleware decides whether requests proceed.
+
+Chromium sent the real signed session to both clients' API requests. A
+trusted client created a site owned by the synthetic account. With Lax or
+no cookie, the same operation returned 401 and wrote no row. Restoring the
+original cookie restored the write. The hostile client received FieldPoint's
+explicit 403 on all 38 declared API mutation routes with JSON and on all 19
+POST routes with a simple form-encoded request. A before/after SQLite
+comparison found no state change from those probes. Only the equality
+result is retained.
+
+Assessment policy v11 requires the pinned revision, matching session
+observation, native authentication dependency and a shared witness for
+cookie necessity, request protection and route coverage. An incomplete
+matrix leaves the finding uncertain. Coverage is limited to the pinned
+loopback deployment and the executed request shapes. It does not establish
+other routes, deployment policies or production browser behavior.
+
+The registered supplement reruns the full matrix under three additional
+readability and lifetime configurations. Each uses the original signed
+session value and native allowlist. The profile changes only the
+selected cookie attributes in the fixture response.
+
+## Yoyo Collection native multipart write
+
+A controlled same-site or foreign browser document submits a small
+generated PNG through the native photo-upload form route. The probe
+validates the browser's multipart request, checks the actual cookie and
+Origin, and verifies both a new SQLite photo row and exact stored bytes.
+The repeated foreign write also succeeds. The anonymous control
+receives 403 and leaves the photo rows unchanged. This supports one
+scoped change assessment per independently checked cookie configuration.
+The captures keep outcome metadata and the binding digest.
+
+## Credentialed JSON on a distinct site
+
+The JSON probe uses an owned loopback document and Chromium's request controls.
+It lets the server handle the actual CORS preflight and verifies the browser's
+Origin, selected cookie and write outcome. Playwright's ordinary interception
+can answer preflight itself, so that path remains limited to the form probes.
+No request body, cookie value or CORS response header is retained.
+
+The Tabinator profile uses the pinned server's development origin reflection
+with credentials. The disposable response proxy varies only the selected
+session cookie attributes. The native bookmark endpoint must return 201 for
+the same-origin write and both foreign writes. Independent SQLite reads verify
+each bookmark's owner and fields. The foreign anonymous control must receive
+401 and leave storage unchanged. This profile covers one route under the
+tested permissive CORS configuration.
+
+Source screening for contextual cases found that Tabinator also exposes
+a body-independent logout POST. A restrictive CORS response can block
+the tested foreign JSON operation at preflight, but it does not make a
+simple form request subject to preflight. The logout handler has no
+route-level origin check. Tabinator's CORS setting alone therefore supplies
+no contextual SameSite seed. This is a source-screening result.
+
+## Habit Tracker logout form
+
+Habit Tracker's native logout ignores the request body, so a plain browser
+form can exercise the route without enabling credentialed CORS. A disposable
+SQLite snapshot resets the exact signed session between phases. The oracle
+checks that the session row exists before each request, disappears after
+authenticated logout and survives the anonymous control. The endpoint's
+HTTP 200 alone carries no evidentiary weight because it also returns 200
+without a cookie. The proof covers session revocation on the tested route.
+
+## HomeInventory house creation form
+
+The native route accepts a form-encoded house name. The fixture modifies
+only the signed authentication cookie's browser attributes. It verifies
+the JWT and account, then checks the authenticated response with the
+cookie present, absent and restored. The separate write oracle compares
+SQLite ownership rows before and after each submission. The evidence
+scope is one native operation. Cookie values, house names, request
+bodies and database contents stay in the disposable run.
+
 ## Explicit mutating-GET iteration
 
 The helper now supports an explicitly declared GET operation with **no fields**, credentials, query or fragment. It rejects GET/POST declaration mismatches before browser access and rejects GET fields before the target request. Existing POST form overrides retain their bounds. Diagnostic format `vylnt-cross-site-v3` records the actual method and `initiatorVerified` separately from `originVerified`; no frozen envelope, model input or archived report format changes.

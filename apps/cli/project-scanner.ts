@@ -1,3 +1,4 @@
+import { collectProjectDom } from './project-dom';
 import { measureProjectBrowser } from './project-probes';
 import { observeMetaPolicy } from './project-meta-policy';
 import { observeResourceRequests } from './project-resource-function';
@@ -8,9 +9,12 @@ import { randomUUID } from 'node:crypto';
 import { cookieMetadata, createReport, safeUrl, securityHeaders, cspEvidenceComplete, type Observation, type Resource } from '../../packages/core';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {upgradeFixtureHost} from './project-resource-function';
 export const isLoopback = (hostname: string) => ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
 export interface TrustedProjectHooks {
   prepare?(page:Page,context:BrowserContext):Promise<void>;
+  /** Optional bounded native readiness after navigation, before the snapshot. */
+  ready?(page:Page,context:BrowserContext):Promise<void>;
   collected?(page:Page,context:BrowserContext,report:ReturnType<typeof createReport>):Promise<void>;
 }
 async function trustedHook(task:()=>Promise<void>,timeoutMs:number,close:()=>Promise<void>,signal?:AbortSignal){
@@ -22,20 +26,28 @@ async function trustedHook(task:()=>Promise<void>,timeoutMs:number,close:()=>Pro
   try{await Promise.race([bound,Promise.resolve().then(()=>{signal?.throwIfAborted();return task();})]);}
   finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
 }
-export async function scanProjectPage(target: string, options: { allowRemote?: boolean; ignoreHTTPSErrors?: boolean; waitMs?: number; allowedLocalOrigins?: string[]; signal?: AbortSignal; requireComplete?: boolean; channel?: 'chromium' | 'msedge'; hooks?:TrustedProjectHooks } = {}) {
+export async function scanProjectPage(target: string, options: { allowRemote?: boolean; ignoreHTTPSErrors?: boolean; waitMs?: number; allowedLocalOrigins?: string[]; signal?: AbortSignal; requireComplete?: boolean; channel?: 'chromium' | 'msedge'; hooks?:TrustedProjectHooks; namedUpgradeFixture?: boolean } = {}) {
   options.signal?.throwIfAborted();
   if (options.allowRemote || !options.allowedLocalOrigins?.length) throw Error('Project collection requires explicit loopback origins');
   const url = new URL(target);
+  const named=options.namedUpgradeFixture===true;
+  const namedOrigins=new Set([url.origin,'http://'+url.host]);
+  if(named&&(url.hostname!==upgradeFixtureHost||url.protocol!=='https:'||!url.port||options.ignoreHTTPSErrors||
+    options.allowedLocalOrigins.length<2||options.allowedLocalOrigins.length>3||!options.allowedLocalOrigins.includes('http://'+url.host)||
+    options.allowedLocalOrigins.some(origin=>!namedOrigins.has(origin)&&!/^http:\/\/127\.0\.0\.1:[0-9]{1,5}$/.test(origin))))
+    throw Error('Named fixture collection requires paired strict TLS origins and at most one literal HTTP dependency origin');
+  const localHost=(host:string)=>isLoopback(host)||(named&&host===upgradeFixtureHost);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('Provide an HTTP(S) URL without embedded credentials.');
-  if (!isLoopback(url.hostname) && !options.allowRemote) throw new Error('Remote scans require --allow-remote. Scan only sites you own or are authorized to assess.');
+  if (!localHost(url.hostname) && !options.allowRemote) throw new Error('Remote scans require --allow-remote. Scan only sites you own or are authorized to assess.');
   if (options.ignoreHTTPSErrors && !isLoopback(url.hostname)) throw new Error('--ignore-https-errors is limited to localhost fixtures.');
   const localOrigins = options.allowedLocalOrigins ? new Set(options.allowedLocalOrigins) : undefined;
   if (localOrigins && (options.allowRemote || localOrigins.size > 10 || !localOrigins.has(url.origin) || [...localOrigins].some(origin => {
-    try { const parsed = new URL(origin); return !isLoopback(parsed.hostname) || !['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== origin; } catch { return true; }
+    try { const parsed = new URL(origin); return !localHost(parsed.hostname) || !['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== origin; } catch { return true; }
   }))) throw new Error('Local origin scope must contain the target and at most ten plain loopback HTTP(S) origins');
   if (!process.env.PLAYWRIGHT_BROWSERS_PATH && existsSync('.local/browsers')) process.env.PLAYWRIGHT_BROWSERS_PATH = resolve('.local/browsers');
   const { chromium } = await import('playwright');
-  const browser = await chromium.launch({ channel: options.channel ?? 'chromium', headless: true });
+  const browser = await chromium.launch({ channel: options.channel ?? 'chromium', headless: true,
+    ...(named?{args:['--no-proxy-server','--host-resolver-rules=MAP '+upgradeFixtureHost+' 127.0.0.1, EXCLUDE 127.0.0.1, MAP * ~NOTFOUND']}: {}) });
   const abort = () => { void browser.close().catch(() => {}); };
   options.signal?.addEventListener('abort', abort);
   let redirectGuard:Awaited<ReturnType<typeof guardProjectRedirects>>|undefined;
@@ -44,13 +56,13 @@ export async function scanProjectPage(target: string, options: { allowRemote?: b
     const context = await browser.newContext({ ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false, serviceWorkers: 'block' });
     await context.routeWebSocket('**/*', socket => socket.close());
     const page = await context.newPage();
-    redirectGuard=await guardProjectRedirects(page,localOrigins!);
+    redirectGuard=await guardProjectRedirects(page,localOrigins!,{namedUpgradeFixture:named});
     // Request identity is retained in memory only: sanitized URL collisions must
     // not let one resource's completion overwrite another resource's failure.
     const resources = new Map<Request, Resource>();
     let networkTruncated = false;
     if (!options.allowRemote) await context.route('**/*', route => {
-      try { const requestUrl = new URL(route.request().url()); if (!isLoopback(requestUrl.hostname) || (localOrigins && !localOrigins.has(requestUrl.origin))) { void route.abort(); return; } } catch { /* invalid URLs will be handled by browser */ }
+      try { const requestUrl = new URL(route.request().url()); if (!localHost(requestUrl.hostname) || (localOrigins && !localOrigins.has(requestUrl.origin))) { void route.abort(); return; } } catch { /* invalid URLs will be handled by browser */ }
       void route.continue();
     });
     page.on('request', request => {
@@ -68,19 +80,12 @@ export async function scanProjectPage(target: string, options: { allowRemote?: b
     if(options.hooks?.prepare){await trustedHook(()=>options.hooks!.prepare!(page,context),30000,()=>browser.close(),options.signal);resources.clear();networkTruncated=false;}
     options.signal?.throwIfAborted();
     const metaObservation=await observeMetaPolicy(page,target);
-    const resourceObservation=observeResourceRequests(page,target,localOrigins!,options.ignoreHTTPSErrors??false);
+    const resourceObservation=observeResourceRequests(page,target,localOrigins!,options.ignoreHTTPSErrors??false,named);
     const response = await page.goto(target, { waitUntil: 'load', timeout: 30000 });
     if (!response || response.status() >= 400) throw new Error(`Target navigation failed (${response?.status() ?? 'no response'})`);
+    if(options.hooks?.ready)await trustedHook(()=>options.hooks!.ready!(page,context),30000,()=>browser.close(),options.signal);
     await page.waitForTimeout(options.waitMs ?? 300);
-    const dom = await page.evaluate(() => {
-      const clean = (raw: string) => { try { const u = new URL(raw, location.href); return ['http:', 'https:'].includes(u.protocol) ? `${u.origin}${u.pathname}` : ''; } catch { return ''; } };
-      return {
-        truncated: document.querySelectorAll('script[src]').length > 150 || document.querySelectorAll('script[src],img[src],iframe[src],link[rel="stylesheet"][href],audio[src],video[src]').length > 300,
-        scripts: [...document.scripts].filter(s => s.src).slice(0, 150).map(s => ({ url: clean(s.src), integrity: Boolean(s.integrity.trim()), scriptType: s.type === 'module' ? 'module' as const : !s.type || /^(?:text|application)\/javascript$/i.test(s.type) ? 'classic' as const : 'other' as const, async: s.hasAttribute('async'), defer: s.hasAttribute('defer') })).filter(s => s.url),
-        resources: [...document.querySelectorAll('script[src],img[src],iframe[src],link[rel="stylesheet"][href],audio[src],video[src]')].slice(0, 300)
-          .map(el => ({ url: clean(el.getAttribute('src') ?? el.getAttribute('href') ?? ''), type: el.tagName === 'IMG' ? 'image' : el.tagName.toLowerCase(), outcome: 'referenced' as const })).filter(r => r.url)
-      };
-    });
+    const dom = await collectProjectDom(page);
     const collectedCookies = await context.cookies(page.url());
     const cookies = collectedCookies.slice(0, 100).map(c => cookieMetadata({ ...c, session: c.expires === -1,
       sameSite: c.sameSite === 'None' ? 'no_restriction' : c.sameSite === 'Strict' ? 'strict' : 'lax' }));

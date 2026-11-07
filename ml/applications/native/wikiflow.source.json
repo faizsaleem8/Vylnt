@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:aialra-0/wikiflow",
+  "repository": "https://github.com/AIALRA-0/Wikiflow",
+  "repositoryId": 1111588612,
+  "revision": "c41f5ba323ff3bd931cc7396f13b801272253b77",
+  "license": "MIT",
+  "licenseGitBlob": "c3423abe7a6a73f4c3881f578749629d3fa45086",
+  "dependencyLockSha256": "37f734436ebeb83f5f82d9e4c4a5f0077ea4c74ff36b5f436076ad06abe86fed",
+  "sourceSha256": {
+    "LICENSE": "6326a7b5fe1b287eb82889f72c920a3c1e87dca5d299cbd3f5160f75a82f22bc",
+    "server.js": "b2a2761e8ba8b03e85e3997fd857d1bc078d29bebf1c34a205f9266b03ccfd09",
+    "server/db.js": "17b359f33ec024eb7af9ebb378e37bf7fc159b927989aa78fc368c91caf7e6da",
+    "server/security.js": "c35938a916335822818d2d547bcf713a445460bf9ed36a8575aaa47e844edcd7",
+    "server/routes-auth.js": "5aa1acd6bdf6cc20925adec2e54c93cf3058e6bcc7869dcc5533ffc6fb061747",
+    "server/routes-terms.js": "64ea6919edd4dd7845fcf1f45a6733529df7c0796e55c483d6a4328a52b7683a",
+    "server-js/wf-server-config.js": "ca4a0efbfc4161f9cee1728695f3ecc978e612136f18a8a6526f432bea8b5597"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

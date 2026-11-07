@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "role": "development-source-screening",
+  "selectedAt": "2026-11-05",
+  "selectionPolicy": "Selected before execution or prediction by MIT licence, bounded Node/Express source, native SQLite-backed operations and local-only suitability. No qualification or source independence established by selection alone.",
+  "modelPredictions": 0,
+  "candidates": [
+    {"repository":"ntkhang03/Anonymous-Notepad","repositoryId":835732214,"revision":"135e18dde6ac1acae195bb74dfaee49a0fbf33f6","fork":false,"isTemplate":false,"license":"MIT","size":203,"defaultBranch":"main"},
+    {"repository":"brixdorf/habit-tracker","repositoryId":1319171448,"revision":"c903c2788f8336bb195e7b2ce490a8b8d97e1a0d","fork":false,"isTemplate":false,"license":"MIT","size":136,"defaultBranch":"main"}
+  ],
+  "screeningExclusions": [
+    {"repository":"leonifrazao/sistema-estudos","reason":"GitHub marks this source as a template; excluded before download/execution/prediction."},
+    {"repository":"asdteke/HomeInventory","revision":"ffbdb191ac9eeb0d6e19a91db0c9fea4b476e49b","reason":"719 tracked files exceed the existing 600-file disposable application copy limit. No execution, labels or predictions."}
+  ]
+}

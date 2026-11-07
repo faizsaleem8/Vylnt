@@ -5,9 +5,25 @@ import { scanProjectPage } from '../apps/cli/project-scanner';
 import { measureCrossSite } from '../apps/cli/project-cross-site';
 import { canonicalJson } from '../packages/core/integrity';
 let mutations=0,origin='';
+let jsonPreflights=0;
 const token='private-test-csrf-token',value='private-test-cookie-value';
 const server=createServer(async(request,response)=>{
   const path=new URL(request.url!,'http://localhost').pathname;
+  if(path==='/json-open'||path==='/json-blocked'){
+    if(path==='/json-open'&&request.headers.origin){
+      response.setHeader('Access-Control-Allow-Origin',request.headers.origin);
+      response.setHeader('Access-Control-Allow-Credentials','true');
+      response.setHeader('Access-Control-Allow-Methods','POST');
+      response.setHeader('Access-Control-Allow-Headers','Content-Type');
+    }
+    if(request.method==='OPTIONS'){jsonPreflights++;response.writeHead(204).end();return;}
+    if(request.method==='POST'){
+      let body='';for await(const chunk of request)body+=chunk.toString();
+      assert.equal(JSON.parse(body).value,'synthetic-write');
+      if(!(request.headers.cookie??'').includes('session='+value)){response.writeHead(401).end();return;}
+      mutations++;response.writeHead(201).end();return;
+    }
+  }
   if(path==='/get-change'){
     if(request.method!=='GET'){response.writeHead(405);response.end();return;}
     if(!(request.headers.cookie??'').includes('session='+value)){response.writeHead(401);response.end();return;}
@@ -43,6 +59,23 @@ try{
         assert.ok(Object.values(mismatch.controls).every(control=>!control.complete&&control.outcome==='unknown'));
         assert.equal(mutations,writesBeforeMismatch,'An undeclared override must never reach the application');
         const abort=new AbortController();await assert.rejects(measureCrossSite(context,report,{...check,prepare:async phase=>{abort.abort();return check.prepare(phase);}},abort.signal));
+        const preflightsBefore=jsonPreflights;
+        const open=await measureCrossSite(context,report,{...check,path:'/json-open',json:true});
+        assert.equal(open.requestEncoding,'application/json');
+        assert.equal(open.controls.crossSite.outcome,'changed-with-cookie',JSON.stringify(open));
+        assert.equal(open.controls.repeated.outcome,'changed-with-cookie');
+        assert.equal(open.controls.anonymous.status,401);
+        const beforeBlocked=mutations;
+        const blocked=await measureCrossSite(context,report,{...check,path:'/json-blocked',json:true});
+        assert.equal(blocked.controls.sameSite.outcome,'changed-with-cookie');
+        assert.equal(blocked.controls.crossSite.outcome,'unknown');
+        assert.equal(blocked.controls.repeated.outcome,'unknown');
+        assert.equal(mutations,beforeBlocked+1,'Native preflight must prevent every foreign write');
+        assert.equal(jsonPreflights,preflightsBefore+6,'Every foreign JSON check must reach the server for a native preflight');
+        for(const privateValue of [token,value,'synthetic-write','/json-open','/json-blocked']){
+          assert.ok(!JSON.stringify({open,blocked}).includes(privateValue));
+        }
+        results.jsonOpen=open;results.jsonBlocked=blocked;
       }
       if(path==='/protected'){assert.equal(result.controls.sameSite.outcome,'changed-with-cookie');assert.equal(result.controls.crossSite.outcome,'explicit-denial',JSON.stringify(result));assert.equal(result.controls.repeated.outcome,'explicit-denial');}
       if(path==='/lax'){assert.equal(result.controls.sameSite.outcome,'changed-with-cookie');assert.equal(result.controls.crossSite.cookieSent,false);assert.equal(result.controls.crossSite.outcome,'unknown');}

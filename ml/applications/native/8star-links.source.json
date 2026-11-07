@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:timom84/8star-links",
+  "repository": "https://github.com/TimoM84/8star-links",
+  "repositoryId": 1383658359,
+  "revision": "b52d350eec54822d9d4039eaa4cbce833c0368dc",
+  "license": "MIT",
+  "licenseGitBlob": "d199d8656fff61f92241e2c1b10635b072d87880",
+  "dependencyLockSha256": "4b0e2d3e63d8e3caf7ba2a76a20e8413a9d3dd612a0951fabdb3a55a6cb68525",
+  "sourceSha256": {
+    "LICENSE": "e6746cbf654ba71498a299a22e5c5b5522239346e3c14c096c5a772ecc9f5914",
+    "server.js": "c8d479ad2fe46837b282c6d59b1e3a265982b885407cc32970f01747277fc6b7"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

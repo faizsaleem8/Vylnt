@@ -4,9 +4,12 @@ import { canonicalJson } from '../core/integrity';
 import { parseSubmission } from '../core/validation';
 import { evidenceFeatureNames4, prepareProjectContexts, guardProjectAssessment, projectRules, verifyProjectEvidence, type ProjectPublicKey } from '../core/project-evidence';
 
+import {materialPolicySchema,materialVariant,type MaterialPolicy} from './project-material-context';
+
 const digest = z.string().regex(/^[a-f0-9]{64}$/), commit = z.string().regex(/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/);
 const sha = (value: unknown) => createHash('sha256').update(canonicalJson(value)).digest('hex');
 const label = z.enum(['change-warranted','contextual','needs-review']);
+export const projectMaterialCaptureLimit=2000;
 export const projectSourceLockSchema = z.object({
   version:z.literal('vylnt-project-development-v1'), experiment:z.string().uuid(),
   assessmentPolicyHash:digest, harnessHash:digest,
@@ -17,7 +20,7 @@ export const projectSourceLockSchema = z.object({
     partition:z.enum(['train','validation']), license:z.enum(['MIT','ISC','Apache-2.0','BSD-2-Clause','BSD-3-Clause']), licenseHash:digest,
     securityImplementationHashes:z.array(digest).min(1).max(100),
     revisions:z.array(z.object({commit,sourceHashes:z.array(digest).min(1).max(200)}).strict()).min(1).max(100),
-    adapterHash:digest,oracleHash:digest,
+    adapterHash:digest,additionalAdapterHashes:z.array(digest).max(projectMaterialCaptureLimit).optional(),oracleHash:digest,
   }).strict()).max(12),
 }).strict();
 export const projectOracleSchema = z.object({version:z.literal('vylnt-project-oracle-v1'),
@@ -30,7 +33,7 @@ export const projectHoldoutSourceLockSchema=projectSourceLockSchema.extend({vers
 type Exposure = {families:string[];variants:string[]};
 type Input = {report:unknown;seal:unknown;oracle:unknown};
 type Row = {family:string;variant:string;sequence:number[][];category:typeof projectRules[number];severity:string;
-  label:z.infer<typeof label>;uncertain:boolean;evidenceRecord:string;scenario:string;contextualAllowed?:boolean;evidenceRequiresReview?:boolean};
+  label:z.infer<typeof label>;uncertain:boolean;evidenceRecord:string;scenario:string;materialVariant?:string;contextualAllowed?:boolean;evidenceRequiresReview?:boolean};
 
 /** Developer-only preparation. Labels/oracles never enter the numeric tensor.
  * Source independence and oracle correctness still require checked source manifests;
@@ -42,7 +45,13 @@ export async function prepareProjectData(inputs: Input[], source: unknown, expos
 export async function prepareProjectHoldout(inputs: Input[], source: unknown, exposure: Exposure, secret: string, trustedKeys: readonly ProjectPublicKey[]) {
   return prepareProjectInputs(inputs,source,exposure,secret,trustedKeys,'holdout');
 }
-async function prepareProjectInputs(inputs:Input[],source:unknown,exposure:Exposure,secret:string,trustedKeys:readonly ProjectPublicKey[],mode:'development'|'holdout'){
+export async function prepareProjectMaterialData(inputs:Input[],source:unknown,exposure:Exposure,secret:string,trustedKeys:readonly ProjectPublicKey[],policy:unknown){
+  return prepareProjectInputs(inputs,source,exposure,secret,trustedKeys,'development',materialPolicySchema.parse(policy));
+}
+export async function prepareProjectMaterialHoldout(inputs:Input[],source:unknown,exposure:Exposure,secret:string,trustedKeys:readonly ProjectPublicKey[],policy:unknown){
+  return prepareProjectInputs(inputs,source,exposure,secret,trustedKeys,'holdout',materialPolicySchema.parse(policy));
+}
+async function prepareProjectInputs(inputs:Input[],source:unknown,exposure:Exposure,secret:string,trustedKeys:readonly ProjectPublicKey[],mode:'development'|'holdout',material?:MaterialPolicy){
   const lock=mode==='development'?projectSourceLockSchema.parse(source):projectHoldoutSourceLockSchema.parse(source);
   if(inputs.length>50000)throw Error('Project dataset input budget exceeded');
   if(secret.length<32)throw Error('Use the existing private family key (at least 32 characters)');
@@ -80,40 +89,49 @@ async function prepareProjectInputs(inputs:Input[],source:unknown,exposure:Expos
     if(!family)throw Error('Application is absent from frozen source selection');
     const revision=family.revisions.find(r=>r.commit===evidence.commit);
     if(!revision || !evidence.inspection || sha([...revision.sourceHashes].sort())!==sha([...evidence.inspection.sourceHashes].sort()))throw Error('Source revision or inspection mismatch');
+    const adapters=[family.adapterHash,...(mode==='development'&&material?family.additionalAdapterHashes??[]:[])];
     if(oracle.scanHash!==sha(report)||oracle.evidenceHash!==sha(evidence)||oracle.commit!==evidence.commit||oracle.configHash!==evidence.configHash||
-      oracle.adapterHash!==family.adapterHash||oracle.adapterHash!==evidence.adapterHash||oracle.harnessHash!==lock.harnessHash||oracle.sourceLockHash!==sha(lock)||oracle.oracleHash!==family.oracleHash)throw Error('Oracle identity or same-run binding mismatch');
+      !adapters.includes(oracle.adapterHash)||oracle.adapterHash!==evidence.adapterHash||oracle.harnessHash!==lock.harnessHash||oracle.sourceLockHash!==sha(lock)||oracle.oracleHash!==family.oracleHash)throw Error('Oracle identity or same-run binding mismatch');
     const finding=report.findings.find(f=>f.id===oracle.findingId&&f.ruleId===oracle.category);
     if(!finding)throw Error('Oracle finding is not in the captured report');
     const context=prepareProjectContexts(report,evidence)(finding),variant=sha(context.sequence),opaque=familyHash(family.familyId),record=sha({evidence,oracle});
-    if(exposure.variants.includes(variant)){rejected.push({reason:'previous-numeric-input',family:opaque,variant,record});continue;}
+    if(!material&&exposure.variants.includes(variant)){rejected.push({reason:'previous-numeric-input',family:opaque,variant,record});continue;}
     // Repeated observations are one labelled evidence context, while conflicting
     // oracle outcomes survive below and force abstention for the whole variant.
-    const key=canonicalJson([opaque,variant,oracle.label,context.requiresReview]);
+    const projected=material?materialVariant(context.sequence,oracle.category,material):undefined;
+    const key=canonicalJson([opaque,projected??variant,oracle.label,context.requiresReview]);
     if(seen.has(key)){rejected.push({reason:'repeated-context',family:opaque,variant,record});continue;}seen.add(key);
     rows.push({family:opaque,variant,sequence:context.sequence,category:oracle.category,severity:finding.severity,
-      label:oracle.label,uncertain:context.requiresReview||oracle.label==='needs-review',evidenceRecord:record,scenario:oracle.scenarioHash,
+      label:oracle.label,uncertain:context.requiresReview||oracle.label==='needs-review',evidenceRecord:record,scenario:oracle.scenarioHash,...(projected?{materialVariant:projected}:{}),
       ...(mode==='holdout'?{contextualAllowed:guardProjectAssessment(context,finding,'contextual')==='contextual',evidenceRequiresReview:context.requiresReview}:{})});
   }
   const assignments=Object.fromEntries(lock.families.map(f=>[familyHash(f.familyId),f.partition]));
-  const groups=new Map<string,Row[]>();for(const row of rows){const group=groups.get(row.variant)??[];group.push(row);groups.set(row.variant,group);}
-  const conflicts=new Set([...groups].filter(([,rr])=>new Set(rr.map(r=>r.label)).size>1||rr.some(r=>r.uncertain)).map(([v])=>v));
-  for(const row of rows)if(conflicts.has(row.variant))row.uncertain=true;
-  const crossPartition=new Set([...groups].filter(([,rr])=>new Set(rr.map(r=>assignments[r.family])).size>1).map(([v])=>v));
+  const groups=new Map<string,Row[]>();for(const row of rows){const id=row.materialVariant??row.variant,group=groups.get(id)??[];group.push(row);groups.set(id,group);}
+  const conflicts=new Set([...groups].filter(([,rr])=>{
+    const supported=material?rr.filter(r=>!r.uncertain&&r.label!=='needs-review'):rr;
+    return new Set(supported.map(r=>r.label)).size>1||(!material&&rr.some(r=>r.uncertain));
+  }).map(([v])=>v));
+  for(const row of rows)if(conflicts.has(row.materialVariant??row.variant))row.uncertain=true;
+  const numericGroups=new Map<string,Row[]>();for(const row of rows){const group=numericGroups.get(row.variant)??[];group.push(row);numericGroups.set(row.variant,group);}
+  const crossPartition=new Set([...numericGroups].filter(([,rr])=>new Set(rr.map(r=>assignments[r.family])).size>1).map(([v])=>v));
   const categories=Object.fromEntries(projectRules.map(category=>{
     const partitions=Object.fromEntries((['train','validation'] as const).map(part=>{
       const needed=part==='train'?30:15;
-      const eligible=rows.filter(r=>r.category===category&&assignments[r.family]===part&&!r.uncertain&&!crossPartition.has(r.variant));
+      const eligible=rows.filter(r=>r.category===category&&assignments[r.family]===part&&!r.uncertain&&(material||!crossPartition.has(r.variant)));
       const classes=Object.fromEntries((['change-warranted','contextual'] as const).map(label=>{
-        const selected=eligible.filter(r=>r.label===label),contexts=new Set(selected.map(r=>r.variant)).size,families=new Set(selected.map(r=>r.family)).size;
+        const selected=eligible.filter(r=>r.label===label),contexts=new Set(selected.map(r=>material?canonicalJson([r.family,r.materialVariant]):r.variant)).size,families=new Set(selected.map(r=>r.family)).size;
         return[label,{contexts,families,requiredContexts:needed,ready:contexts>=needed&&families>=3}];
       }));return[part,{classes,ready:Object.values(classes).every(c=>c.ready)}];
     }));return[category,{partitions,ready:Object.values(partitions).every(p=>p.ready)}];
   }));
   const train=lock.families.filter(f=>f.partition==='train').length,validation=lock.families.filter(f=>f.partition==='validation').length;
   const ready=train===8&&validation===4&&Object.values(categories).every(c=>c.ready);
-  const dataset={schemaVersion:'vylnt-evidence-v4',featureNames:[...evidenceFeatureNames4],sourceLockHash:sha(lock),examples:rows};
+  const dataset={schemaVersion:'vylnt-evidence-v4',featureNames:[...evidenceFeatureNames4],sourceLockHash:sha(lock),...(material?{countingPolicy:{version:material.version,hash:sha(material)}}:{}),examples:rows};
   return {dataset,split:{version:mode==='development'?'vylnt-project-development-split-v1':'vylnt-project-holdout-split-v1',sourceLockHash:sha(lock),families:assignments},rejected,
-    audit:{version:mode==='development'?'vylnt-project-development-audit-v1':'vylnt-project-holdout-audit-v1',datasetHash:sha(dataset),ready:mode==='development'?ready:false,trainFamilies:train,validationFamilies:validation,
-      conflictingOrUnknownVariants:conflicts.size,crossPartitionVariants:crossPartition.size,categories,
-      qualification:false,testPredictions:0,limitations:['Readiness is not qualification.','Independent source suitability and native functional coverage must be established before fitting.','Shared train/validation inputs are excluded from eligibility; all records are retained.']}};
+    audit:{version:material?(mode==='development'?'vylnt-project-development-audit-v2':'vylnt-project-holdout-audit-v2'):(mode==='development'?'vylnt-project-development-audit-v1':'vylnt-project-holdout-audit-v1'),datasetHash:sha(dataset),ready:mode==='development'?ready:false,trainFamilies:train,validationFamilies:validation,
+      conflictingOrUnknownVariants:new Set(rows.filter(row=>row.uncertain).map(row=>row.materialVariant??row.variant)).size,crossPartitionVariants:crossPartition.size,categories,
+      ...(material?{materialConflicts:[...conflicts].sort().map(variant=>({category:groups.get(variant)![0].category,variant})),
+        previousNumericVariants:new Set(rows.filter(row=>exposure.variants.includes(row.variant)).map(row=>row.variant)).size,
+        materialPolicyHash:sha(material)}:{}),
+      qualification:false,testPredictions:0,limitations:['Readiness is not qualification.','Independent source suitability and native functional coverage must be established before fitting.',material?'Equal numeric inputs on independent families are audited; within-family material repeats are excluded.':'Shared train/validation inputs are excluded from eligibility; all records are retained.']}};
 }

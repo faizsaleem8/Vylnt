@@ -21,7 +21,7 @@ export async function inspectProject(context:SnapshotContext) {
     if(isAbsolute(within)||within.startsWith('..'+sep)||within==='..'||resolve(path)===resolve(context.app)){partial=true;continue;}
     const info=await lstat(path),actual=await realpath(path),inside=relative(actualRoot,actual);
     if(info.isSymbolicLink()||!info.isFile()||isAbsolute(inside)||inside==='..'||inside.startsWith('..'+sep)){partial=true;continue;}
-    if(info.size>64*1024||total+info.size>4*1024*1024){partial=true;continue;}total+=info.size;
+    if(info.size>256*1024||total+info.size>4*1024*1024){partial=true;continue;}total+=info.size;
     const source=await readFile(path,'utf8');sourceHashes.push(createHash('sha256').update(source).digest('hex'));
     const file=ts.createSourceFile('local.ts',source,ts.ScriptTarget.Latest,true);
     const imports=new Map<string,string>(),applications=new Set<string>(),uninitialized=new Set<string>(),topNames=new Map<string,number>();
@@ -44,6 +44,31 @@ export async function inspectProject(context:SnapshotContext) {
       if(ts.isVariableStatement(statement))for(const declaration of statement.declarationList.declarations)if(ts.isIdentifier(declaration.name)&&!declaration.initializer)uninitialized.add(declaration.name.text);
     }
     const factories=new Map<ts.Node,Set<string>>();
+    // Bounded ESM factory inventory (e.g. export function createApp()). This
+    // recognises syntax only; it never establishes route coverage or purpose.
+    for(const statement of file.statements){
+      if(!ts.isFunctionDeclaration(statement)||!statement.body||!statement.modifiers?.some(m=>m.kind===ts.SyntaxKind.ExportKeyword))continue;
+      for(const entry of statement.body.statements){
+        if(!ts.isVariableStatement(entry)||(entry.declarationList.flags&ts.NodeFlags.Const)===0)continue;
+        for(const declaration of entry.declarationList.declarations){
+          if(!ts.isIdentifier(declaration.name)||!declaration.initializer||!ts.isCallExpression(declaration.initializer)||!ts.isIdentifier(declaration.initializer.expression)||declaration.initializer.arguments.length)continue;
+          const app=declaration.name.text,factory=declaration.initializer.expression.text;
+          if(imports.get(factory)!=='express'||topNames.get(factory)!==1)continue;
+          let invalid=false;
+          const protects=new Set([app,factory]);
+          const protectedBinding=(name:ts.BindingName):boolean=>ts.isIdentifier(name)?protects.has(name.text):name.elements.some(e=>ts.isBindingElement(e)&&protectedBinding(e.name));
+          function audit(node:ts.Node){
+            if(node!==declaration&&(ts.isVariableDeclaration(node)||ts.isParameter(node))&&protectedBinding(node.name))invalid=true;
+            if((ts.isFunctionDeclaration(node)||ts.isClassDeclaration(node))&&node.name&&protects.has(node.name.text))invalid=true;
+            if(ts.isBinaryExpression(node)&&ts.isIdentifier(node.left)&&protects.has(node.left.text)&&node.operatorToken.kind>=ts.SyntaxKind.FirstAssignment&&node.operatorToken.kind<=ts.SyntaxKind.LastAssignment)invalid=true;
+            if((ts.isPrefixUnaryExpression(node)||ts.isPostfixUnaryExpression(node))&&ts.isIdentifier(node.operand)&&protects.has(node.operand.text)&&[ts.SyntaxKind.PlusPlusToken,ts.SyntaxKind.MinusMinusToken].includes(node.operator))invalid=true;
+            ts.forEachChild(node,audit);
+          }
+          audit(statement);if(invalid)continue;
+          const selected=factories.get(statement)??new Set<string>();selected.add(app);factories.set(statement,selected);express=true;partial=true;
+        }
+      }
+    }
     for(const statement of file.statements){
       if(!ts.isExpressionStatement(statement)||!ts.isBinaryExpression(statement.expression)||statement.expression.operatorToken.kind!==ts.SyntaxKind.EqualsToken)continue;
       const {left,right}=statement.expression;

@@ -49,6 +49,17 @@ it('freezes signed provenance without changing analysis, qualification or legacy
   await expect(freezeInsights(scan(),{seal:f.seal,keys:f.keys})).rejects.toThrow(/match/);
   expect(await verifyFrozenInsights({content:null} as unknown as StoredInsightReport,f.keys)).toBe(false);
 });
+it.each(['vylnt-project-assessment-v4','vylnt-project-assessment-v5'] as const)('archives opt-in %s evidence while keeping project relevance analysis disabled',async(policy)=>{
+  const f=await fixture(),originalHash=await contentHash(f.content);
+  const evidence={...f.evidence,policy},seal=f.signer.seal(evidence);
+  const content=await freezeInsights(f.report,{seal,keys:f.keys}),hash=await contentHash(content);
+  const stored={...f.stored,id:hash,hash,content};
+  expect(content.analysis).toEqual(f.content.analysis);expect(content.originalScanHash).toBe(f.content.originalScanHash);
+  expect(hash).not.toBe(originalHash);expect(await verifyFrozenInsights(JSON.parse(JSON.stringify(stored)),f.keys)).toBe(true);
+  expect(await verifyFrozenInsights(f.stored,f.keys)).toBe(true);expect(await contentHash(f.content)).toBe(originalHash);
+  expect(content.version).toBe('vylnt-frozen-insights-v2');
+  if(content.version==='vylnt-frozen-insights-v2')expect(content.project.assessment).toBe('not-enabled');
+});
 it('persists immutable project versions, retains key history and deletes with the source',async()=>{
   const f=await fixture(),path=join(f.dir,'store.json'),store=new FileStore(path);await store.put(owner,f.report);
   await expect(store.putInsight(owner,f.content)).rejects.toThrow(/trusted/);

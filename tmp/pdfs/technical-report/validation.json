@@ -1,0 +1,32 @@
+{
+  "pages": 38,
+  "markdownWords": 11350,
+  "pdfBytes": 361423,
+  "requiredChecks": [
+    "Executive Summary",
+    "Technology Stack",
+    "Core Features",
+    "Mathematical Rigor",
+    "Empirical Proof",
+    "Production Readiness",
+    "Interview Defense",
+    "Presentation",
+    "159",
+    "1,801",
+    "0.6695",
+    "95.42",
+    "326 of 630",
+    "Follow One Report",
+    "Closed-Book Interview Drill",
+    "not been fitted"
+  ],
+  "derivedMetrics": {
+    "lstmF1": 1.0,
+    "ruleF1": 0.6694560669456067,
+    "TP": 80,
+    "TN": 79,
+    "FP": 0,
+    "FN": 0
+  },
+  "renderReview": "pending"
+}

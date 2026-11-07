@@ -1,8 +1,48 @@
 # VYLNT executed framing-policy evidence
 
+## Scheme-wide ancestor rule
+
+The `framed-write-broad` profile applies `frame-ancestors http:` to
+the disposable HTTP loopback editor. The evidence keeps policy presence
+separate from restrictiveness. Assessment v16 requires the exact supported
+directive, complete response policy evidence, and a signed receipt for a
+native authenticated action exercised in the same-origin control and
+twice under a foreign origin. The adapters independently verify the
+resulting storage change and the anonymous denial. These observations
+cover the configured route and action.
+
+## Duplicate deny values
+
+The developer profile sets `X-Frame-Options: DENY, DENY` on the
+disposable loopback response without an enforcing CSP header. The raw rule
+still records a finding. To issue assessment v15 evidence, Chromium must
+block the response in direct, repeated and nested foreign frames.
+The initial probe matched the failed target request and Chromium's XFO
+diagnostic. Chromium omitted that diagnostic in some direct foreign
+frames. The paired probe instead matches the blocked target request and
+its error frame, then removes only the header in otherwise identical
+direct and nested foreign frames. Both paired controls must load the
+healthy native response. A separate same-origin control must also load.
+This establishes the tested behavior for the exact response. Four new
+registered applications passed in Chromium. Portal passed separately
+in installed Edge and contributed no additional credits. Other header
+values, CSP combinations and browser engines remain outside the profile.
+
+The FieldPoint site form, Habit Tracker note form and Jingo wiki editor
+now have signed framed-write cases. The browser submits the native form
+from the target document under the controlled parent. Independent storage
+readback verifies the expected account's row or commit. Jingo's replay
+checks the exact native POST redirect and returns a neutral terminal
+response before any navigation to the destination. A separate Jingo
+profile verified permitted own-origin embedding and foreign, repeated
+and nested ancestor blocks. These are scoped application fixture results.
+[Dataset counts](ML_REGISTERED_DATASETS.md)
+
 Implemented 2026-10-29 as an HDR-002 development evidence component. No model is trained, qualified or released by these checks.
 
 ## Response-policy controls
+
+5 November native expansion: `FramePolicyCheck` supports transient, bounded `x-api-key` / `x-session-token` headers for explicit local application checks. Only these names and printable values up to 512 characters are accepted. Values are copied in memory, forwarded after target-origin validation, and never sent to synthetic ancestor origins or retained in evidence. Personal Knowledge Manager's authenticated response passed real Chromium/Edge controls. Missing/invalid headers and unsupported operations cannot become verified facts. Anonymous Notepad's external asset requests and native POSTs remain outside the GET-only framing scope and produce review-only results. Existing cookie-session behavior is preserved. See `ML_NATIVE_TWELVE_FAMILIES.md` for scope and acceptance.
 
 `frame-policy-scope.ts` independently parses a narrow response `frame-ancestors` scope: self, none and finite exact HTTP loopback origins. It respects the first directive in each policy and intersects multiple enforced policies. Broad schemes, wildcards, external origins, paths, malformed/oversized syntax and absent policies stay unsupported. Meta and report-only policies cannot supply enforced ancestor restrictions. HTTP source-expression matching can also permit secure scheme variants; this component's execution scope is explicitly HTTP loopback ancestors, not every web origin.
 
@@ -15,6 +55,12 @@ Each replay verifies the target response status and exact security-header metada
 Successful HDR-002 targets receive `framePolicyEnforced=true` and `frameAncestorsRestricted=true`, with browser provenance and a common witness digest. Public-embedding purpose, sensitive-action intent and the trustworthiness of allowed parents remain unasserted. These are measured configuration controls within the declared scope, not exploitability or application-wide safety findings.
 
 ## Assessment policy and compatibility
+
+2026-11-05 opt-in `vylnt-project-assessment-v4`: a native Express response with nonempty inspected source hashes, complete same-run own-origin/no-ancestor policy witnesses and healthy browser enforcement can retain scoped framing context despite partial application-wide syntax coverage. Unknown/mismatched/response-only witnesses, foreign allowed parents, conflicting known purpose and unsupported frameworks remain review-only; high/critical findings remain visible. Policies v1-v3 retain their previous partial-inventory decisions. The default producer remains v3; only the explicit native framing harness opts into v4. No qualified production classifier is enabled.
+
+`npm run test:projects:native:tabinator:framing` now executes the pinned native API response and independently checked SQL/session operations with an explicit framing configuration intervention. The profile counts as the same Tabinator family. It supplies one contextual seed after complete permitted/forbidden/repeated/nested controls, not a full eligible dataset. Chromium/Edge, reload/privacy and cancellation passed on 2026-11-05; details and counts are in `ML_NATIVE_DATASETS.md`. Frozen report compatibility tests retain the seal while project assessment stays `not-enabled`.
+
+The following paragraphs describe the original v2 implementation; default production collection subsequently moved to v3, and the new native framing profile explicitly selects v4.
 
 New project evidence uses `vylnt-project-assessment-v2`. Its future candidate safeguard can use the two complete browser-proven policy facts with the same witness only when complete response policy also establishes self/no-parent scope in the supported HTTP ancestor domain. This avoids fabricating purpose values. Other permitted origins retain Needs review until their trust/purpose relationship is supported. Unsupported framework/collection, contradictory known purpose, high/critical severity and incomplete controls retain review safeguards. Response-parser facts alone cannot select this path.
 

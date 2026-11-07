@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:ether/etherpad",
+  "repository": "https://github.com/ether/etherpad",
+  "repositoryId": 1529160,
+  "release": "v3.3.15",
+  "revision": "3ecf54ef7c8a0341bc5fe436725f3843f7c3ce80",
+  "license": "Apache-2.0",
+  "licenseGitBlob": "366aa1a47ada71731706b5c1a2bb0933438f4d02",
+  "licenseSha256": "9bb380ff448a820820bf4351a3dbc68355d81e2bd936187f15528ae52cf12fc3",
+  "dependencyLockSha256": "3d5873ae61538776ea1a46f7906b58606ca6f4bfb8199eb571ff0588ca96031e",
+  "sourceSha256": {
+    "package.json": "ddce480d4c198078783c549db9dfc4f2e4e09bd901be8c5c4aafc17b4d84483d",
+    "src/package.json": "8f917a8f6aed1801c36ccc5fb2801fd17090b8d9c2375a4af546faab5f8a2381",
+    "doc/cookies.md": "81872351e199ba189ed19c58fa08c8651b61fb250a99fbeb0afa64d90f32a30f",
+    "src/static/js/pad_cookie.ts": "5d645601eb067055c39913e9139ef3b8a58de51d75ee14829ddbfe7aad292405",
+    "src/static/js/pad.ts": "697777860129d089902b3eae5535e5692303775174e05ce583d81c60458c7fd1",
+    "src/node/utils/ensureAuthorTokenCookie.ts": "4981414af97be377c89fea2a0dbb4f9415c76b090d80ea4fd2e7c12e7921845e",
+    "src/node/handler/PadMessageHandler.ts": "8c639f5c7f3d977952d47f0a654e671801c23f96a6d18d52fcc41e2d2e14ebc7",
+    "src/node/hooks/express/tokenTransfer.ts": "2889e940a760d610e669577169e956c27e681159f9282fea652ca6bcc70c9519",
+    "src/node/hooks/express.ts": "049717c427ee58cb024c4d9d4e4a3839a6a519ed0af717c4d48f2e83088d0521",
+    "settings.json.template": "b80908edabe1d969f1df7ff42f4167fb97cc4aece1108efbc43f03128a56960e"
+  },
+  "proposedScope": "Native per-browser editor preferences, tested independently from protected pad access and authorship. The existing cookie-prefix option can exercise the detector without changing preference logic.",
+  "partition": null,
+  "executed": true,
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "eligibleExamples": 0
+}

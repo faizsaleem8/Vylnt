@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:fufu1209/personal-knowledge-manager",
+  "repository": "https://github.com/fufu1209/personal-knowledge-manager",
+  "repositoryId": 1291300660,
+  "revision": "413d308c0b43b2a171dd945a29909a95b47904f0",
+  "license": "MIT",
+  "licenseGitBlob": "b9c1da783ec5a402a042c5514ab69fd0bcfc3927",
+  "dependencyLockSha256": "807425f7be10745e794e2695253bd4cb987343aa22ea3844160a4e2368a5d79a",
+  "sourceSha256": {
+    "LICENSE": "f79f38ac7592020712d7549f761aa41430ba0e72e6176855db1478425190e713",
+    "src/backend/server.ts": "6579879c93d9e27f37f666be80efa28259a4c2c3040891a067f80e6a7c5299b1",
+    "src/backend/config.ts": "93ac8098497e565b1dc4aeff6a768a0e42ea47d91e6d45c26c87a297357120a0",
+    "src/backend/middleware/auth.ts": "6ec505c87e86289399a514e840f7838b5809ad3361efbcc6d0e2a786d854ef3d",
+    "src/backend/db/index.ts": "ea3f932f213ac3c1ff23364780464840c75e4002b7a21310d800ff7a7baab572",
+    "src/backend/routes/notes.ts": "a57da8958413c52b78d377c52764df2cccd3a80f0061eab7529117408118ad2d",
+    "src/backend/package-lock.json": "9a7a19168ede329512d33668577829d62a2f95581186adbb2213fd2becbd21bf"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

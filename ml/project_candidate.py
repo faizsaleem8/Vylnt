@@ -2,9 +2,11 @@
 import argparse
 import copy
 import hashlib
+import hmac
 import json
 import math
 import platform
+import project_material as material_context
 from importlib.metadata import version
 from collections import Counter
 from pathlib import Path
@@ -14,7 +16,7 @@ POLICY = 'vylnt-project-candidate-v1'
 
 
 def protocol_hash():
-    return digest({name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in ['project_candidate.py', 'insights_v3.py', 'insights.py']})
+    return digest({name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in ['project_candidate.py', 'project_material.py', 'insights_v3.py', 'insights.py']})
 
 
 def digest(value):
@@ -32,15 +34,59 @@ def save(path, value):
         json.dump(value, file, indent=2, allow_nan=False)
 
 
+def native_representatives(rows):
+    """Credit each native cause and numeric input once within its partition."""
+    scenarios = {}
+    for row in rows:
+        scenarios.setdefault(row['scenario'], []).append(row)
+    used = set()
+    selected = []
+    # Prefer constrained scenarios. An unassigned case stays out, even if its
+    # other representation differs only in unrelated observations on the page.
+    for _, group in sorted(scenarios.items(), key=lambda item: (len({r['variant'] for r in item[1]}), item[0])):
+        for row in sorted(group, key=lambda r: (r['variant'], r['evidenceRecord'])):
+            if row['variant'] not in used:
+                selected.append(row)
+                used.add(row['variant'])
+                break
+    return selected
+
+
 def inspect(prepared, features):
     data, split, audit = [read(prepared / name) for name in ['dataset.json', 'split.json', 'audit.json']]
     preparation = read(prepared / 'registration.json')
-    if preparation.get('version') != 'vylnt-project-registration-v1':
+    material = preparation.get('version') == 'vylnt-native-prepared-v2'
+    native = material or preparation.get('version') == 'vylnt-native-prepared-v1'
+    if native:
+        key = (Path('.local') / 'insights-dataset-key').read_text(encoding='utf-8').strip().encode()
+        registration = preparation['registration'].copy()
+        registration_hash = registration.pop('registrationHash')
+        encoded = json.dumps(registration, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+        scope = 'native-material-development:' if material else 'native-development:'
+        expected = hmac.new(key, (scope + encoded).encode(), 'sha256').hexdigest()
+        if not hmac.compare_digest(expected, registration_hash) or registration['sourceHash'] != data.get('sourceLockHash'):
+            raise ValueError('Native development registration binding changed')
+        names = ['dataset', 'split', 'audit', 'collection'] + (['material-policy'] if material else [])
+        hashes = {name: hashlib.sha256((prepared / (name + '.json')).read_bytes()).hexdigest() for name in names}
+        message = json.dumps([registration_hash, *hashes.values()], separators=(',', ':'))
+        scope = 'prepared-native-material-datasets:' if material else 'prepared-native-datasets:'
+        expected = hmac.new(key, (scope + message).encode(), 'sha256').hexdigest()
+        if hashes != preparation['fileHashes'] or not hmac.compare_digest(expected, preparation['auth']):
+            raise ValueError('Authenticated native preparation differs')
+    elif preparation.get('version') != 'vylnt-project-registration-v1':
         raise ValueError('Expected a registered project preparation')
     if data.get('schemaVersion') != 'vylnt-evidence-v4' or data.get('featureNames') != features or len(set(features)) != len(features):
         raise ValueError('Incompatible feature contract')
     if audit.get('datasetHash') != digest(data) or split.get('sourceLockHash') != data.get('sourceLockHash') or split.get('version') != 'vylnt-project-development-split-v1':
         raise ValueError('Prepared dataset/split binding changed')
+    policy = None
+    if material:
+        policy = material_context.validate_policy(read(prepared / 'material-policy.json'), features, RULES)
+        if registration.get('materialPolicyHash') != digest(policy) or data.get('countingPolicy') != {'version': policy['version'], 'hash': digest(policy)}:
+            raise ValueError('Material counting policy binding changed')
+        code = {name: hashlib.sha256(Path(name).read_bytes()).hexdigest() for name in ['packages/ml/project-material-context.ts', 'ml/project_material.py']}
+        if registration.get('projectionCodeHash') != digest(code):
+            raise ValueError('Material projection implementation changed')
     assignments = split['families']
     if any(part not in ['train', 'validation'] for part in assignments.values()):
         raise ValueError('Development candidate cannot read a test partition')
@@ -67,7 +113,13 @@ def inspect(prepared, features):
             if key not in seen:
                 seen.add(key)
                 eligible[assignments[row['family']]].append(row)
+    if material:
+        selected = material_context.representatives(rows, features, policy)
+        eligible = {part: [row for row in selected if assignments[row['family']] == part] for part in eligible}
+    elif native:
+        eligible = {part: native_representatives(rows) for part, rows in eligible.items()}
     deficits = []
+    class_counts = {}
     counts = Counter(assignments.values())
     if counts != {'train': 8, 'validation': 4}:
         deficits.append('Need exactly 8 training and 4 validation families')
@@ -75,13 +127,21 @@ def inspect(prepared, features):
         for part, minimum in [('train', 30), ('validation', 15)]:
             for label in ['change-warranted', 'contextual']:
                 selected = [r for r in eligible[part] if r['category'] == category and r['label'] == label]
-                contexts, families = len({r['variant'] for r in selected}), len({r['family'] for r in selected})
+                contexts = len({(r['family'], r['materialVariant']) for r in selected}) if material else len({r['variant'] for r in selected})
+                families = len({r['family'] for r in selected})
+                class_counts.setdefault(category, {}).setdefault(part, {})[label] = {'contexts': contexts, 'families': families, 'requiredContexts': minimum}
                 if contexts < minimum or families < 3:
                     deficits.append(f'{category}/{part}/{label}: {contexts}/{minimum} contexts, {families}/3 families')
     ready = not deficits and audit.get('ready') is True
     if not deficits and not ready:
         deficits.append('Preparation audit is not ready')
     status = {'version': POLICY, 'ready': ready, 'deficits': deficits, 'datasetHash': digest(data), 'splitHash': digest(split), 'featureHash': digest(features), 'preparationHash': digest(preparation), 'qualification': False, 'testPredictions': 0}
+    if native:
+        status['classCounts'] = class_counts
+    if material:
+        status['countingPolicy'] = {'version': policy['version'], 'hash': digest(policy)}
+        status['familyWeighting'] = 'equal-family-within-category-class'
+        status['numericOverlapVariants'] = sum(len({assignments[row['family']] for row in group}) > 1 for group in groups.values())
     return status, eligible
 
 
@@ -124,6 +184,8 @@ def fit(prepared, features, root):
     labels = lambda rows: torch.tensor([r['label'] == 'change-warranted' for r in rows], dtype=torch.float32)
     def weights(rows):
         counts = Counter((r['category'], r['label']) for r in rows)
+        if status.get('countingPolicy'):
+            return np.asarray(material_context.family_weights(rows))
         return np.array([len(rows) / (len(counts) * counts[(r['category'], r['label'])]) for r in rows])
     loss = torch.nn.BCEWithLogitsLoss(reduction='none')
     optimizer = torch.optim.Adam(model.parameters(), lr=.01)
@@ -147,8 +209,11 @@ def fit(prepared, features, root):
         idx = [i for i, r in enumerate(val) if r['category'] == category]
         if not idx:  # Unsupported even in developer smoke tests.
             policy['categories'][category] = {'supported': False}; continue
-        calibration, thresholds = engine.calibrate(logits[idx], labels([val[i] for i in idx]).numpy())
-        lc, lt = engine.calibrate(logistic_logits[idx], labels([val[i] for i in idx]).numpy())
+        selected_rows = [val[i] for i in idx]
+        values = labels(selected_rows).numpy()
+        calibrate = lambda output: material_context.calibrate(output, values, selected_rows) if status.get('countingPolicy') else engine.calibrate(output, values)
+        calibration, thresholds = calibrate(logits[idx])
+        lc, lt = calibrate(logistic_logits[idx])
         policy['categories'][category] = {'supported': True, 'calibration': calibration, 'thresholds': thresholds, 'logisticCalibration': lc, 'logisticThresholds': lt}
     w = model.state_dict()
     artifact = {'schemaVersion': 'vylnt-evidence-v4', 'kind': 'evidence-lstm', 'featureNames': features, 'hiddenSize': 8, 'maxSteps': 74, 'gateOrder': 'ifgo',
@@ -217,7 +282,7 @@ def main():
     # Acquisition outputs deliberately cannot impersonate registered preparation.
     # Explain the actual next step before reading datasets or importing ML runtimes.
     audit_path = args.prepared / 'audit.json'
-    if audit_path.exists() and read(audit_path).get('version') == 'vylnt-native-seed-audit-v1':
+    if audit_path.exists() and read(audit_path).get('version') in ['vylnt-native-seed-audit-v1', 'vylnt-native-seed-audit-v2']:
         status = {'version': POLICY, 'ready': False, 'seedData': True, 'modelFitted': False,
                   'qualification': False, 'testPredictions': 0,
                   'deficits': ['Native seed observations are not a registered 8-training/4-validation family corpus.'] +
@@ -227,7 +292,10 @@ def main():
             return 2
         raise ValueError('Native seed observations cannot be registered or fitted; complete eligible development preparation first')
     if args.action == 'preflight':
-        status, _ = inspect(args.prepared, features); print(json.dumps(status, indent=2))
+        status, _ = inspect(args.prepared, features)
+        if args.output is not None:
+            save(args.output, status)
+        print(json.dumps(status, indent=2))
         return 0 if status['ready'] else 2
     if args.output is None:
         raise ValueError('--output is required')

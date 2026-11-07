@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:egeyigit/fieldpoint",
+  "repository": "https://github.com/egeyigit/fieldpoint",
+  "repositoryId": 1361716771,
+  "revision": "1329edc008f284967517f6fb9af1f622900af7b2",
+  "license": "MIT",
+  "licenseGitBlob": "02142da75fe7cd39de20488d4e020aea2ddaa8df",
+  "dependencyLockSha256": "aef2f63ad3e9868eade25d5b2addf618e27646960c0b73c687fc3e25541c8e6c",
+  "sourceSha256": {
+    "LICENSE": "330ec97a0f56e0a944c999bb9d74da034569f7a9df0ab4d9940654d3bf351977",
+    "src/app.js": "b3e1a3158858d05791c7dfd1d784cfe59f78ab1d380a5a10347e61c1ac82e326",
+    "src/auth/session.js": "902759900f1c0cb9ff3d5614dcc4f932019f6785bbb6495385dbeda31bd71e66",
+    "src/auth/routes.js": "2be152e020d9e5f8f083b2d0b258554cf862c331c6cdd1d536b95d3695d35c05",
+    "src/middleware/security.js": "fb0b78b706bb223e59e6b4ba02960b006233c54c640a789becc417d161022c12",
+    "src/sites/routes.js": "75ffea70b08f8b6033a3bb4308e6f4b79c1f7cbe1fd548e154b54122187a56ca"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

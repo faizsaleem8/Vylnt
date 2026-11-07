@@ -5,6 +5,8 @@ import tempfile
 import subprocess
 import sys
 import os
+import hmac
+import hashlib
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -13,6 +15,76 @@ import project_candidate as C
 
 
 class ProjectCandidateTests(unittest.TestCase):
+    def test_authenticated_material_preparation_counts_families_and_rejects_tampering(self):
+        policy = C.read(Path('ml/project_material_policy.json'))
+        features = ['target'] + ['rule_' + rule for rule in C.RULES] + sorted(set(policy['common'] + sum(policy['categories'].values(), [])))
+        self.data['featureNames'] = features
+        target = [-1] * len(features)
+        target[features.index('target')] = target[features.index('rule_CK-001')] = 1
+        rows = []
+        for family in ['f0', 'f8']:
+            row = {'family': family, 'category': 'CK-001', 'label': 'change-warranted', 'uncertain': False,
+                   'sequence': [[-1] * len(features), target], 'evidenceRecord': family}
+            row['variant'] = C.digest(row['sequence'])
+            row['materialVariant'] = C.material_context.material_variant(row, features, policy)
+            rows.append(row)
+        self.data.update(examples=rows, countingPolicy={'version': policy['version'], 'hash': C.digest(policy)})
+        self.flush()
+        body = {'version': 'vylnt-native-material-registration-v1', 'sourceHash': self.data['sourceLockHash'],
+                'materialPolicyHash': C.digest(policy), 'projectionCodeHash': C.digest({name: hashlib.sha256(Path(name).read_bytes()).hexdigest()
+                    for name in ['packages/ml/project-material-context.ts', 'ml/project_material.py']})}
+        private_key = 'mechanics-key-not-a-real-installation-secret'
+
+        def authenticate():
+            registration = {**body, 'registrationHash': hmac.new(private_key.encode(), ('native-material-development:' + json.dumps(body, sort_keys=True, separators=(',', ':'))).encode(), 'sha256').hexdigest()}
+            names = ['dataset', 'split', 'audit', 'collection', 'material-policy']
+            hashes = {name: hashlib.sha256((self.root / (name + '.json')).read_bytes()).hexdigest() for name in names}
+            message = json.dumps([registration['registrationHash'], *hashes.values()], separators=(',', ':'))
+            C.save(self.root / 'registration.json', {'version': 'vylnt-native-prepared-v2', 'registration': registration, 'fileHashes': hashes,
+                'auth': hmac.new(private_key.encode(), ('prepared-native-material-datasets:' + message).encode(), 'sha256').hexdigest()})
+
+        (self.root / 'registration.json').unlink()
+        C.save(self.root / 'collection.json', {'qualification': False})
+        C.save(self.root / 'material-policy.json', policy)
+        authenticate()
+        original_read = Path.read_text
+
+        def bounded_key(path, *args, **kwargs):
+            if path == Path('.local/insights-dataset-key'):
+                return private_key
+            return original_read(path, *args, **kwargs)
+
+        with patch.object(Path, 'read_text', bounded_key):
+            status, selected = C.inspect(self.root, features)
+            self.assertFalse(status['ready'])
+            self.assertEqual(len(selected['train']), 1)
+            self.assertEqual(len(selected['validation']), 1)
+            self.assertEqual(status['numericOverlapVariants'], 1)
+            self.assertEqual(status['classCounts']['CK-001']['train']['change-warranted']['contexts'], 1)
+            with self.assertRaisesRegex(ValueError, 'not ready'):
+                C.register(self.root, features, self.root / 'candidate')
+            self.assertFalse((self.root / 'candidate').exists())
+            original = (self.root / 'dataset.json').read_bytes()
+            (self.root / 'dataset.json').write_bytes(original + b' ')
+            with self.assertRaisesRegex(ValueError, 'Authenticated'):
+                C.inspect(self.root, features)
+            (self.root / 'dataset.json').write_bytes(original)
+            body['projectionCodeHash'] = '0' * 64
+            (self.root / 'registration.json').unlink()
+            authenticate()
+            with self.assertRaisesRegex(ValueError, 'projection implementation'):
+                C.inspect(self.root, features)
+
+    def test_native_repetitions_cannot_multiply_training_weight(self):
+        def example(scenario, variant):
+            return {'scenario': scenario, 'variant': variant, 'evidenceRecord': scenario + variant}
+        rows = [example('A', 'x'), example('A', 'z'), example('B', 'x'), example('C', 'x')]
+        selected = C.native_representatives(rows)
+        self.assertEqual(selected, C.native_representatives(list(reversed(rows))))
+        self.assertEqual(len(selected), 2)
+        self.assertEqual(len({r['scenario'] for r in selected}), 2)
+        self.assertEqual(len({r['variant'] for r in selected}), 2)
+
     def setUp(self):
         parent = Path('.local/test-tmp').resolve(); parent.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(prefix='project-candidate-', dir=parent)
@@ -41,7 +113,12 @@ class ProjectCandidateTests(unittest.TestCase):
         self.assertFalse((self.root / 'candidate').exists())
 
     def test_native_seed_format_reports_deficits_and_cannot_register_or_fit(self):
-        (self.root / 'audit.json').write_text(json.dumps({'version': 'vylnt-native-seed-audit-v1'}))
+        for version in ['vylnt-native-seed-audit-v1', 'vylnt-native-seed-audit-v2']:
+            with self.subTest(version=version):
+                self.check_seed_refusal(version)
+
+    def check_seed_refusal(self, version):
+        (self.root / 'audit.json').write_text(json.dumps({'version': version}))
         features = self.root / 'features.json'; features.write_text(json.dumps(self.features))
         candidate = self.root / 'candidate'
         for action in ['preflight', 'register', 'fit']:

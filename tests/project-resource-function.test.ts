@@ -6,13 +6,56 @@ import {collectResponseFacts} from '../packages/ml/project-policy-facts';
 import {contentHash} from '../packages/core/integrity';
 import {resourceFunctionVersion,resourceControlsPass,mergeResourceFunction,measureResourceFunction,observeResourceRequests,correlateResourceTransfers,type ResourceControls,type ResourceMeasurement} from '../apps/cli/project-resource-function';
 import {redirectAllowed} from '../apps/cli/project-redirect-guard';
+import {scanProjectPage} from '../apps/cli/project-scanner';
 const good:ResourceControls={baseline:{complete:true,functionality:'passed',transfer:'http',metadataHash:'a'.repeat(64)},withheld:{complete:true,functionality:'failed',transfer:'withheld',metadataHash:'a'.repeat(64)},restored:{complete:true,functionality:'passed',transfer:'http',metadataHash:'a'.repeat(64)}};
 describe('direct HTTP resource causal controls',()=>{
+  it('keeps modules outside the default probe and limits the reviewed probe to the named fixture',async()=>{
+    const target='https://127.0.0.1/',raw='http://127.0.0.1/app.js',frame={};
+    const input={scripts:[{raw,attrs:[raw,'module','','',''],async:false,defer:false,noModule:false}],policies:[],styles:[]};
+    const report=createReport(crypto.randomUUID(),{url:target,scannedAt:'2026-10-29T00:00:00Z',headers:{},cookies:[],domCollected:true,
+      resources:[{url:raw,type:'script',outcome:'referenced'}],scripts:[{url:raw,integrity:false,scriptType:'module'}]});
+    const events=Object.assign(new EventEmitter(),{url:()=>target,mainFrame:()=>frame,locator:()=>({evaluate:async()=>input})});
+    const page=events as unknown as Page;
+    const observation=observeResourceRequests(page,target,new Set(['https://127.0.0.1','http://127.0.0.1']));
+    const request={url:()=>raw,resourceType:()=>'script',frame:()=>frame,redirectedFrom:()=>null,redirectedTo:()=>null,
+      response:async()=>({status:()=>200,fromServiceWorker:()=>false,serverAddr:async()=>({ipAddress:'127.0.0.1',port:80})}),
+      sizes:async()=>({responseBodySize:100,responseHeadersSize:25})};
+    events.emit('request',request);events.emit('requestfinished',request);
+    await observation.finish(report);
+    const browser=vi.fn(),source={pages:()=>[page],browser} as never;
+    const check={identityHash:'a'.repeat(64),check:async()=> 'passed' as const};
+    for(const options of [check,{...check,nativeModulePath:'/app.js' as const}]){
+      expect((await measureResourceFunction(source,report,options)).status).toBe('needs-review');
+    }
+    expect(browser).not.toHaveBeenCalled();
+  });
+  it('leaves ambiguous or inactive stylesheet references uncertain even after a completed wire transfer',async()=>{
+    const target='https://127.0.0.1/',raw='http://127.0.0.1/app.css',frame={};
+    const style={raw,media:'',integrity:'',disabled:false,alternate:false};
+    const report=createReport(crypto.randomUUID(),{url:target,scannedAt:'2026-10-29T00:00:00Z',headers:{},cookies:[],scripts:[],
+      domCollected:true,resources:[{url:raw,type:'link',outcome:'referenced'}]});
+    for(const styles of [[style,{...style,raw:raw+'?different=true'}],[{...style,disabled:true}],[{...style,alternate:true}]]){
+      const input={scripts:[],policies:[],styles};
+      const events=Object.assign(new EventEmitter(),{url:()=>target,mainFrame:()=>frame,locator:()=>({evaluate:async()=>input})});
+      const page=events as unknown as Page;
+      const request={url:()=>raw,resourceType:()=>'stylesheet',frame:()=>frame,redirectedFrom:()=>null,redirectedTo:()=>null,
+        response:async()=>({status:()=>200,fromServiceWorker:()=>false,serverAddr:async()=>({ipAddress:'127.0.0.1',port:80})}),
+        sizes:async()=>({responseBodySize:100,responseHeadersSize:25})};
+      const observation=observeResourceRequests(page,target,new Set(['https://127.0.0.1','http://127.0.0.1']));
+      events.emit('request',request);events.emit('requestfinished',request);
+      await observation.finish(report);
+      const browser=vi.fn();
+      const result=await measureResourceFunction({pages:()=>[page],browser} as never,report,
+        {identityHash:'a'.repeat(64),resourceKind:'stylesheet',check:async()=>'passed'});
+      expect(result).toMatchObject({status:'needs-review',targets:[]});
+      expect(browser).not.toHaveBeenCalled();
+    }
+  });
   it('bounds missing browser response metadata and cannot turn a timed-out transfer into a fact',async()=>{
     vi.useFakeTimers();
     try{
       const target='https://127.0.0.1/',raw='http://127.0.0.1/app.js',frame={};
-      const input={scripts:[{raw,attrs:[raw,'','', '', ''],async:false,defer:false,noModule:false}],policies:[]};
+      const input={scripts:[{raw,attrs:[raw,'','', '', ''],async:false,defer:false,noModule:false}],policies:[],styles:[]};
       const events=Object.assign(new EventEmitter(),{url:()=>target,mainFrame:()=>frame,locator:()=>({evaluate:async()=>input})}),page=events as unknown as Page;
       const req={url:()=>raw,resourceType:()=>'script',frame:()=>frame,redirectedFrom:()=>null,redirectedTo:()=>null,response:async()=>({status:()=>200,fromServiceWorker:()=>false,serverAddr:async()=>({ipAddress:'127.0.0.1',port:80})}),sizes:async()=>new Promise<never>(()=>{})} as unknown as Request;
       const report=createReport(crypto.randomUUID(),{url:target,scannedAt:'2026-10-29T00:00:00Z',headers:{},cookies:[],domCollected:true,resources:[{url:raw,type:'script',outcome:'completed'}],scripts:[{url:raw,integrity:false,scriptType:'classic',async:false,defer:false}]});
@@ -41,6 +84,20 @@ describe('direct HTTP resource causal controls',()=>{
     expect(resourceControlsPass({...good,withheld:{...good.withheld,functionality:'passed'}})).toBe(false);
     expect(resourceControlsPass({...good,restored:{...good.restored,functionality:'failed'}})).toBe(false);
     expect(resourceControlsPass({...good,baseline:{...good.baseline,transfer:'withheld'}})).toBe(false);
+    const upgraded={...good,baseline:{...good.baseline,transfer:'https-upgraded' as const},restored:{...good.restored,transfer:'https-upgraded' as const}};
+    expect(resourceControlsPass(upgraded)).toBe(true);
+    expect(resourceControlsPass({...upgraded,restored:good.restored})).toBe(false);
+  });
+  it('rejects additional or mismatched origins before launching named fixture collection',async()=>{
+    const origin='https://vylnt-resource.test:4000',plain='http://vylnt-resource.test:4000';
+    for(const allowedLocalOrigins of [[origin],[origin,plain,'https://127.0.0.1:4001'],
+      [origin,plain,'http://127.0.0.2:4001'],[origin,plain,'http://127.0.0.1:4001','http://127.0.0.1:4002']]){
+      await expect(scanProjectPage(origin+'/editor',{namedUpgradeFixture:true,allowedLocalOrigins})).rejects.toThrow(/paired strict TLS/);
+    }
+    await expect(scanProjectPage(origin+'/editor',{namedUpgradeFixture:true,allowedLocalOrigins:[origin,plain],ignoreHTTPSErrors:true})).rejects.toThrow(/strict TLS/);
+    const allowed=new Set([origin,plain]);
+    expect(redirectAllowed(origin,302,[{name:'location',value:'/editor'}],allowed,true)).toBe(true);
+    expect(redirectAllowed(origin,302,[{name:'location',value:plain+'/editor'}],allowed,true)).toBe(false);
   });
   it('refuses uploaded receipts, stale bindings and uncertain facts',async()=>{
     const report=createReport(crypto.randomUUID(),{url:'https://127.0.0.1/',scannedAt:'2026-10-29T00:00:00Z',headers:{},cookies:[],scripts:[],domCollected:true,resources:[{url:'http://127.0.0.1/app.js',type:'script',outcome:'completed'}]});

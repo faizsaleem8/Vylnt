@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:joesalaz/bookwise",
+  "repository": "https://github.com/joesalaz/BookWise",
+  "repositoryId": 997802277,
+  "revision": "547203a025c28d809bc09c8bbd00992b81c032aa",
+  "license": "MIT",
+  "licenseGitBlob": "aefe9d0510cc4041d175f3fc512452542d2a1819",
+  "dependencyLockSha256": "09fd5d29dc6b3288814ae7a0f53d8fa7c19509994d5c5d619e136dadf3a4d0e5",
+  "sourceSha256": {
+    "LICENSE": "033e320ca143986aad91f1587896b43b07661c2c098d4edbfd042838a2a62bf9",
+    "server/app.js": "0e86d6b751e6092b318b3675f39ec07967ffe010275a09ae6ed53541e3d11aa4",
+    "server/middleware/session.js": "bd011b8b7c6b8b3027d3bd83c75eb82144f05e75c21f753f304bd5b5b61f6033",
+    "server/middleware/auth.js": "31ce521dc77a911b7aded8631668fd8a6ce7d1347a55f360d67d475476b7058a",
+    "server/controllers/authController.js": "9a4fd725cf30fecda49393f167f31c5a303cba7dfecfba195dd475e229402881",
+    "server/controllers/categoryController.js": "d8785d598886e8dcc8a23aa14a94188b2063b861e3a3de711f73d4c915d644de",
+    "server/models/user.js": "a16420e976d76e1307928cd08fc4c04b75775caa1d36daa40e6ffe1c2daa2015",
+    "server/models/category.js": "97c7077d94d04c71ff979d050c1c6dde321f4fa9100a35622f800850d5e3f81f",
+    "server/config/config.json": "fa709aa6914f5dcbafc2eaa2d8c5372d47680562e3d53bc046ceaf3a6f16f9d1"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

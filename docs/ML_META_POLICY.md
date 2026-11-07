@@ -1,5 +1,32 @@
 # VYLNT meta-CSP evidence
 
+## String evaluation in the response policy
+
+The `script-eval-response` profile tests a bounded `script-src` policy
+that includes `unsafe-eval`. It must block an unapproved inline element
+while allowing a fixed string-evaluation probe. The probe explicitly
+disables the debugger's CSP bypass. A paired replay removes only
+`unsafe-eval` from the exact matched response. String evaluation must
+then fail while the native interaction still works. Assessment v18
+uses this scoped behavior as change-warranted evidence. The profile
+does not establish an attacker-controlled input or a full-site fix.
+[W3C Content Security Policy specification](https://www.w3.org/TR/CSP2/) ·
+[Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-evaluate)
+
+## Hash allowlist in the response
+
+The developer response profile sends `script-src 'self' 'unsafe-inline'`
+with a bounded SHA-256 allowlist. CSP-aware browsers can ignore the inline
+fallback when a hash source is present. The test requires the native
+interaction to work, break with JavaScript disabled and recover when
+restored. The separate unapproved inline probe must be blocked in both
+enabled runs. The collector confirms that an HTML meta policy is absent,
+so this behavior can be attributed to the response. The raw heuristic
+finding remains visible. Assessment v17 covers only this exact fixture
+and observed interaction. [W3C Content Security Policy specification](https://www.w3.org/TR/CSP2/)
+
+5 November 2026: native Jingo acquisition now exercises missing, early restrictive hash/self and late meta policies against its real editor and independently checked Git write. Opt-in assessment v5 retains partial application scope and archived policy behavior. These are development seeds, not a qualified category. See `ML_NATIVE_JINGO_SCRIPTS.md` and PLAN.md for measured validation and limitations.
+
 Implemented 2026-10-29 for the supported HDR-003 developer workflow. This collects scoped facts; it does not qualify HDR-003 or enable a model release. Ordinary extension scans retain their existing behavior.
 
 ## Timing and identity

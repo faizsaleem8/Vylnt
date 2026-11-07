@@ -11,5 +11,5 @@
     "types": ["chrome", "node"],
     "skipLibCheck": true
   },
-  "include": ["packages/**/*.ts", "apps/**/*.ts", "apps/**/*.tsx", "tests/**/*.ts"]
+  "include": ["packages/**/*.ts", "apps/**/*.ts", "apps/**/*.tsx", "tests/**/*.ts", "scripts/ml-native-development.ts", "scripts/ml-material-development.ts", "scripts/native-preference-registration.ts", "scripts/native-etherpad-capture.ts"]
 }

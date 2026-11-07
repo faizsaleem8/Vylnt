@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "role": "development-prototype-exposure",
+  "familyId": "upstream:brixdorf/habit-tracker",
+  "repository": "https://github.com/brixdorf/habit-tracker",
+  "repositoryId": 1319171448,
+  "revision": "c903c2788f8336bb195e7b2ce490a8b8d97e1a0d",
+  "license": "MIT",
+  "licenseGitBlob": "300ad7635d65fdd045aca99b37cef678dea6f5ec",
+  "dependencyLockSha256": "cba594826a9138979bd83277aa4ed1a1be64fe184d60f18b1cbd39751fbaa09f",
+  "sourceSha256": {
+    "LICENSE": "70c6edf65a493f32405e5dd91f53c3d3b438c9fdf7e4bf8a022de18944719151",
+    "server/src/app.js": "528cc508275b06a74727956a73315119e06d43c15cca703e22be7b730846b204",
+    "server/src/db.js": "07ad68534f59688e28f674aeff2b8e61cd7d43a14c9d19ed97d2f436301135d2",
+    "server/src/lib/sqliteSessionStore.js": "50318c112477f33369b50052fe7a50b6c187fa3cbff671840ed1619593683dcc",
+    "server/src/routes/auth.js": "4d346cbdee203ce01c0083227433e0282e1e691ba6b4268a55d7e31ba87657ae",
+    "server/src/routes/notes.js": "25581f6efacb5db1030d35184c3daa788ebb516520a793a216ce2d9cafd3c92f"
+  },
+  "scope": "Native operation adapter; execution determines evidence eligibility. Authentication is not assumed. One response and one mutation, not whole-application security.",
+  "excludeFromFutureHoldout": true,
+  "qualificationClaimed": false,
+  "sourceBytePolicy": "Exact Git blobs; canonical CRLF conversion only when original blob is reproduced."
+}

@@ -4,6 +4,14 @@ Last updated: 2026-11-07 (Asia/Calcutta)
 
 ## Current milestone
 
+**7 November — GitHub Checks Chromium setup.** Moved browser dependency
+and Chromium installation ahead of `npm run check` so the native-readiness
+tests can launch the pinned browser. Scoped Vitest to `tests/` to exclude
+third-party fixture checkouts under `.local/`. Type checking, production
+builds and both native-readiness tests passed locally. The full local suite
+was stopped after failures in the restricted environment. The hosted
+workflow still needs a run on the updated commit.
+
 **7 November — Technical report and demo study guide.** Updated the
 [editable report](docs/VYLNT_TECHNICAL_REPORT.md) and rebuilt the
 [38-page PDF](output/pdf/VYLNT_Technical_Report_and_Presentation_Guide.pdf).

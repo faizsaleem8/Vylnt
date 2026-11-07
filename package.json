@@ -51,7 +51,7 @@
     "test:chain": "node scripts/blockchain-acceptance.mjs",
     "build": "node scripts/build.mjs && vite build --config apps/dashboard/vite.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --dir tests",
     "check": "npm run typecheck && npm test && npm run build",
     "lab": "node labs/server.mjs",
     "lab:m1": "node scripts/scanner-manual.mjs",
